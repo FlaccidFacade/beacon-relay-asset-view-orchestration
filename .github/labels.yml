@@ -1,0 +1,113 @@
+# GitHub Labels Configuration
+# This file defines all standard labels used across B.R.A.V.O. repositories
+# Labels are automatically applied to PRs based on file changes by the auto-label workflow
+
+# Automation and tool-specific labels
+- name: "copilot"
+  color: "7057ff"
+  description: "Changes generated or assisted by GitHub Copilot"
+
+- name: "dependabot"
+  color: "0366d6"
+  description: "Pull requests created by Dependabot"
+
+# Dependency management labels
+- name: "dependencies"
+  color: "0366d6"
+  description: "Updates to project dependencies"
+
+# Programming language labels
+- name: "python"
+  color: "3572A5"
+  description: "Python code changes"
+
+- name: "javascript"
+  color: "f1e05a"
+  description: "JavaScript code changes"
+
+- name: "typescript"
+  color: "2b7489"
+  description: "TypeScript code changes"
+
+- name: "java"
+  color: "b07219"
+  description: "Java code changes"
+
+- name: "rust"
+  color: "dea584"
+  description: "Rust code changes"
+
+- name: "go"
+  color: "00ADD8"
+  description: "Go code changes"
+
+- name: "csharp"
+  color: "178600"
+  description: "C# code changes"
+
+- name: "cpp"
+  color: "f34b7d"
+  description: "C/C++ code changes"
+
+- name: "ruby"
+  color: "701516"
+  description: "Ruby code changes"
+
+- name: "php"
+  color: "4F5D95"
+  description: "PHP code changes"
+
+- name: "swift"
+  color: "ffac45"
+  description: "Swift code changes"
+
+- name: "kotlin"
+  color: "A97BFF"
+  description: "Kotlin code changes"
+
+# Infrastructure and configuration labels
+- name: "terraform"
+  color: "5C4EE5"
+  description: "Terraform infrastructure changes"
+
+- name: "docker"
+  color: "384d54"
+  description: "Docker/container changes"
+
+- name: "github-actions"
+  color: "000000"
+  description: "GitHub Actions workflow changes"
+
+# Change type labels
+- name: "documentation"
+  color: "0075ca"
+  description: "Documentation updates"
+
+- name: "ci"
+  color: "000000"
+  description: "CI/CD pipeline changes"
+
+- name: "testing"
+  color: "d4c5f9"
+  description: "Test code changes"
+
+- name: "configuration"
+  color: "ededed"
+  description: "Configuration file changes"
+
+# Additional useful labels
+- name: "bugfix"
+  color: "d73a4a"
+  description: "Bug fix"
+
+- name: "enhancement"
+  color: "a2eeef"
+  description: "New feature or enhancement"
+
+- name: "security"
+  color: "ee0701"
+  description: "Security-related changes"
+
+- name: "performance"
+  color: "c5def5"
+  description: "Performance improvements"

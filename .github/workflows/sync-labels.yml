@@ -1,0 +1,62 @@
+# Sync GitHub Labels workflow
+# This workflow synchronizes repository labels from the labels.yml configuration file
+# Runs when labels.yml is changed and pushed to main
+
+name: Sync GitHub Labels
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - '.github/labels.yml'
+  workflow_dispatch:
+
+permissions:
+  issues: write
+
+jobs:
+  sync-labels:
+    name: Sync Repository Labels
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Sync labels
+        run: |
+          echo "Syncing labels from .github/labels.yml"
+          
+          # Parse YAML and create/update labels
+          while IFS= read -r line; do
+            if [[ "$line" =~ ^-[[:space:]]*name:[[:space:]]*\"(.*)\" ]]; then
+              label_name="${BASH_REMATCH[1]}"
+              read -r color_line
+              read -r desc_line
+              
+              if [[ "$color_line" =~ color:[[:space:]]*\"(.*)\" ]]; then
+                label_color="${BASH_REMATCH[1]}"
+              fi
+              
+              if [[ "$desc_line" =~ description:[[:space:]]*\"(.*)\" ]]; then
+                label_desc="${BASH_REMATCH[1]}"
+              fi
+              
+              echo "Creating/updating label: $label_name"
+              
+              # Try to create the label, if it exists, update it
+              gh label create "$label_name" \
+                --color "$label_color" \
+                --description "$label_desc" \
+                --repo "${{ github.repository }}" 2>/dev/null || \
+              gh label edit "$label_name" \
+                --color "$label_color" \
+                --description "$label_desc" \
+                --repo "${{ github.repository }}"
+            fi
+          done < .github/labels.yml
+          
+          echo ""
+          echo "Label sync completed!"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

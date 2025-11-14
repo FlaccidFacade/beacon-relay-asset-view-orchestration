@@ -1,0 +1,52 @@
+# Auto-delete branch after PR merge workflow
+# This workflow automatically deletes the head branch after a pull request is merged
+# Keeps the repository clean by removing stale branches and reducing clutter
+# Only deletes branches that have been successfully merged, not closed without merging
+
+name: Auto-delete Branch After Merge
+
+on:
+  # Trigger when a pull request is closed
+  pull_request:
+    types: [closed]
+
+permissions:
+  # Required to delete branches
+  contents: write
+
+jobs:
+  delete-branch:
+    name: Delete Merged Branch
+    runs-on: ubuntu-latest
+    # Only run if the PR was merged (not just closed) and not from a fork
+    if: github.event.pull_request.merged == true && github.event.pull_request.head.repo.full_name == github.repository
+    steps:
+      - name: Delete branch
+        # Uses GitHub CLI to delete the branch that was just merged
+        # This keeps the repository clean and prevents branch accumulation
+        run: |
+          echo "Deleting branch: ${{ github.event.pull_request.head.ref }}"
+          gh api \
+            --method DELETE \
+            -H "Accept: application/vnd.github+json" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            "/repos/${{ github.repository }}/git/refs/heads/${{ github.event.pull_request.head.ref }}" \
+            || echo "Branch may have already been deleted or delete failed"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Comment on PR
+        # Adds a comment confirming the branch was deleted
+        # Provides transparency about the automated cleanup
+        run: |
+          gh pr comment "${{ github.event.pull_request.number }}" \
+            --repo "${{ github.repository }}" \
+            --body "🧹 **Branch Auto-Deleted**
+          
+          The branch \`${{ github.event.pull_request.head.ref }}\` has been automatically deleted after merge to keep the repository clean.
+          
+          This is part of the B.R.A.V.O. organization's automated repository governance."
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        # Don't fail the workflow if commenting fails
+        continue-on-error: true

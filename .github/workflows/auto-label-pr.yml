@@ -1,0 +1,230 @@
+# Auto-label Pull Requests workflow
+# This workflow automatically assigns labels to PRs based on the files changed
+# Helps with organization, filtering, and understanding the scope of changes at a glance
+# Labels are defined in .github/labels.yml
+
+name: Auto-label Pull Requests
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+permissions:
+  pull-requests: write
+  contents: read
+
+jobs:
+  label:
+    name: Auto-label PR
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get changed files
+        id: changed-files
+        run: |
+          # Get the list of changed files in this PR
+          git fetch origin ${{ github.base_ref }}
+          CHANGED_FILES=$(git diff --name-only origin/${{ github.base_ref }}...HEAD)
+          
+          echo "Changed files:"
+          echo "$CHANGED_FILES"
+          
+          # Save to output
+          echo "files<<EOF" >> $GITHUB_OUTPUT
+          echo "$CHANGED_FILES" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Determine labels
+        id: labels
+        run: |
+          CHANGED_FILES="${{ steps.changed-files.outputs.files }}"
+          LABELS=""
+          
+          # Function to add label if not already present
+          add_label() {
+            if [[ ! "$LABELS" =~ (^|,)$1(,|$) ]]; then
+              if [ -z "$LABELS" ]; then
+                LABELS="$1"
+              else
+                LABELS="$LABELS,$1"
+              fi
+            fi
+          }
+          
+          # Check for Copilot PR (branch name pattern)
+          if [[ "${{ github.head_ref }}" =~ ^copilot/ ]]; then
+            add_label "copilot"
+          fi
+          
+          # Check for Dependabot PR
+          if [[ "${{ github.event.pull_request.user.login }}" == "dependabot[bot]" ]]; then
+            add_label "dependabot"
+            add_label "dependencies"
+          fi
+          
+          # Language detection based on file extensions
+          while IFS= read -r file; do
+            # Skip empty lines
+            [ -z "$file" ] && continue
+            
+            # Python
+            if [[ "$file" =~ \.py$ ]] || [[ "$file" == "requirements.txt" ]] || [[ "$file" == "setup.py" ]] || [[ "$file" == "Pipfile" ]] || [[ "$file" == "pyproject.toml" ]]; then
+              add_label "python"
+            fi
+            
+            # JavaScript
+            if [[ "$file" =~ \.js$ ]] || [[ "$file" =~ \.jsx$ ]] || [[ "$file" =~ \.mjs$ ]] || [[ "$file" =~ \.cjs$ ]]; then
+              add_label "javascript"
+            fi
+            
+            # TypeScript
+            if [[ "$file" =~ \.ts$ ]] || [[ "$file" =~ \.tsx$ ]]; then
+              add_label "typescript"
+            fi
+            
+            # Java
+            if [[ "$file" =~ \.java$ ]] || [[ "$file" == "pom.xml" ]] || [[ "$file" =~ build\.gradle ]]; then
+              add_label "java"
+            fi
+            
+            # Rust
+            if [[ "$file" =~ \.rs$ ]] || [[ "$file" == "Cargo.toml" ]] || [[ "$file" == "Cargo.lock" ]]; then
+              add_label "rust"
+            fi
+            
+            # Go
+            if [[ "$file" =~ \.go$ ]] || [[ "$file" == "go.mod" ]] || [[ "$file" == "go.sum" ]]; then
+              add_label "go"
+            fi
+            
+            # C#
+            if [[ "$file" =~ \.cs$ ]] || [[ "$file" =~ \.csproj$ ]]; then
+              add_label "csharp"
+            fi
+            
+            # C/C++
+            if [[ "$file" =~ \.(c|cpp|cc|cxx|h|hpp)$ ]] || [[ "$file" == "CMakeLists.txt" ]]; then
+              add_label "cpp"
+            fi
+            
+            # Ruby
+            if [[ "$file" =~ \.rb$ ]] || [[ "$file" == "Gemfile" ]]; then
+              add_label "ruby"
+            fi
+            
+            # PHP
+            if [[ "$file" =~ \.php$ ]] || [[ "$file" == "composer.json" ]]; then
+              add_label "php"
+            fi
+            
+            # Swift
+            if [[ "$file" =~ \.swift$ ]]; then
+              add_label "swift"
+            fi
+            
+            # Kotlin
+            if [[ "$file" =~ \.kt$ ]] || [[ "$file" =~ \.kts$ ]]; then
+              add_label "kotlin"
+            fi
+            
+            # Terraform
+            if [[ "$file" =~ \.tf$ ]] || [[ "$file" =~ \.tfvars$ ]]; then
+              add_label "terraform"
+            fi
+            
+            # Docker
+            if [[ "$file" =~ Dockerfile ]] || [[ "$file" == "docker-compose.yml" ]] || [[ "$file" == "docker-compose.yaml" ]] || [[ "$file" =~ \.dockerignore$ ]]; then
+              add_label "docker"
+            fi
+            
+            # GitHub Actions
+            if [[ "$file" =~ \.github/workflows/.*\.ya?ml$ ]]; then
+              add_label "github-actions"
+              add_label "ci"
+            fi
+            
+            # Documentation
+            if [[ "$file" =~ \.(md|rst|txt|adoc)$ ]] || [[ "$file" =~ docs/ ]]; then
+              add_label "documentation"
+            fi
+            
+            # Configuration files
+            if [[ "$file" =~ \.(json|yml|yaml|toml|xml|ini|conf|config)$ ]]; then
+              # Don't label package files as configuration (they're already labeled by language)
+              if [[ ! "$file" =~ (package\.json|composer\.json|pom\.xml|Cargo\.toml|pyproject\.toml) ]]; then
+                add_label "configuration"
+              fi
+            fi
+            
+            # Testing
+            if [[ "$file" =~ (tests?|specs?|__tests__|__mocks__) ]] || [[ "$file" =~ \.(test|spec)\. ]] || [[ "$file" =~ [_-](test|spec)\. ]]; then
+              add_label "testing"
+            fi
+            
+          done <<< "$CHANGED_FILES"
+          
+          # Detect npm/yarn/pnpm lockfiles for dependencies
+          if echo "$CHANGED_FILES" | grep -qE "(package-lock\.json|yarn\.lock|pnpm-lock\.yaml)"; then
+            add_label "dependencies"
+          fi
+          
+          # Detect other dependency files
+          if echo "$CHANGED_FILES" | grep -qE "(requirements\.txt|Pipfile\.lock|Gemfile\.lock|Cargo\.lock|go\.sum)"; then
+            add_label "dependencies"
+          fi
+          
+          echo "Labels to apply: $LABELS"
+          echo "labels=$LABELS" >> $GITHUB_OUTPUT
+
+      - name: Apply labels
+        if: steps.labels.outputs.labels != ''
+        run: |
+          LABELS="${{ steps.labels.outputs.labels }}"
+          
+          # Convert comma-separated labels to JSON array
+          LABEL_ARRAY="["
+          IFS=',' read -ra LABEL_LIST <<< "$LABELS"
+          for i in "${!LABEL_LIST[@]}"; do
+            if [ $i -gt 0 ]; then
+              LABEL_ARRAY="$LABEL_ARRAY,"
+            fi
+            LABEL_ARRAY="$LABEL_ARRAY\"${LABEL_LIST[$i]}\""
+          done
+          LABEL_ARRAY="$LABEL_ARRAY]"
+          
+          echo "Applying labels: $LABEL_ARRAY"
+          
+          # Apply labels using GitHub API with heredoc for safer JSON handling
+          gh api \
+            --method POST \
+            -H "Accept: application/vnd.github+json" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            "/repos/${{ github.repository }}/issues/${{ github.event.pull_request.number }}/labels" \
+            --input - <<EOF
+          {"labels": $LABEL_ARRAY}
+          EOF
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Comment on PR
+        if: steps.labels.outputs.labels != ''
+        run: |
+          LABELS="${{ steps.labels.outputs.labels }}"
+          LABEL_LIST=$(echo "$LABELS" | tr ',' '\n' | sed 's/^/- `/' | sed 's/$/`/')
+          
+          gh pr comment "${{ github.event.pull_request.number }}" \
+            --repo "${{ github.repository }}" \
+            --body "🏷️ **Auto-labeling Complete**
+          
+          The following labels have been automatically applied based on the files changed in this PR:
+          
+          $LABEL_LIST
+          
+          This is part of the B.R.A.V.O. organization's automated PR management."
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        continue-on-error: true
