@@ -1,10 +1,8 @@
-# B.R.A.V.O. - Quickstart
+# B.R.A.V.O. - quickstart
 
 This monorepo contains all components of the B.R.A.V.O. (Beacon Relay Asset View Orchestration) system.
 
 ## Getting Started
-
-To get started with the B.R.A.V.O. system, follow these steps:
 
 1. **Clone the repository**:
    ```bash
@@ -12,17 +10,23 @@ To get started with the B.R.A.V.O. system, follow these steps:
    cd beacon-relay-asset-view-orchestration
    ```
 
-2. **Read component documentation**:
-   - [Main README](../README.md) - Project overview and structure
-   - [API Documentation](../api/README.md) - Backend API setup
-   - [Web Dashboard](../web/README.md) - Frontend setup
-   - [Firmware](../firmware/README.md) - ESP32 firmware
-   - [Mobile App](../mobile/README.md) - Android app
-   - [Infrastructure](../infra/README.md) - AWS infrastructure
-   - [Documentation](../docs/README.md) - Additional documentation
+## The first steps to take
 
-3. **Set up your development environment** based on which component you want to work on.
+- [ ] read [README.md](../README.md) - Project overview and monorepo structure
+- [ ] read [api/QUICKSTART.md](../api/QUICKSTART.md) - API quick start guide
+- [ ] read [api/README.md](../api/README.md) - Backend API setup and deployment
+- [ ] read [docs/README.md](../docs/README.md) - Additional project documentation
+- [ ] read [firmware/README.md](../firmware/README.md) - ESP32 collar & dongle firmware
+- [ ] read [infra/QUICKSTART.md](../infra/QUICKSTART.md) - Infrastructure quick start
+- [ ] read [infra/README.md](../infra/README.md) - AWS infrastructure as code
+- [ ] read [mobile/QUICKSTART.md](../mobile/QUICKSTART.md) - Mobile app quick start
+- [ ] read [mobile/README.md](../mobile/README.md) - Android app documentation
+- [ ] read [web/README.md](../web/README.md) - Web dashboard setup
 
-## Features to come
+- [ ] copy this file with check marks for acknowledgement
+- [ ] `mv quickstart/README.md quickstart/reviewed/README-flaccidfacade.md`
+- [ ] submit PR for review
 
-- [ ] Check for quick start updates on reviewed copies
+## features to come
+
+- [ ] check for quick start updates on reviewed copies
