@@ -1,0 +1,81 @@
+# Auto-merge Dependabot PRs workflow
+# This workflow automatically approves and merges Dependabot PRs when all checks pass
+# Ensures dependencies stay up-to-date without manual intervention while maintaining safety
+# through required status checks and automated testing
+
+name: Auto-merge Dependabot PRs
+
+on:
+  # Trigger when a pull request is opened, updated, or marked ready for review
+  pull_request:
+    types: [opened, synchronize, ready_for_review]
+  # Trigger when all required checks have completed
+  pull_request_review:
+    types: [submitted]
+  check_suite:
+    types: [completed]
+  status: {}
+
+permissions:
+  # Required to approve PRs
+  pull-requests: write
+  # Required to merge PRs and read repository contents
+  contents: write
+
+jobs:
+  # Job to automatically approve Dependabot PRs
+  approve:
+    name: Approve Dependabot PR
+    runs-on: ubuntu-latest
+    # Only run for Dependabot PRs that are not drafts
+    if: github.event.pull_request.user.login == 'dependabot[bot]' && github.event.pull_request.draft == false
+    steps:
+      - name: Approve PR
+        # Uses GitHub CLI to approve the PR
+        run: gh pr review --approve "$PR_URL"
+        env:
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  # Job to automatically merge Dependabot PRs once checks pass
+  auto-merge:
+    name: Auto-merge Dependabot PR
+    runs-on: ubuntu-latest
+    # Only run for Dependabot PRs that are not drafts
+    if: github.event.pull_request.user.login == 'dependabot[bot]' && github.event.pull_request.draft == false
+    steps:
+      - name: Enable auto-merge
+        # Enables GitHub's auto-merge feature which will merge the PR
+        # automatically once all required status checks pass
+        run: gh pr merge --auto --squash "$PR_URL"
+        env:
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  # Job to provide feedback when auto-merge cannot be enabled
+  feedback:
+    name: Provide Merge Feedback
+    runs-on: ubuntu-latest
+    # Only run for Dependabot PRs
+    if: github.event.pull_request.user.login == 'dependabot[bot]'
+    steps:
+      - name: Comment on PR
+        # Adds a comment explaining the auto-merge status
+        # This helps maintain transparency about the automation
+        run: |
+          gh pr comment "$PR_URL" --body "🤖 **Dependabot Auto-Merge Status**
+          
+          This PR will be automatically merged once:
+          - ✅ All required status checks pass
+          - ✅ PR is approved
+          - ✅ Branch is up to date with the base branch
+          
+          If auto-merge fails, please check:
+          - Required status checks are configured in repository settings
+          - Branch protection rules allow auto-merge
+          - No conflicts exist with the base branch"
+        env:
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        # Don't fail the workflow if commenting fails
+        continue-on-error: true

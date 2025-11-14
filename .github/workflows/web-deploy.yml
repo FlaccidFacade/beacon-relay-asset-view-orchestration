@@ -1,0 +1,62 @@
+name: Deploy to AWS
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build application
+        run: npm run build
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION || 'us-east-1' }}
+
+      # Option 1: Deploy to AWS Amplify
+      # Uncomment if using AWS Amplify
+      # - name: Deploy to Amplify
+      #   run: |
+      #     npm install -g @aws-amplify/cli
+      #     amplify publish --yes
+      #   env:
+      #     AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      #     AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+
+      # Option 2: Deploy to S3 + CloudFront
+      # Uncomment if using S3 + CloudFront
+      - name: Deploy to S3
+        run: |
+          aws s3 sync out/ s3://${{ secrets.S3_BUCKET }}/bravo --delete
+        if: success()
+
+      - name: Invalidate CloudFront cache
+        run: |
+          aws cloudfront create-invalidation \
+            --distribution-id ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }} \
+            --paths "/bravo/*"
+        if: success()
+
+      - name: Deployment successful
+        run: |
+          echo "✅ Deployment completed successfully!"
+          echo "🌐 Application available at: https://${{ secrets.DOMAIN }}/bravo"

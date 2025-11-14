@@ -1,0 +1,43 @@
+{
+  "name": "bravo-api",
+  "version": "1.0.0",
+  "description": "B.R.A.V.O (Beacon Relay Asset View Orchestration) API - REST/GraphQL endpoints for device registration, telemetry, and OTA updates",
+  "main": "dist/lambda/rest.js",
+  "scripts": {
+    "build": "tsc",
+    "clean": "rm -rf dist",
+    "lint": "eslint src --ext .ts",
+    "lint:fix": "eslint src --ext .ts --fix",
+    "prebuild": "npm run clean",
+    "package": "npm run build && cd dist && zip -r ../lambda.zip .",
+    "dev": "ts-node src/lambda/rest.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "keywords": [
+    "bravo",
+    "iot",
+    "lambda",
+    "api",
+    "graphql",
+    "rest",
+    "aws"
+  ],
+  "author": "Beacon Relay Asset View Orchestration",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.156",
+    "@types/node": "^24.9.1",
+    "@typescript-eslint/eslint-plugin": "^8.46.2",
+    "@typescript-eslint/parser": "^8.46.2",
+    "eslint": "^9.38.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.9.3"
+  },
+  "dependencies": {
+    "@apollo/server": "^5.0.0",
+    "@as-integrations/aws-lambda": "^4.0.1",
+    "aws-lambda": "^1.0.7",
+    "graphql": "^16.11.0",
+    "uuid": "^13.0.0"
+  }
+}

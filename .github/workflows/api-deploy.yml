@@ -1,0 +1,98 @@
+name: Deploy to AWS Lambda
+
+on:
+  push:
+    branches:
+      - main
+
+env:
+  AWS_REGION: us-east-1
+  NODE_VERSION: '20'
+
+jobs:
+  deploy:
+    name: Deploy API to AWS Lambda
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run linter
+        run: npm run lint
+
+      - name: Type check
+        run: npm run typecheck
+
+      - name: Build project
+        run: npm run build
+
+      - name: Package Lambda functions
+        run: |
+          cd dist
+          npm install --production --no-package-lock
+          zip -r ../rest-api.zip .
+          
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Deploy REST API Lambda
+        run: |
+          aws lambda update-function-code \
+            --function-name bravo-api-rest \
+            --zip-file fileb://rest-api.zip \
+            --region ${{ env.AWS_REGION }} || \
+          aws lambda create-function \
+            --function-name bravo-api-rest \
+            --runtime nodejs20.x \
+            --role ${{ secrets.AWS_LAMBDA_ROLE_ARN }} \
+            --handler lambda/rest.handler \
+            --zip-file fileb://rest-api.zip \
+            --timeout 30 \
+            --memory-size 512 \
+            --region ${{ env.AWS_REGION }}
+
+      - name: Deploy GraphQL API Lambda
+        run: |
+          aws lambda update-function-code \
+            --function-name bravo-api-graphql \
+            --zip-file fileb://rest-api.zip \
+            --region ${{ env.AWS_REGION }} || \
+          aws lambda create-function \
+            --function-name bravo-api-graphql \
+            --runtime nodejs20.x \
+            --role ${{ secrets.AWS_LAMBDA_ROLE_ARN }} \
+            --handler lambda/graphql.handler \
+            --zip-file fileb://rest-api.zip \
+            --timeout 30 \
+            --memory-size 512 \
+            --region ${{ env.AWS_REGION }}
+
+      - name: Update API Gateway Integration (REST)
+        run: |
+          echo "Updating API Gateway integration for REST API"
+          # Add API Gateway update commands here if needed
+
+      - name: Update API Gateway Integration (GraphQL)
+        run: |
+          echo "Updating API Gateway integration for GraphQL API"
+          # Add API Gateway update commands here if needed
+
+      - name: Deployment successful
+        run: |
+          echo "✅ Deployment completed successfully!"
+          echo "REST API Lambda: bravo-api-rest"
+          echo "GraphQL API Lambda: bravo-api-graphql"

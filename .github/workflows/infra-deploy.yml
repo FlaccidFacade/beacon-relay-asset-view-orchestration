@@ -1,0 +1,49 @@
+name: Deploy Infrastructure
+
+on:
+  release:
+    types: [created]
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  deploy:
+    name: Deploy CDK Stacks
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build project
+        run: npm run build
+
+      - name: Synthesize CDK
+        run: npm run synth
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ secrets.AWS_REGION || 'us-east-1' }}
+
+      - name: Deploy CDK stacks
+        run: |
+          npx cdk deploy --all --require-approval never
+
+      - name: Output deployment results
+        run: |
+          echo "Deployment completed successfully!"
+          echo "Stack outputs:"
+          aws cloudformation describe-stacks --region ${{ secrets.AWS_REGION || 'us-east-1' }} --query 'Stacks[?contains(StackName, `BRAVO`)].{Name:StackName,Status:StackStatus}' --output table
