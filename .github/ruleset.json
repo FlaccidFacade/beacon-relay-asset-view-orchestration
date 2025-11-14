@@ -1,0 +1,72 @@
+{
+  "_comment": "Repository Ruleset for B.R.A.V.O Organization - Defines governance rules for all repositories. This ruleset enforces: 1) Required code owner reviews before merging, 2) Required status checks (build, test, lint), 3) Non-fast-forward protection to prevent force pushes, 4) Required commit signatures for security, 5) Branch deletion protection, 6) Linear history requirement for clean git logs. Apply this to repositories via GitHub Settings > Rules > Rulesets.",
+  "$schema": "https://docs.github.com/en/rest/repos/rules#create-a-repository-ruleset",
+  "name": "B.R.A.V.O Organization Protection Rules",
+  "target": "branch",
+  "enforcement": "active",
+  "conditions": {
+    "ref_name": {
+      "include": [
+        "refs/heads/main",
+        "refs/heads/master",
+        "refs/heads/develop"
+      ],
+      "exclude": []
+    }
+  },
+  "rules": [
+    {
+      "type": "pull_request",
+      "parameters": {
+        "required_approving_review_count": 1,
+        "dismiss_stale_reviews_on_push": true,
+        "require_code_owner_reviews": true,
+        "require_last_push_approval": false,
+        "required_review_thread_resolution": true
+      }
+    },
+    {
+      "type": "required_status_checks",
+      "parameters": {
+        "required_status_checks": [
+          {
+            "context": "build",
+            "integration_id": null
+          },
+          {
+            "context": "test",
+            "integration_id": null
+          },
+          {
+            "context": "lint",
+            "integration_id": null
+          }
+        ],
+        "strict_required_status_checks_policy": true
+      }
+    },
+    {
+      "type": "non_fast_forward",
+      "parameters": {}
+    },
+    {
+      "type": "required_signatures",
+      "parameters": {}
+    },
+    {
+      "type": "deletion",
+      "parameters": {}
+    },
+    {
+      "type": "required_linear_history",
+      "parameters": {}
+    }
+  ],
+  "bypass_actors": [
+    {
+      "actor_id": 5,
+      "actor_type": "RepositoryRole",
+      "bypass_mode": "always"
+    }
+  ]
+}

@@ -1,0 +1,185 @@
+# Dependabot configuration for organization-wide dependency management
+# This file enables automated dependency updates across all supported package ecosystems
+# used in B.R.A.V.O. projects (firmware, mobile, web, api, infrastructure)
+
+version: 2
+
+updates:
+  # GitHub Actions workflow dependencies
+  # Ensures CI/CD workflows stay up-to-date with the latest action versions
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "daily"
+      time: "03:00"
+      timezone: "America/New_York"
+    # Group all GitHub Actions updates into a single PR to reduce noise
+    groups:
+      github-actions:
+        patterns:
+          - "*"
+    labels:
+      - "dependencies"
+      - "github-actions"
+    open-pull-requests-limit: 5
+
+  # npm/Node.js dependencies
+  # For web dashboard (React/Next.js) and any Node.js-based tooling
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "daily"
+      time: "03:00"
+      timezone: "America/New_York"
+    # Group minor and patch updates to reduce PR volume
+    groups:
+      npm-production:
+        dependency-type: "production"
+        update-types:
+          - "minor"
+          - "patch"
+      npm-development:
+        dependency-type: "development"
+        update-types:
+          - "minor"
+          - "patch"
+    labels:
+      - "dependencies"
+      - "npm"
+    open-pull-requests-limit: 5
+
+  # pip/Python dependencies
+  # For API Lambda functions and infrastructure scripts
+  - package-ecosystem: "pip"
+    directory: "/"
+    schedule:
+      interval: "daily"
+      time: "03:00"
+      timezone: "America/New_York"
+    groups:
+      python:
+        patterns:
+          - "*"
+    labels:
+      - "dependencies"
+      - "python"
+    open-pull-requests-limit: 5
+
+  # Docker dependencies
+  # For containerized services and build environments
+  - package-ecosystem: "docker"
+    directory: "/"
+    schedule:
+      interval: "daily"
+      time: "03:00"
+      timezone: "America/New_York"
+    groups:
+      docker:
+        patterns:
+          - "*"
+    labels:
+      - "dependencies"
+      - "docker"
+    open-pull-requests-limit: 5
+
+  # Maven dependencies
+  # For any Java-based services in the B.R.A.V.O. ecosystem
+  - package-ecosystem: "maven"
+    directory: "/"
+    schedule:
+      interval: "daily"
+      time: "03:00"
+      timezone: "America/New_York"
+    groups:
+      maven:
+        patterns:
+          - "*"
+    labels:
+      - "dependencies"
+      - "maven"
+    open-pull-requests-limit: 5
+
+  # Gradle dependencies
+  # For Android mobile app and other Gradle-based projects
+  - package-ecosystem: "gradle"
+    directory: "/"
+    schedule:
+      interval: "daily"
+      time: "03:00"
+      timezone: "America/New_York"
+    groups:
+      gradle:
+        patterns:
+          - "*"
+    labels:
+      - "dependencies"
+      - "gradle"
+    open-pull-requests-limit: 5
+
+  # Terraform dependencies
+  # For infrastructure-as-code (AWS IoT Core, DynamoDB, S3/CloudFront)
+  - package-ecosystem: "terraform"
+    directory: "/"
+    schedule:
+      interval: "daily"
+      time: "03:00"
+      timezone: "America/New_York"
+    groups:
+      terraform:
+        patterns:
+          - "*"
+    labels:
+      - "dependencies"
+      - "terraform"
+    open-pull-requests-limit: 5
+
+  # Composer dependencies
+  # For any PHP-based tooling or services
+  - package-ecosystem: "composer"
+    directory: "/"
+    schedule:
+      interval: "daily"
+      time: "03:00"
+      timezone: "America/New_York"
+    groups:
+      composer:
+        patterns:
+          - "*"
+    labels:
+      - "dependencies"
+      - "php"
+    open-pull-requests-limit: 5
+
+  # NuGet dependencies
+  # For any .NET/C# services in the ecosystem
+  - package-ecosystem: "nuget"
+    directory: "/"
+    schedule:
+      interval: "daily"
+      time: "03:00"
+      timezone: "America/New_York"
+    groups:
+      nuget:
+        patterns:
+          - "*"
+    labels:
+      - "dependencies"
+      - "dotnet"
+    open-pull-requests-limit: 5
+
+  # Cargo dependencies
+  # For any Rust-based embedded firmware or high-performance services
+  - package-ecosystem: "cargo"
+    directory: "/"
+    schedule:
+      interval: "daily"
+      time: "03:00"
+      timezone: "America/New_York"
+    groups:
+      cargo:
+        patterns:
+          - "*"
+    labels:
+      - "dependencies"
+      - "rust"
+    open-pull-requests-limit: 5

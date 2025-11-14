@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:padding="16dp"
+    tools:context=".activities.MainActivity">
+
+    <TextView
+        android:id="@+id/textWelcome"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/main_welcome"
+        android:textSize="24sp"
+        android:textStyle="bold"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        android:layout_marginTop="32dp" />
+
+    <TextView
+        android:id="@+id/textConnectionStatus"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/status_disconnected"
+        android:textSize="16sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/textWelcome"
+        android:layout_marginTop="16dp" />
+
+    <Button
+        android:id="@+id/buttonConnectBLE"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:text="@string/connect_ble"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/textConnectionStatus"
+        android:layout_marginTop="32dp" />
+
+    <Button
+        android:id="@+id/buttonConnectUSB"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:text="@string/connect_usb"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/buttonConnectBLE"
+        android:layout_marginTop="16dp" />
+
+    <Button
+        android:id="@+id/buttonViewMap"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:text="@string/view_map"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/buttonConnectUSB"
+        android:layout_marginTop="32dp" />
+
+    <TextView
+        android:id="@+id/textTelemetryData"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:text="Telemetry Data"
+        android:textSize="16sp"
+        android:textStyle="bold"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/buttonViewMap"
+        android:layout_marginTop="32dp" />
+
+    <ScrollView
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/textTelemetryData"
+        android:layout_marginTop="8dp">
+
+        <TextView
+            android:id="@+id/textTelemetryDetails"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="No telemetry data available"
+            android:textSize="14sp" />
+    </ScrollView>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

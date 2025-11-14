@@ -1,0 +1,28 @@
+{
+  "projectName": "BRAVO",
+  "stage": "dev",
+  "aws": {
+    "account": "123456789012",
+    "region": "us-east-1"
+  },
+  "iot": {
+    "thingTypeName": "BRAVODevice",
+    "policyName": "BRAVODevicePolicy"
+  },
+  "dynamodb": {
+    "deviceTableName": "bravo-devices",
+    "telemetryTableName": "bravo-telemetry"
+  },
+  "s3": {
+    "bucketName": "bravo-website",
+    "errorDocument": "error.html",
+    "indexDocument": "index.html"
+  },
+  "api": {
+    "stageName": "prod",
+    "throttle": {
+      "rateLimit": 1000,
+      "burstLimit": 2000
+    }
+  }
+}

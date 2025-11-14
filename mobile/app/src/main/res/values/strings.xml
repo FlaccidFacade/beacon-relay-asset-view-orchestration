@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">BRAVO Mobile</string>
+    <string name="map_activity_title">GPS Tracker</string>
+    <string name="settings_activity_title">Settings</string>
+    
+    <!-- Main Activity -->
+    <string name="main_welcome">Welcome to BRAVO IoT System</string>
+    <string name="connect_ble">Connect via Bluetooth</string>
+    <string name="connect_usb">Connect via USB</string>
+    <string name="view_map">View GPS Map</string>
+    <string name="settings">Settings</string>
+    
+    <!-- Connection Status -->
+    <string name="status_disconnected">Disconnected</string>
+    <string name="status_connecting">Connecting…</string>
+    <string name="status_connected">Connected</string>
+    <string name="status_receiving">Receiving Data…</string>
+    
+    <!-- Map Activity -->
+    <string name="map_loading">Loading map…</string>
+    <string name="location_unavailable">Location unavailable</string>
+    <string name="offline_map_enabled">Offline maps enabled</string>
+    
+    <!-- Telemetry -->
+    <string name="telemetry_latitude">Latitude: %1$s</string>
+    <string name="telemetry_longitude">Longitude: %1$s</string>
+    <string name="telemetry_altitude">Altitude: %1$s m</string>
+    <string name="telemetry_speed">Speed: %1$s km/h</string>
+    <string name="telemetry_rssi">Signal: %1$s dBm</string>
+    <string name="telemetry_timestamp">Last Update: %1$s</string>
+    
+    <!-- Errors -->
+    <string name="error_bluetooth_not_supported">Bluetooth not supported</string>
+    <string name="error_bluetooth_not_enabled">Bluetooth not enabled</string>
+    <string name="error_usb_not_supported">USB host not supported</string>
+    <string name="error_permission_denied">Permission denied</string>
+    <string name="error_connection_failed">Connection failed</string>
+    <string name="error_no_device_found">No device found</string>
+</resources>
