@@ -12,7 +12,9 @@ out/
 .env.*.local
 
 # IDE
-.vscode/
+.vscode/*
+!.vscode/extensions.json
+!.vscode/README.md
 .idea/
 *.swp
 *.swo
@@ -91,7 +93,9 @@ dist/
 .env.*.local
 
 # IDE
-.vscode/
+.vscode/*
+!.vscode/extensions.json
+!.vscode/README.md
 .idea/
 *.swp
 *.swo
@@ -276,7 +280,9 @@ build/
 
 # IDE
 .idea
-.vscode
+.vscode/*
+!.vscode/extensions.json
+!.vscode/README.md
 *.swp
 *.swo
 *~

@@ -1,0 +1,25 @@
+{
+  "recommendations": [
+    "dbaeumer.vscode-eslint",
+    "esbenp.prettier-vscode",
+    "dsznajder.es7-react-js-snippets",
+    "platformio.platformio-ide",
+    "ms-vscode.cpptools",
+    "ms-vscode.cpptools-extension-pack",
+    "mathiasfrohlich.kotlin",
+    "fwcd.kotlin",
+    "vscjava.vscode-java-pack",
+    "amazonwebservices.aws-toolkit-vscode",
+    "amazonwebservices.amazon-q-vscode",
+    "eamodio.gitlens",
+    "github.vscode-pull-request-github",
+    "yzhang.markdown-all-in-one",
+    "davidanson.vscode-markdownlint",
+    "editorconfig.editorconfig",
+    "streetsidesoftware.code-spell-checker",
+    "gruntfuggly.todo-tree",
+    "redhat.vscode-yaml",
+    "bradlc.vscode-tailwindcss"
+  ],
+  "unwantedRecommendations": []
+}
