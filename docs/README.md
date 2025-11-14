@@ -4,6 +4,7 @@ Documentation directory for the B.R.A.V.O. monorepo
 
 - [ROADMAP.md](ROADMAP.md) - Project roadmap including stretch goals and implementation phases
 - [BOM.md](BOM.md) - Hardware bill of materials
+- [SBOM.md](SBOM.md) - Software bill of materials
 - [DEV SETUP] - Development environment notes
 
 ## Development Setup

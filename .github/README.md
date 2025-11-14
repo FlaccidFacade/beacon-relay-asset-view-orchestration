@@ -349,23 +349,6 @@ curl -X POST \
                     └───────────────┘
 ```
 
-## Setup Checklist for New B.R.A.V.O. Projects
-
-- [ ] Copy `.github/labels.yml` to repository
-- [ ] Copy `.github/dependabot.yml` to repository
-- [ ] Copy `.github/workflows/sync-labels.yml` to repository
-- [ ] Copy `.github/workflows/auto-label-pr.yml` to repository
-- [ ] Copy `.github/workflows/auto-merge-dependabot.yml` to repository
-- [ ] Copy `.github/workflows/auto-delete-branch.yml` to repository
-- [ ] Apply `ruleset.json` via Repository Settings or API
-- [ ] Run "Sync Labels" workflow to create repository labels
-- [ ] Create a `CODEOWNERS` file defining code owners
-- [ ] Configure required workflows: build, test, lint
-- [ ] Grant workflow permissions: Settings > Actions > Workflow permissions > Read/Write
-- [ ] Enable "Allow auto-merge" in Settings > General
-- [ ] Test with a test Dependabot PR
-- [ ] Test auto-labeling by creating a test PR
-
 ## Benefits
 
 1. **Security**: Dependencies stay up-to-date with security patches
@@ -373,14 +356,14 @@ curl -X POST \
 3. **Consistency**: Same standards for the B.R.A.V.O. monorepo
 4. **Quality**: Required checks prevent broken code from merging
 5. **Transparency**: Clear rules and automated feedback
-6. **Scalability**: Works across firmware, mobile, web, API, and infrastructure repos
-7. **Cleanliness**: Automatic branch cleanup keeps repositories organized
+6. **Scalability**: Works across firmware, mobile, web, API, and infrastructure components
+7. **Cleanliness**: Automatic branch cleanup keeps the repository organized
 8. **Organization**: Automatic PR labeling improves discoverability and filtering
 9. **Visibility**: Labels provide at-a-glance understanding of PR scope and technology
 
 ## Customization
 
-Each repository may need slight adjustments:
+Each component may need slight adjustments:
 
 - **Firmware**: May need additional checks for embedded toolchains
 - **Mobile**: May need Android/iOS specific linters

@@ -5,7 +5,7 @@ sidebar_label: "Hardware BOM"
 
 # B.R.A.V.O. MVP Hardware BOM
 
-This document lists the **Bill of Materials** for the B.R.A.V.O. prototype, including the **collar** and **dongle** for breadboard testing and development.
+This document lists the **Bill of Materials** for the B.R.A.V.O. prototype, including the **beacon and relay parts** for breadboard testing and development.
 
 For more details, see the [firmware](../firmware/) and [web dashboard](../web/) directories in this repository.
 
