@@ -34,6 +34,24 @@ Sharing this project allows other pet owners and IoT enthusiasts to:
 * Adapt the system for different use cases, like personal tracking, gear monitoring, or IoT experiments.
 
 
+## 🛠️ Development Setup
+
+### VSCode Extensions
+
+This project includes recommended VSCode extensions for optimal development experience. When you open this workspace in VSCode:
+
+1. You'll see a notification to install recommended extensions - click **Install All**
+2. Or manually: Open Extensions (`Ctrl+Shift+X`), filter by `@recommended`, and install
+
+The extensions support all technologies in this project:
+- TypeScript/JavaScript (API, web, infra)
+- PlatformIO/C++/Arduino (firmware)
+- Kotlin/Java (mobile Android)
+- AWS CDK (infrastructure)
+
+For detailed installation instructions, see [.vscode/README.md](.vscode/README.md).
+
+
 ## 🛠 Contribution
 
 We welcome contributions!
