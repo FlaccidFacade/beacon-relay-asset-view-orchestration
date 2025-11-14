@@ -410,7 +410,7 @@ Add these as additional required status checks in the ruleset or as separate job
 
 ## Contributing
 
-To improve these organization-wide files:
+To improve these governance files:
 1. Open an issue in this repository describing the enhancement
 2. Submit a PR with changes
 3. Ensure changes maintain backward compatibility
@@ -418,4 +418,4 @@ To improve these organization-wide files:
 
 ## License
 
-These configuration files are part of the B.R.A.V.O. organization open-source ecosystem.
+These configuration files are part of the B.R.A.V.O. open-source ecosystem.
