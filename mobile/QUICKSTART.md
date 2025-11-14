@@ -27,12 +27,12 @@ The phone receives telemetry data that has been:
 ### Step 1: Clone and Open Project (1 min)
 
 ```bash
-git clone https://github.com/beacon-relay-asset-view-orchestration/mobile.git
-cd mobile
+git clone https://github.com/FlaccidFacade/beacon-relay-asset-view-orchestration.git
+cd beacon-relay-asset-view-orchestration/mobile
 ```
 
 Open in Android Studio:
-- File → Open → Select `mobile` directory
+- File → Open → Select the `mobile` directory
 
 ### Step 2: Sync and Build (2 min)
 
@@ -177,7 +177,7 @@ If you don't have ESP32 hardware yet:
 
 ## Getting Help
 
-- **Issues**: https://github.com/beacon-relay-asset-view-orchestration/mobile/issues
+- **Issues**: https://github.com/FlaccidFacade/beacon-relay-asset-view-orchestration/issues
 - **Documentation**: README.md, PROJECT_STRUCTURE.md
 - **Code Examples**: Check activity implementations for usage patterns
 

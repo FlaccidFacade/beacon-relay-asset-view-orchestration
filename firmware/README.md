@@ -85,10 +85,10 @@ firmware/
    pip install platformio
    ```
 
-2. **Clone the repository**
+2. **Clone the repository (if not already done)**
    ```bash
-   git clone https://github.com/BT-Radio-Advanced-Visual-Orchestration/firmware.git
-   cd firmware
+   git clone https://github.com/FlaccidFacade/beacon-relay-asset-view-orchestration.git
+   cd beacon-relay-asset-view-orchestration/firmware
    ```
 
 3. **Install dependencies**

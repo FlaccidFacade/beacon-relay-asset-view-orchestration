@@ -91,9 +91,9 @@ Edit `config/stack-config.json` to customize your deployment:
 ### 1. Clone and Install
 
 ```bash
-# Clone the repository
-git clone https://github.com/beacon-relay-asset-view-orchestration/infra
-cd infra
+# Clone the repository (if not already done)
+git clone https://github.com/FlaccidFacade/beacon-relay-asset-view-orchestration.git
+cd beacon-relay-asset-view-orchestration/infra
 
 # Install dependencies
 npm install

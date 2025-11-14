@@ -55,10 +55,10 @@ api/
 
 ### Installation
 
-1. Clone the repository:
+1. Clone the repository (if not already done):
 ```bash
-git clone https://github.com/beacon-relay-asset-view-orchestration/api.git
-cd api
+git clone https://github.com/FlaccidFacade/beacon-relay-asset-view-orchestration.git
+cd beacon-relay-asset-view-orchestration/api
 ```
 
 2. Install dependencies:
