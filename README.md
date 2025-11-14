@@ -49,5 +49,5 @@ We welcome contributions!
 ## 🌐 Contact
 
 * **Email:** [bravo-gps@proton.me](mailto:bravo-gps@proton.me)
-* **Discussions / Issues:** Use each repo’s Issues tab for project-specific questions.
+* **Discussions / Issues:** Use the repository's Issues tab for project-wide questions.
 
