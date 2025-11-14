@@ -1,11 +1,11 @@
-# Organization-Wide Governance Files
+# Governance Files
 
-This directory contains configuration files that provide automated dependency management, security, and governance across all B.R.A.V.O. repositories.
+This directory contains configuration files that provide automated dependency management, security, and governance for the B.R.A.V.O. monorepo.
 
 ## Files Overview
 
 ### `.github/labels.yml`
-**Purpose**: Defines standard labels used across all B.R.A.V.O. repositories.
+**Purpose**: Defines standard labels used in this repository.
 
 **What it does**:
 - Defines a comprehensive set of labels for organizing and categorizing PRs and issues
@@ -20,7 +20,7 @@ This directory contains configuration files that provide automated dependency ma
 - Uses standard GitHub label colors matching common conventions
 
 **How to use**:
-1. Copy to any B.R.A.V.O. repository's `.github/` directory
+1. Copy to the B.R.A.V.O. repository's `.github/` directory
 2. Run the "Sync Labels" workflow to create/update labels in the repository
 3. Customize by adding/removing labels as needed for your project
 4. Labels will be automatically applied to PRs by the auto-label workflow
@@ -54,7 +54,7 @@ This directory contains configuration files that provide automated dependency ma
 - PR changing `README.md` → `documentation` label
 
 **How to use**:
-1. Copy to any B.R.A.V.O. repository's `.github/workflows/` directory
+1. Copy to the B.R.A.V.O. repository's `.github/workflows/` directory
 2. Ensure labels are created in the repository (use sync-labels workflow)
 3. Workflow runs automatically on all PRs
 4. No configuration needed - works out of the box
@@ -75,7 +75,7 @@ This directory contains configuration files that provide automated dependency ma
 3. Applies changes to the repository via GitHub API
 
 **How to use**:
-1. Copy to any B.R.A.V.O. repository's `.github/workflows/` directory
+1. Copy to the B.R.A.V.O. repository's `.github/workflows/` directory
 2. Push changes to `.github/labels.yml` to trigger automatic sync
 3. Or manually trigger via Actions tab > Sync Labels > Run workflow
 4. Verify labels in repository Settings > Labels
@@ -100,7 +100,7 @@ This directory contains configuration files that provide automated dependency ma
 - Limits to 5 open PRs per ecosystem to prevent overwhelming maintainers
 
 **How to use**:
-1. Copy to any B.R.A.V.O. repository's `.github/` directory
+1. Copy to the B.R.A.V.O. repository's `.github/` directory
 2. Adjust `directory` paths if dependencies are in subdirectories
 3. Customize `open-pull-requests-limit` based on repository activity
 
@@ -130,7 +130,7 @@ This directory contains configuration files that provide automated dependency ma
 - Works seamlessly with the ruleset.json requirements
 
 **How to use**:
-1. Copy to any B.R.A.V.O. repository's `.github/workflows/` directory
+1. Copy to the B.R.A.V.O. repository's `.github/workflows/` directory
 2. Ensure required status checks are configured (build, test, lint)
 3. Grant workflow permissions in Settings > Actions > General > Workflow permissions
 
@@ -162,7 +162,7 @@ This directory contains configuration files that provide automated dependency ma
 - Fails gracefully if branch is already deleted
 
 **How to use**:
-1. Copy to any B.R.A.V.O. repository's `.github/workflows/` directory
+1. Copy to the B.R.A.V.O. repository's `.github/workflows/` directory
 2. Grant workflow permissions in Settings > Actions > General > Workflow permissions
 3. Works automatically without any additional configuration
 
@@ -195,7 +195,7 @@ This directory contains configuration files that provide automated dependency ma
 
 **How to use**:
 1. Ensure labels exist in the repository (use sync-labels.yml workflow)
-2. Copy to any B.R.A.V.O. repository's `.github/workflows/` directory
+2. Copy to the B.R.A.V.O. repository's `.github/workflows/` directory
 3. Grant workflow permissions: pull-requests: write, contents: read
 
 ### `.github/workflows/sync-labels.yml`
@@ -225,7 +225,7 @@ This directory contains configuration files that provide automated dependency ma
 4. Push changes to main or trigger manually
 
 ### `.github/labels.yml`
-**Purpose**: Define standard labels used across B.R.A.V.O. repositories.
+**Purpose**: Define standard labels used across B.R.A.V.O. repository.
 
 **Contains**:
 - 26+ predefined labels for common use cases
@@ -349,7 +349,7 @@ curl -X POST \
                     └───────────────┘
 ```
 
-## Setup Checklist for New B.R.A.V.O. Repositories
+## Setup Checklist for New B.R.A.V.O. Projects
 
 - [ ] Copy `.github/labels.yml` to repository
 - [ ] Copy `.github/dependabot.yml` to repository
@@ -370,7 +370,7 @@ curl -X POST \
 
 1. **Security**: Dependencies stay up-to-date with security patches
 2. **Automation**: Less manual work for maintainers
-3. **Consistency**: Same standards across all B.R.A.V.O. repositories
+3. **Consistency**: Same standards for the B.R.A.V.O. monorepo
 4. **Quality**: Required checks prevent broken code from merging
 5. **Transparency**: Clear rules and automated feedback
 6. **Scalability**: Works across firmware, mobile, web, API, and infrastructure repos
