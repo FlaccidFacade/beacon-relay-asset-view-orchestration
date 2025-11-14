@@ -87,8 +87,8 @@ firmware/
 
 2. **Clone the repository**
    ```bash
-   git clone https://github.com/BT-Radio-Advanced-Visual-Orchestration/firmware.git
-   cd firmware
+   git clone https://github.com/FlaccidFacade/beacon-relay-asset-view-orchestration.git
+   cd beacon-relay-asset-view-orchestration/firmware
    ```
 
 3. **Install dependencies**
@@ -438,7 +438,7 @@ Contributions are welcome! Please:
 ## Support
 
 For issues and questions:
-- Open an issue on GitHub
+- Open an issue in the [main repository](https://github.com/FlaccidFacade/beacon-relay-asset-view-orchestration/issues)
 - Check existing documentation
 - Review PlatformIO and Arduino ESP32 documentation
 

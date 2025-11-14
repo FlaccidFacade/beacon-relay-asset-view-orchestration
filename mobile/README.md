@@ -74,8 +74,8 @@ app/src/main/java/com/bravo/mobile/
 ### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/beacon-relay-asset-view-orchestration/mobile.git
-cd mobile
+git clone https://github.com/FlaccidFacade/beacon-relay-asset-view-orchestration.git
+cd beacon-relay-asset-view-orchestration/mobile
 ```
 
 ### 2. Open in Android Studio
@@ -274,8 +274,8 @@ Contributions are welcome! Please:
 ## Support
 
 For issues, questions, or contributions, please visit:
-- GitHub Issues: https://github.com/beacon-relay-asset-view-orchestration/mobile/issues
-- Main Project: https://github.com/beacon-relay-asset-view-orchestration
+- GitHub Issues: https://github.com/FlaccidFacade/beacon-relay-asset-view-orchestration/issues
+- Main Project: https://github.com/FlaccidFacade/beacon-relay-asset-view-orchestration
 
 ## Roadmap
 

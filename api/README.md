@@ -57,8 +57,8 @@ api/
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/beacon-relay-asset-view-orchestration/api.git
-cd api
+git clone https://github.com/FlaccidFacade/beacon-relay-asset-view-orchestration.git
+cd beacon-relay-asset-view-orchestration/api
 ```
 
 2. Install dependencies:
@@ -493,4 +493,4 @@ ISC
 
 ## Support
 
-For issues and questions, please open a GitHub issue in the repository.
+For issues and questions, please open a GitHub issue in the [main repository](https://github.com/FlaccidFacade/beacon-relay-asset-view-orchestration/issues).

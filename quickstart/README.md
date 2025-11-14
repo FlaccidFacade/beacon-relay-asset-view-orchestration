@@ -1,22 +1,28 @@
-# B.R.A.V.O. - quickstart
+# B.R.A.V.O. - Quickstart
 
-## The first steps to take
+This monorepo contains all components of the B.R.A.V.O. (Beacon Relay Asset View Orchestration) system.
 
-- [ ] read README.md
-- [ ] read api/QUICKSTART.md
-- [ ] read api/README.md
-- [ ] read docs/README.md
-- [ ] read firmware/README.md
-- [ ] read infra/QUICKSTART.md
-- [ ] read infra/README.md
-- [ ] read mobile/QUICKSTART.md
-- [ ] read mobile/README.md
-- [ ] read web/README.md
+## Getting Started
 
-- [ ] copy this file with check marks for acknowledgement. 
-- [ ] `mv quickstart/README.md quickstart/reviewed/README-flaccidfacade.md`
-- [ ] submit PR for review
+To get started with the B.R.A.V.O. system, follow these steps:
 
-## features to come
+1. **Clone the repository**:
+   ```bash
+   git clone https://github.com/FlaccidFacade/beacon-relay-asset-view-orchestration.git
+   cd beacon-relay-asset-view-orchestration
+   ```
 
-- [ ] check for quick start updates on reviewed copies
+2. **Read component documentation**:
+   - [Main README](../README.md) - Project overview and structure
+   - [API Documentation](../api/README.md) - Backend API setup
+   - [Web Dashboard](../web/README.md) - Frontend setup
+   - [Firmware](../firmware/README.md) - ESP32 firmware
+   - [Mobile App](../mobile/README.md) - Android app
+   - [Infrastructure](../infra/README.md) - AWS infrastructure
+   - [Documentation](../docs/README.md) - Additional documentation
+
+3. **Set up your development environment** based on which component you want to work on.
+
+## Features to come
+
+- [ ] Check for quick start updates on reviewed copies

@@ -92,8 +92,8 @@ Edit `config/stack-config.json` to customize your deployment:
 
 ```bash
 # Clone the repository
-git clone https://github.com/beacon-relay-asset-view-orchestration/infra
-cd infra
+git clone https://github.com/FlaccidFacade/beacon-relay-asset-view-orchestration.git
+cd beacon-relay-asset-view-orchestration/infra
 
 # Install dependencies
 npm install
@@ -413,4 +413,4 @@ ISC
 
 ## Support
 
-For issues and questions, please open an issue in the repository.
+For issues and questions, please open an issue in the [main repository](https://github.com/FlaccidFacade/beacon-relay-asset-view-orchestration/issues).
