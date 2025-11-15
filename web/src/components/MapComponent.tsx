@@ -1,14 +1,14 @@
-'use client';
+"use client";
 
-import { useEffect, useRef } from 'react';
-import L from 'leaflet';
+import { useEffect, useRef } from "react";
+import L from "leaflet";
 
 interface Device {
   id: string;
   name: string;
   lat: number;
   lng: number;
-  status: 'online' | 'offline' | 'warning';
+  status: "online" | "offline" | "warning";
 }
 
 interface MapComponentProps {
@@ -23,12 +23,13 @@ export default function MapComponent({ devices }: MapComponentProps) {
     if (!mapContainerRef.current || mapRef.current) return;
 
     // Initialize map
-    const map = L.map(mapContainerRef.current).setView([40.7128, -74.0060], 10);
+    const map = L.map(mapContainerRef.current).setView([40.7128, -74.006], 10);
     mapRef.current = map;
 
     // Add tile layer
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      attribution:
+        '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
       maxZoom: 19,
     }).addTo(map);
 
@@ -36,9 +37,12 @@ export default function MapComponent({ devices }: MapComponentProps) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     delete (L.Icon.Default.prototype as any)._getIconUrl;
     L.Icon.Default.mergeOptions({
-      iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
-      iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
-      shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+      iconRetinaUrl:
+        "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png",
+      iconUrl:
+        "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png",
+      shadowUrl:
+        "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png",
     });
 
     return () => {
@@ -64,14 +68,14 @@ export default function MapComponent({ devices }: MapComponentProps) {
     devices.forEach((device) => {
       const getMarkerColor = (status: string) => {
         switch (status) {
-          case 'online':
-            return 'green';
-          case 'warning':
-            return 'orange';
-          case 'offline':
-            return 'red';
+          case "online":
+            return "green";
+          case "warning":
+            return "orange";
+          case "offline":
+            return "red";
           default:
-            return 'gray';
+            return "gray";
         }
       };
 
@@ -94,8 +98,8 @@ export default function MapComponent({ devices }: MapComponentProps) {
   }, [devices]);
 
   return (
-    <div 
-      ref={mapContainerRef} 
+    <div
+      ref={mapContainerRef}
       className="w-full h-[600px] rounded-lg shadow-md"
       style={{ zIndex: 0 }}
     />

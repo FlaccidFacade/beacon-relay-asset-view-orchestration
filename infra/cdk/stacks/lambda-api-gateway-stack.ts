@@ -1,10 +1,10 @@
-import * as cdk from 'aws-cdk-lib';
-import { Construct } from 'constructs';
-import * as lambda from 'aws-cdk-lib/aws-lambda';
-import * as apigateway from 'aws-cdk-lib/aws-apigateway';
-import * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
-import * as iam from 'aws-cdk-lib/aws-iam';
-import * as logs from 'aws-cdk-lib/aws-logs';
+import * as cdk from "aws-cdk-lib";
+import { Construct } from "constructs";
+import * as lambda from "aws-cdk-lib/aws-lambda";
+import * as apigateway from "aws-cdk-lib/aws-apigateway";
+import * as dynamodb from "aws-cdk-lib/aws-dynamodb";
+import * as iam from "aws-cdk-lib/aws-iam";
+import * as logs from "aws-cdk-lib/aws-logs";
 
 export interface LambdaApiGatewayStackProps extends cdk.StackProps {
   projectName: string;
@@ -21,10 +21,12 @@ export class LambdaApiGatewayStack extends cdk.Stack {
     super(scope, id, props);
 
     // Lambda execution role with necessary permissions
-    const lambdaRole = new iam.Role(this, 'LambdaExecutionRole', {
-      assumedBy: new iam.ServicePrincipal('lambda.amazonaws.com'),
+    const lambdaRole = new iam.Role(this, "LambdaExecutionRole", {
+      assumedBy: new iam.ServicePrincipal("lambda.amazonaws.com"),
       managedPolicies: [
-        iam.ManagedPolicy.fromAwsManagedPolicyName('service-role/AWSLambdaBasicExecutionRole'),
+        iam.ManagedPolicy.fromAwsManagedPolicyName(
+          "service-role/AWSLambdaBasicExecutionRole"
+        ),
       ],
     });
 
@@ -33,22 +35,24 @@ export class LambdaApiGatewayStack extends cdk.Stack {
     props.telemetryTable.grantReadWriteData(lambdaRole);
 
     // Grant Lambda access to IoT
-    lambdaRole.addToPolicy(new iam.PolicyStatement({
-      actions: [
-        'iot:DescribeThing',
-        'iot:ListThings',
-        'iot:UpdateThing',
-        'iot:CreateThing',
-        'iot:DeleteThing',
-      ],
-      resources: ['*'],
-    }));
+    lambdaRole.addToPolicy(
+      new iam.PolicyStatement({
+        actions: [
+          "iot:DescribeThing",
+          "iot:ListThings",
+          "iot:UpdateThing",
+          "iot:CreateThing",
+          "iot:DeleteThing",
+        ],
+        resources: ["*"],
+      })
+    );
 
     // Device Management Lambda Function
-    const deviceLambda = new lambda.Function(this, 'DeviceFunction', {
+    const deviceLambda = new lambda.Function(this, "DeviceFunction", {
       functionName: `${props.projectName}-DeviceFunction-${props.stage}`,
       runtime: lambda.Runtime.NODEJS_20_X,
-      handler: 'index.handler',
+      handler: "index.handler",
       code: lambda.Code.fromInline(`
         const { DynamoDBClient, PutItemCommand, GetItemCommand, QueryCommand, DeleteItemCommand } = require("@aws-sdk/client-dynamodb");
         const { marshall, unmarshall } = require("@aws-sdk/util-dynamodb");
@@ -188,10 +192,10 @@ export class LambdaApiGatewayStack extends cdk.Stack {
     });
 
     // Telemetry Lambda Function
-    const telemetryLambda = new lambda.Function(this, 'TelemetryFunction', {
+    const telemetryLambda = new lambda.Function(this, "TelemetryFunction", {
       functionName: `${props.projectName}-TelemetryFunction-${props.stage}`,
       runtime: lambda.Runtime.NODEJS_20_X,
-      handler: 'index.handler',
+      handler: "index.handler",
       code: lambda.Code.fromInline(`
         const { DynamoDBClient, PutItemCommand, QueryCommand } = require("@aws-sdk/client-dynamodb");
         const { marshall, unmarshall } = require("@aws-sdk/util-dynamodb");
@@ -291,17 +295,17 @@ export class LambdaApiGatewayStack extends cdk.Stack {
     });
 
     // Add cost allocation tags
-    cdk.Tags.of(deviceLambda).add('CostCenter', 'BRAVO-API');
-    cdk.Tags.of(deviceLambda).add('Service', 'Lambda-Devices');
-    cdk.Tags.of(telemetryLambda).add('CostCenter', 'BRAVO-API');
-    cdk.Tags.of(telemetryLambda).add('Service', 'Lambda-Telemetry');
+    cdk.Tags.of(deviceLambda).add("CostCenter", "BRAVO-API");
+    cdk.Tags.of(deviceLambda).add("Service", "Lambda-Devices");
+    cdk.Tags.of(telemetryLambda).add("CostCenter", "BRAVO-API");
+    cdk.Tags.of(telemetryLambda).add("Service", "Lambda-Telemetry");
 
     // API Gateway REST API
-    this.api = new apigateway.RestApi(this, 'BravoApi', {
+    this.api = new apigateway.RestApi(this, "BravoApi", {
       restApiName: `${props.projectName}-API-${props.stage}`,
-      description: 'B.R.A.V.O REST API',
+      description: "B.R.A.V.O REST API",
       deployOptions: {
-        stageName: 'prod',
+        stageName: "prod",
         throttlingRateLimit: 1000,
         throttlingBurstLimit: 2000,
         loggingLevel: apigateway.MethodLoggingLevel.INFO,
@@ -311,46 +315,57 @@ export class LambdaApiGatewayStack extends cdk.Stack {
       defaultCorsPreflightOptions: {
         allowOrigins: apigateway.Cors.ALL_ORIGINS,
         allowMethods: apigateway.Cors.ALL_METHODS,
-        allowHeaders: ['Content-Type', 'X-Amz-Date', 'Authorization', 'X-Api-Key'],
+        allowHeaders: [
+          "Content-Type",
+          "X-Amz-Date",
+          "Authorization",
+          "X-Api-Key",
+        ],
       },
     });
 
     // Device endpoints
-    const devices = this.api.root.addResource('devices');
-    const device = devices.addResource('{deviceId}');
-    
-    devices.addMethod('GET', new apigateway.LambdaIntegration(deviceLambda));
-    devices.addMethod('POST', new apigateway.LambdaIntegration(deviceLambda));
-    device.addMethod('GET', new apigateway.LambdaIntegration(deviceLambda));
-    device.addMethod('DELETE', new apigateway.LambdaIntegration(deviceLambda));
+    const devices = this.api.root.addResource("devices");
+    const device = devices.addResource("{deviceId}");
+
+    devices.addMethod("GET", new apigateway.LambdaIntegration(deviceLambda));
+    devices.addMethod("POST", new apigateway.LambdaIntegration(deviceLambda));
+    device.addMethod("GET", new apigateway.LambdaIntegration(deviceLambda));
+    device.addMethod("DELETE", new apigateway.LambdaIntegration(deviceLambda));
 
     // Telemetry endpoints
-    const telemetry = this.api.root.addResource('telemetry');
-    const telemetryDevice = telemetry.addResource('{deviceId}');
-    
-    telemetry.addMethod('POST', new apigateway.LambdaIntegration(telemetryLambda));
-    telemetryDevice.addMethod('GET', new apigateway.LambdaIntegration(telemetryLambda));
+    const telemetry = this.api.root.addResource("telemetry");
+    const telemetryDevice = telemetry.addResource("{deviceId}");
+
+    telemetry.addMethod(
+      "POST",
+      new apigateway.LambdaIntegration(telemetryLambda)
+    );
+    telemetryDevice.addMethod(
+      "GET",
+      new apigateway.LambdaIntegration(telemetryLambda)
+    );
 
     // Add cost allocation tags
-    cdk.Tags.of(this.api).add('CostCenter', 'BRAVO-API');
-    cdk.Tags.of(this.api).add('Service', 'API-Gateway');
+    cdk.Tags.of(this.api).add("CostCenter", "BRAVO-API");
+    cdk.Tags.of(this.api).add("Service", "API-Gateway");
 
     // Output values
-    new cdk.CfnOutput(this, 'ApiEndpoint', {
+    new cdk.CfnOutput(this, "ApiEndpoint", {
       value: this.api.url,
-      description: 'API Gateway Endpoint',
+      description: "API Gateway Endpoint",
       exportName: `${props.projectName}-ApiEndpoint-${props.stage}`,
     });
 
-    new cdk.CfnOutput(this, 'DeviceFunctionName', {
+    new cdk.CfnOutput(this, "DeviceFunctionName", {
       value: deviceLambda.functionName,
-      description: 'Device Lambda Function Name',
+      description: "Device Lambda Function Name",
       exportName: `${props.projectName}-DeviceFunctionName-${props.stage}`,
     });
 
-    new cdk.CfnOutput(this, 'TelemetryFunctionName', {
+    new cdk.CfnOutput(this, "TelemetryFunctionName", {
       value: telemetryLambda.functionName,
-      description: 'Telemetry Lambda Function Name',
+      description: "Telemetry Lambda Function Name",
       exportName: `${props.projectName}-TelemetryFunctionName-${props.stage}`,
     });
   }

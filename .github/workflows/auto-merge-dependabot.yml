@@ -64,12 +64,12 @@ jobs:
         # This helps maintain transparency about the automation
         run: |
           gh pr comment "$PR_URL" --body "🤖 **Dependabot Auto-Merge Status**
-          
+
           This PR will be automatically merged once:
           - ✅ All required status checks pass
           - ✅ PR is approved
           - ✅ Branch is up to date with the base branch
-          
+
           If auto-merge fails, please check:
           - Required status checks are configured in repository settings
           - Branch protection rules allow auto-merge

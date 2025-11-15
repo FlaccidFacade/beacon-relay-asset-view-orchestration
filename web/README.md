@@ -58,22 +58,26 @@ web/
 ### Installation
 
 1. Clone the repository:
+
 ```bash
 git clone https://github.com/FlaccidFacade/beacon-relay-asset-view-orchestration.git
 cd beacon-relay-asset-view-orchestration/web
 ```
 
 2. Install dependencies:
+
 ```bash
 npm install
 ```
 
 3. Run the development server:
+
 ```bash
 npm run dev
 ```
 
 4. Open your browser and navigate to:
+
 ```
 http://localhost:3000/bravo
 ```
@@ -145,6 +149,7 @@ The `.github/workflows/deploy.yml` file contains the CI/CD pipeline that:
 5. Invalidates CloudFront cache
 
 The workflow runs automatically on:
+
 - Release published
 - Manual trigger via GitHub Actions UI
 

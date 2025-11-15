@@ -6,11 +6,7 @@
   "enforcement": "active",
   "conditions": {
     "ref_name": {
-      "include": [
-        "refs/heads/main",
-        "refs/heads/master",
-        "refs/heads/develop"
-      ],
+      "include": ["refs/heads/main", "refs/heads/master", "refs/heads/develop"],
       "exclude": []
     }
   },

@@ -1,16 +1,16 @@
-'use client';
+"use client";
 
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 export default function Navigation() {
   const pathname = usePathname();
 
   const links = [
-    { href: '/', label: 'Home' },
-    { href: '/telemetry', label: 'Device Telemetry' },
-    { href: '/map', label: 'Map Visualization' },
-    { href: '/offline-cache', label: 'Offline Cache' },
+    { href: "/", label: "Home" },
+    { href: "/telemetry", label: "Device Telemetry" },
+    { href: "/map", label: "Map Visualization" },
+    { href: "/offline-cache", label: "Offline Cache" },
   ];
 
   return (
@@ -31,8 +31,8 @@ export default function Navigation() {
                       href={link.href}
                       className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
                         isActive
-                          ? 'bg-gray-900 text-white'
-                          : 'text-gray-300 hover:bg-gray-700 hover:text-white'
+                          ? "bg-gray-900 text-white"
+                          : "text-gray-300 hover:bg-gray-700 hover:text-white"
                       }`}
                     >
                       {link.label}

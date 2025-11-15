@@ -18,6 +18,7 @@ This firmware powers both the beacon devices and the relay devices in the B.R.A.
 ## Hardware Requirements
 
 ### Heltec WiFi LoRa 32 V3 Development Board
+
 - ESP32-S3FN8 processor
 - Built-in SX1262 LoRa radio (863-928 MHz)
 - Built-in 0.96" OLED display
@@ -25,11 +26,13 @@ This firmware powers both the beacon devices and the relay devices in the B.R.A.
 - LiPo battery connector with charging circuit
 
 **Official Documentation & Pinout:**
-- [Heltec WiFi LoRa 32 V3 Pin Map](https://resource.heltec.cn/download/WiFi_LoRa32_V3/HTIT-WB32LA(F)_V3.png)
+
+- [Heltec WiFi LoRa 32 V3 Pin Map](<https://resource.heltec.cn/download/WiFi_LoRa32_V3/HTIT-WB32LA(F)_V3.png>)
 - [Heltec WiFi LoRa 32 V3 Docs](https://heltec.org/project/wifi-lora-32-v3/)
 - [Hardware Reference](https://docs.heltec.org/en/nodeheltec_wifi_lora_32_V3/esp32/wifi_lora_32/hardware_update_log.html#v3)
 
 ### Peripherals
+
 - **GPS Module**: NEO-6M Navigation Satellite Positioning Module
   - High sensitivity ceramic antenna
   - UART interface (TTL level)
@@ -44,6 +47,7 @@ This firmware powers both the beacon devices and the relay devices in the B.R.A.
 ### Pin Connections for Heltec WiFi LoRa 32 V3
 
 #### LoRa Module (Built-in, pre-configured)
+
 - SCK: GPIO 9
 - MISO: GPIO 11
 - MOSI: GPIO 10
@@ -52,13 +56,16 @@ This firmware powers both the beacon devices and the relay devices in the B.R.A.
 - DIO0: GPIO 14
 
 #### GPS Module NEO-6M (UART)
+
 **Connections:**
+
 - GPS VCC → 3.3V or 5V (both supported by NEO-6M)
 - GPS GND → GND
 - GPS TX → ESP32 GPIO 33 (RX pin)
 - GPS RX → ESP32 GPIO 34 (TX pin, input only on ESP32-S3)
 
 **Configuration:**
+
 - Baud Rate: 9600 (default)
 - Protocol: NMEA 0183
 - Update Rate: 1Hz (configurable)
@@ -66,6 +73,7 @@ This firmware powers both the beacon devices and the relay devices in the B.R.A.
 **Note**: The NEO-6M module typically comes with a ceramic patch antenna. Ensure the antenna has clear view of the sky for optimal GPS fix acquisition.
 
 #### IMU (I2C)
+
 - SDA: GPIO 41
 - SCL: GPIO 42
 
@@ -104,11 +112,13 @@ firmware/
 ### Installation
 
 1. **Install PlatformIO**
+
    ```bash
    pip install platformio
    ```
 
 2. **Clone the repository**
+
    ```bash
    git clone https://github.com/FlaccidFacade/beacon-relay-asset-view-orchestration.git
    cd beacon-relay-asset-view-orchestration/firmware
@@ -188,6 +198,7 @@ ota.handle();
 Handles long-range radio communication using LoRa modulation.
 
 **Key Functions:**
+
 - `bool begin()` - Initialize LoRa module
 - `bool sendMessage(const String& message)` - Send text message
 - `bool sendData(const uint8_t* data, size_t length)` - Send binary data
@@ -196,6 +207,7 @@ Handles long-range radio communication using LoRa modulation.
 - `float getSNR()` - Get signal-to-noise ratio
 
 **Example:**
+
 ```cpp
 LoRaComm lora;
 lora.begin();
@@ -215,6 +227,7 @@ if (lora.available()) {
 Manages GPS data acquisition and parsing using TinyGPS++ library.
 
 **Key Functions:**
+
 - `bool begin()` - Initialize GPS module
 - `void update()` - Process incoming GPS data (call in loop)
 - `bool getLocation(double& lat, double& lon)` - Get current coordinates
@@ -224,13 +237,14 @@ Manages GPS data acquisition and parsing using TinyGPS++ library.
 - `GPSData getData()` - Get complete GPS data structure
 
 **Example:**
+
 ```cpp
 GPS gps;
 gps.begin();
 
 void loop() {
     gps.update();
-    
+
     if (gps.hasFix()) {
         double lat, lon;
         gps.getLocation(lat, lon);
@@ -244,6 +258,7 @@ void loop() {
 Provides Bluetooth Low Energy interface for device configuration.
 
 **Key Functions:**
+
 - `bool begin(const char* deviceName)` - Initialize BLE with device name
 - `void update()` - Update BLE stack
 - `bool isConnected()` - Check if client connected
@@ -252,13 +267,14 @@ Provides Bluetooth Low Energy interface for device configuration.
 - `void setConfig(const BLEConfigData& config)` - Update configuration
 
 **Example:**
+
 ```cpp
 BLEConfig ble;
 ble.begin("BRAVO_BEACON_001");
 
 void loop() {
     ble.update();
-    
+
     if (ble.isConnected()) {
         ble.sendStatus("Battery: 85%");
     }
@@ -270,6 +286,7 @@ void loop() {
 Reads accelerometer and gyroscope data from MPU6050 sensor.
 
 **Key Functions:**
+
 - `bool begin()` - Initialize IMU sensor
 - `bool readSensor()` - Read current sensor values
 - `void getAcceleration(float& x, float& y, float& z)` - Get acceleration
@@ -279,6 +296,7 @@ Reads accelerometer and gyroscope data from MPU6050 sensor.
 - `bool isInMotion(float threshold)` - Detect motion
 
 **Example:**
+
 ```cpp
 IMU imu;
 imu.begin();
@@ -286,7 +304,7 @@ imu.begin();
 void loop() {
     if (imu.readSensor()) {
         uint8_t activity = imu.getActivityLevel();
-        
+
         if (imu.isInMotion(1.0)) {
             Serial.println("Motion detected!");
         }
@@ -299,6 +317,7 @@ void loop() {
 Enables over-the-air firmware updates via WiFi.
 
 **Key Functions:**
+
 - `bool begin(const char* hostname, const char* password)` - Initialize OTA
 - `void handle()` - Process OTA requests (call in loop)
 - `bool connectWiFi(const char* ssid, const char* password)` - Connect to WiFi
@@ -306,6 +325,7 @@ Enables over-the-air firmware updates via WiFi.
 - `void enable()` / `void disable()` - Control OTA availability
 
 **Example:**
+
 ```cpp
 OTA ota;
 
@@ -325,6 +345,7 @@ void loop() {
 Formats sensor data into JSON for transmission and cloud integration.
 
 **Key Functions:**
+
 - `String createFullTelemetry(...)` - Create complete telemetry packet
 - `String createGPSTelemetry(...)` - Create GPS-only packet
 - `String createIMUTelemetry(...)` - Create IMU-only packet
@@ -333,6 +354,7 @@ Formats sensor data into JSON for transmission and cloud integration.
 - `bool parseTelemetry(const String& json)` - Parse incoming telemetry
 
 **Example:**
+
 ```cpp
 Telemetry telemetry;
 
@@ -359,15 +381,15 @@ lora.sendMessage(json);
   "gps": {
     "valid": true,
     "lat": 40.7128,
-    "lon": -74.0060,
+    "lon": -74.006,
     "alt": 10.5,
     "speed": 5.2,
     "course": 180.0,
     "satellites": 8
   },
   "imu": {
-    "accel": {"x": 0.1, "y": 0.2, "z": 9.8},
-    "gyro": {"x": 0.0, "y": 0.0, "z": 0.0},
+    "accel": { "x": 0.1, "y": 0.2, "z": 9.8 },
+    "gyro": { "x": 0.0, "y": 0.0, "z": 0.0 },
     "temp": 25.5
   }
 }
@@ -385,6 +407,7 @@ lora.sendMessage(json);
 ### Testing
 
 1. **Serial Monitor**: Monitor debug output via USB
+
    ```bash
    pio device monitor
    ```
@@ -400,24 +423,26 @@ lora.sendMessage(json);
 Enable detailed logging by increasing debug level in `platformio.ini`:
 
 ```ini
-build_flags = 
+build_flags =
     -D CORE_DEBUG_LEVEL=5  ; 0=None, 5=Verbose
 ```
 
 ## Troubleshooting
 
 ### LoRa Not Working
+
 - Check wiring connections
 - Verify frequency band matches your region
 - Ensure antennas are connected
 - Check SPI communication
 
 ### GPS Not Getting Fix (NEO-6M Module)
+
 - **Location**: Use outdoors with clear view of the sky. NEO-6M requires line-of-sight to satellites
 - **Cold Start Time**: Allow 27+ seconds for initial satellite acquisition
 - **Hot Start Time**: Should acquire fix within 1 second if recently powered on same location
 - **Antenna**: Ensure ceramic patch antenna is properly connected and positioned horizontally
-- **UART Connections**: 
+- **UART Connections**:
   - Verify GPS TX connects to ESP32 GPIO 33
   - Verify GPS RX connects to ESP32 GPIO 34
   - Check GND connection
@@ -428,16 +453,19 @@ build_flags =
 - **Interference**: Keep away from LoRa antenna and WiFi when testing
 
 ### IMU Not Responding
+
 - Check I2C connections (SDA/SCL)
 - Verify I2C address (default 0x68)
 - Check power supply voltage
 
 ### BLE Not Advertising
+
 - Restart device
 - Check for BLE conflicts with WiFi
 - Verify device name is set correctly
 
 ### OTA Upload Fails
+
 - Check WiFi credentials
 - Ensure device is on same network
 - Verify OTA password
@@ -470,6 +498,7 @@ Contributions are welcome! Please:
 ## Support
 
 For issues and questions:
+
 - Open an issue in the [main repository](https://github.com/FlaccidFacade/beacon-relay-asset-view-orchestration/issues)
 - Check existing documentation
 - Review PlatformIO and Arduino ESP32 documentation
