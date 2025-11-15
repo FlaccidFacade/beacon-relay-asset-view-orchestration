@@ -9,20 +9,20 @@ LoRaComm::LoRaComm() : initialized(false) {
 }
 
 bool LoRaComm::begin() {
-    // Setup LoRa pins
-    SPI.begin(LORA_SCK, LORA_MISO, LORA_MOSI, LORA_CS);
-    LoRa.setPins(LORA_CS, LORA_RST, LORA_DIO0);
-
+    // Initialize LoRa using Heltec library (handles pins internally)
+    // Note: Heltec.begin() should be called in main.cpp before this
+    // Second parameter is PABOOST - true for high power mode
+    
     // Initialize LoRa module
-    if (!LoRa.begin(LORA_BAND)) {
+    if (!Heltec.LoRa.begin(LORA_BAND, true)) {
         Serial.println("LoRa init failed!");
         return false;
     }
 
     // Configure LoRa parameters
-    LoRa.setSpreadingFactor(LORA_SPREAD);
-    LoRa.setSignalBandwidth(LORA_BANDWIDTH);
-    LoRa.enableCrc();
+    Heltec.LoRa.setSpreadingFactor(LORA_SPREAD);
+    Heltec.LoRa.setSignalBandwidth(LORA_BANDWIDTH);
+    Heltec.LoRa.enableCrc();
 
     initialized = true;
     Serial.println("LoRa initialized successfully");
@@ -34,9 +34,9 @@ bool LoRaComm::sendData(const uint8_t* data, size_t length) {
         return false;
     }
 
-    LoRa.beginPacket();
-    LoRa.write(data, length);
-    return LoRa.endPacket();
+    Heltec.LoRa.beginPacket();
+    Heltec.LoRa.write(data, length);
+    return Heltec.LoRa.endPacket();
 }
 
 bool LoRaComm::sendMessage(const String& message) {
@@ -44,9 +44,9 @@ bool LoRaComm::sendMessage(const String& message) {
         return false;
     }
 
-    LoRa.beginPacket();
-    LoRa.print(message);
-    return LoRa.endPacket();
+    Heltec.LoRa.beginPacket();
+    Heltec.LoRa.print(message);
+    return Heltec.LoRa.endPacket();
 }
 
 bool LoRaComm::available() {
@@ -54,7 +54,7 @@ bool LoRaComm::available() {
         return false;
     }
 
-    return LoRa.parsePacket() > 0;
+    return Heltec.LoRa.parsePacket() > 0;
 }
 
 int LoRaComm::receiveData(uint8_t* buffer, size_t maxLength) {
@@ -62,11 +62,11 @@ int LoRaComm::receiveData(uint8_t* buffer, size_t maxLength) {
         return 0;
     }
 
-    int packetSize = LoRa.parsePacket();
+    int packetSize = Heltec.LoRa.parsePacket();
     int bytesRead = 0;
 
-    while (LoRa.available() && bytesRead < maxLength) {
-        buffer[bytesRead++] = LoRa.read();
+    while (Heltec.LoRa.available() && bytesRead < maxLength) {
+        buffer[bytesRead++] = Heltec.LoRa.read();
     }
 
     return bytesRead;
@@ -78,17 +78,17 @@ String LoRaComm::receiveMessage() {
     }
 
     String message = "";
-    while (LoRa.available()) {
-        message += (char)LoRa.read();
+    while (Heltec.LoRa.available()) {
+        message += (char)Heltec.LoRa.read();
     }
 
     return message;
 }
 
 int LoRaComm::getRSSI() {
-    return LoRa.packetRssi();
+    return Heltec.LoRa.packetRssi();
 }
 
 float LoRaComm::getSNR() {
-    return LoRa.packetSnr();
+    return Heltec.LoRa.packetSnr();
 }

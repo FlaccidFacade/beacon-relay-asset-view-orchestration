@@ -1,280 +1,219 @@
 /**
- * @file main.cpp
- * @brief Main firmware file for B.R.A.V.O. (Bluetooth Radio Advanced Visual Orchestration)
- * 
- * This is the main entry point for the ESP32 firmware running on both collars and dongle.
- * It integrates LoRa communication, GPS tracking, IMU motion sensing, BLE configuration,
- * OTA updates, and JSON telemetry formatting.
- * 
- * @author B.R.A.V.O. Team
- * @date 2025
+ * B.R.A.V.O. Firmware - GPS Display Test
  */
 
-#include <Arduino.h>
-#include "LoRaComm.h"
+#include <Wire.h>
+#include <Adafruit_GFX.h>
+#include <Adafruit_SSD1306.h>
 #include "GPS.h"
-#include "BLEConfig.h"
-#include "IMU.h"
-#include "OTA.h"
-#include "Telemetry.h"
 
-// Device configuration
-#define DEVICE_ID           "BRAVO_001"
-#define DEVICE_TYPE_COLLAR  true  // Set to false for dongle
+// Heltec WiFi LoRa 32 V3 OLED pins
+#define OLED_SDA 17
+#define OLED_SCL 18
+#define OLED_RST 21
+#define Vext 36  // Power enable pin for OLED
 
-// Timing intervals (milliseconds)
-#define GPS_UPDATE_INTERVAL         1000   // Update GPS every 1 second
-#define IMU_UPDATE_INTERVAL         100    // Update IMU every 100ms
-#define TELEMETRY_SEND_INTERVAL     10000  // Send telemetry every 10 seconds
-#define STATUS_PRINT_INTERVAL       5000   // Print status every 5 seconds
+#define SCREEN_WIDTH 128
+#define SCREEN_HEIGHT 64
+#define OLED_ADDR 0x3C
 
-// Module instances
-LoRaComm lora;
-GPS gps;
-BLEConfig bleConfig;
-IMU imu;
-OTA ota;
-Telemetry telemetry;
+Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RST);
+GPS gpsModule;
 
-// Timing variables
-unsigned long lastGPSUpdate = 0;
-unsigned long lastIMUUpdate = 0;
-unsigned long lastTelemetrySend = 0;
-unsigned long lastStatusPrint = 0;
-
-// Battery monitoring (placeholder - implement based on hardware)
-uint8_t batteryLevel = 100;
-
-/**
- * @brief Get battery level percentage
- * @return Battery level 0-100
- */
-uint8_t getBatteryLevel() {
-    // TODO: Implement actual battery monitoring via ADC
-    // This is a placeholder that simulates battery drain
-    static uint8_t battery = 100;
-    if (battery > 0 && millis() % 60000 == 0) {
-        battery--;
+void scanI2C() {
+  Serial.println("Scanning I2C bus...");
+  byte count = 0;
+  
+  for (byte i = 1; i < 127; i++) {
+    Wire.beginTransmission(i);
+    if (Wire.endTransmission() == 0) {
+      Serial.print("Found device at 0x");
+      if (i < 16) Serial.print("0");
+      Serial.println(i, HEX);
+      count++;
     }
-    return battery;
+  }
+  
+  if (count == 0) {
+    Serial.println("No I2C devices found!");
+  } else {
+    Serial.print("Found ");
+    Serial.print(count);
+    Serial.println(" device(s)");
+  }
 }
 
-/**
- * @brief Initialize all modules
- */
-void initializeModules() {
-    Serial.println("=== B.R.A.V.O. Firmware Initialization ===");
-    Serial.print("Device ID: ");
-    Serial.println(DEVICE_ID);
-    Serial.print("Device Type: ");
-    Serial.println(DEVICE_TYPE_COLLAR ? "Collar" : "Dongle");
-    
-    // Initialize LoRa
-    Serial.println("\nInitializing LoRa...");
-    if (lora.begin()) {
-        Serial.println("✓ LoRa ready");
-    } else {
-        Serial.println("✗ LoRa failed");
-    }
-
-    // Initialize GPS
-    Serial.println("\nInitializing GPS...");
-    if (gps.begin()) {
-        Serial.println("✓ GPS ready");
-    } else {
-        Serial.println("✗ GPS failed");
-    }
-
-    // Initialize IMU
-    Serial.println("\nInitializing IMU...");
-    if (imu.begin()) {
-        Serial.println("✓ IMU ready");
-    } else {
-        Serial.println("✗ IMU failed");
-    }
-
-    // Initialize BLE
-    Serial.println("\nInitializing BLE...");
-    if (bleConfig.begin(DEVICE_ID)) {
-        Serial.println("✓ BLE ready");
-    } else {
-        Serial.println("✗ BLE failed");
-    }
-
-    // Initialize OTA (optional - uncomment to enable WiFi OTA)
-    // Serial.println("\nInitializing OTA...");
-    // if (ota.connectWiFi("YourSSID", "YourPassword")) {
-    //     ota.begin(DEVICE_ID);
-    //     Serial.println("✓ OTA ready");
-    // } else {
-    //     Serial.println("✗ OTA WiFi connection failed");
-    // }
-
-    Serial.println("\n=== Initialization Complete ===\n");
-}
-
-/**
- * @brief Handle GPS updates
- */
-void handleGPS() {
-    gps.update();
-
-    if (millis() - lastGPSUpdate >= GPS_UPDATE_INTERVAL) {
-        lastGPSUpdate = millis();
-        
-        if (gps.hasFix()) {
-            double lat, lon;
-            gps.getLocation(lat, lon);
-            // GPS data is ready for telemetry
-        }
-    }
-}
-
-/**
- * @brief Handle IMU updates
- */
-void handleIMU() {
-    if (millis() - lastIMUUpdate >= IMU_UPDATE_INTERVAL) {
-        lastIMUUpdate = millis();
-        
-        if (imu.readSensor()) {
-            // IMU data is ready for telemetry
-            uint8_t activity = imu.getActivityLevel();
-            
-            // Check for motion events
-            if (imu.isInMotion(1.0)) {
-                // Motion detected - could trigger alert
-            }
-        }
-    }
-}
-
-/**
- * @brief Handle telemetry transmission
- */
-void handleTelemetry() {
-    if (millis() - lastTelemetrySend >= TELEMETRY_SEND_INTERVAL) {
-        lastTelemetrySend = millis();
-        
-        // Get current sensor data
-        GPSData gpsData = gps.getData();
-        IMUData imuData = imu.getData();
-        batteryLevel = getBatteryLevel();
-
-        // Create full telemetry packet
-        String telemetryJson = telemetry.createFullTelemetry(
-            gpsData, imuData, DEVICE_ID, batteryLevel
-        );
-
-        // Send via LoRa
-        if (lora.sendMessage(telemetryJson)) {
-            Serial.println("Telemetry sent via LoRa");
-        }
-
-        // Also send status to BLE if connected
-        if (bleConfig.isConnected()) {
-            bleConfig.sendStatus(telemetryJson);
-        }
-    }
-}
-
-/**
- * @brief Handle incoming LoRa messages
- */
-void handleLoRaReceive() {
-    if (lora.available()) {
-        String message = lora.receiveMessage();
-        int rssi = lora.getRSSI();
-        float snr = lora.getSNR();
-
-        Serial.println("=== LoRa Message Received ===");
-        Serial.print("Message: ");
-        Serial.println(message);
-        Serial.print("RSSI: ");
-        Serial.print(rssi);
-        Serial.println(" dBm");
-        Serial.print("SNR: ");
-        Serial.println(snr);
-
-        // Parse telemetry if it's JSON
-        if (telemetry.parseTelemetry(message)) {
-            Serial.println("Valid telemetry packet received");
-        }
-    }
-}
-
-/**
- * @brief Print status information
- */
-void printStatus() {
-    if (millis() - lastStatusPrint >= STATUS_PRINT_INTERVAL) {
-        lastStatusPrint = millis();
-        
-        Serial.println("\n=== Status Update ===");
-        Serial.print("Uptime: ");
-        Serial.print(millis() / 1000);
-        Serial.println(" seconds");
-        
-        Serial.print("Battery: ");
-        Serial.print(batteryLevel);
-        Serial.println("%");
-        
-        Serial.print("GPS Fix: ");
-        Serial.println(gps.hasFix() ? "Yes" : "No");
-        
-        if (gps.hasFix()) {
-            Serial.print("Satellites: ");
-            Serial.println(gps.getSatellites());
-        }
-        
-        Serial.print("BLE Connected: ");
-        Serial.println(bleConfig.isConnected() ? "Yes" : "No");
-        
-        Serial.print("Activity Level: ");
-        Serial.println(imu.getActivityLevel());
-        
-        Serial.println("====================\n");
-    }
-}
-
-/**
- * @brief Arduino setup function
- */
 void setup() {
-    // Initialize serial communication
-    Serial.begin(115200);
-    delay(1000);
-    Serial.println("\n\n");
-
-    // Initialize all modules
-    initializeModules();
+  Serial.begin(115200);
+  delay(1000);
+  
+  Serial.println("\n=== Heltec V3 Display Test ===");
+  
+  // Enable Vext power for OLED (critical for Heltec V3!)
+  pinMode(Vext, OUTPUT);
+  digitalWrite(Vext, LOW);  // LOW = ON for Vext
+  delay(100);  // Give power time to stabilize
+  Serial.println("Vext power enabled");
+  
+  // Initialize I2C with custom pins
+  Wire.begin(OLED_SDA, OLED_SCL);
+  
+  // Scan for I2C devices
+  scanI2C();
+  
+  // Initialize display
+  Serial.println("Initializing display...");
+  if(!display.begin(SSD1306_SWITCHCAPVCC, OLED_ADDR)) {
+    Serial.println("SSD1306 allocation failed!");
+    Serial.println("Trying alternate address 0x3D...");
+    if(!display.begin(SSD1306_SWITCHCAPVCC, 0x3D)) {
+      Serial.println("Display init failed at both addresses!");
+      for(;;); // Don't proceed, loop forever
+    }
+  }
+  
+  Serial.println("Display initialized!");
+  
+  // Initialize GPS
+  Serial.println("Initializing GPS...");
+  if (gpsModule.begin()) {
+    Serial.println("GPS initialized!");
+  } else {
+    Serial.println("GPS initialization failed!");
+  }
+  
+  // Show startup screen
+  display.clearDisplay();
+  display.setTextSize(1);
+  display.setTextColor(SSD1306_WHITE);
+  display.setCursor(0, 0);
+  display.println("B.R.A.V.O. System");
+  display.drawLine(0, 10, 128, 10, SSD1306_WHITE);
+  display.setCursor(0, 20);
+  display.println("GPS: Initializing");
+  display.setCursor(0, 30);
+  display.println("Searching for");
+  display.setCursor(0, 40);
+  display.println("satellites...");
+  display.display();
+  
+  Serial.println("System ready!");
 }
 
-/**
- * @brief Arduino main loop function
- */
 void loop() {
-    // Update GPS continuously
-    handleGPS();
-
-    // Update IMU periodically
-    handleIMU();
-
-    // Handle BLE updates
-    bleConfig.update();
-
-    // Handle OTA updates (if enabled)
-    // ota.handle();
-
-    // Send telemetry periodically
-    handleTelemetry();
-
-    // Check for incoming LoRa messages
-    handleLoRaReceive();
-
-    // Print status periodically
-    printStatus();
-
-    // Small delay to prevent watchdog issues
-    delay(10);
+  static unsigned long lastUpdate = 0;
+  static unsigned long lastDebug = 0;
+  static unsigned long lastRawGPS = 0;
+  
+  // Update GPS data continuously
+  gpsModule.update();
+  
+  // Debug: Show raw GPS data (every 3 seconds - capture a full NMEA sentence)
+  if (millis() - lastRawGPS >= 3000) {
+    lastRawGPS = millis();
+    Serial.println("\n--- Raw GPS Data (next 200 chars) ---");
+    int count = 0;
+    unsigned long startWait = millis();
+    while (count < 200 && (millis() - startWait) < 500) {
+      if (Serial2.available()) {
+        char c = Serial2.read();
+        Serial.print(c);
+        count++;
+      }
+    }
+    if (count == 0) {
+      Serial.println("NO DATA FROM GPS MODULE!");
+      Serial.println("Check wiring: GPS TX -> ESP32 Pin 33");
+    }
+    Serial.println("\n--- End Raw Data ---");
+  }
+  
+  // Debug: Check if GPS is sending any data (every 5 seconds)
+  if (millis() - lastDebug >= 5000) {
+    lastDebug = millis();
+    Serial.print("GPS Debug - Characters processed: ");
+    Serial.print(gpsModule.getCharsProcessed());
+    Serial.print(" | Failed checksums: ");
+    Serial.println(gpsModule.getFailedChecksums());
+  }
+  
+  // Update display every 1 second
+  if (millis() - lastUpdate >= 1000) {
+    lastUpdate = millis();
+    
+    double lat, lon;
+    bool hasLocation = gpsModule.getLocation(lat, lon);
+    uint8_t sats = gpsModule.getSatellites();
+    
+    // Update display
+    display.clearDisplay();
+    display.setTextSize(1);
+    display.setTextColor(SSD1306_WHITE);
+    
+    // Header
+    display.setCursor(0, 0);
+    display.println("B.R.A.V.O. GPS");
+    display.drawLine(0, 10, 128, 10, SSD1306_WHITE);
+    
+    // GPS Status
+    display.setCursor(0, 13);
+    display.print("Sats: ");
+    display.print(sats);
+    display.print(" | ");
+    display.print(hasLocation ? "LOCK" : "SEARCH");
+    
+    // Always display coordinates (even if invalid, show 0.000000)
+    display.setCursor(0, 23);
+    display.print("Lat:");
+    if (hasLocation) {
+      display.print(lat, 6);
+    } else {
+      display.print(" No Fix");
+    }
+    
+    display.setCursor(0, 33);
+    display.print("Lon:");
+    if (hasLocation) {
+      display.print(lon, 6);
+    } else {
+      display.print(" No Fix");
+    }
+    
+    // Show altitude or data status
+    display.setCursor(0, 43);
+    if (hasLocation) {
+      double alt = gpsModule.getAltitude();
+      display.print("Alt: ");
+      display.print(alt, 1);
+      display.print("m");
+    } else {
+      display.print("Chars: ");
+      display.print(gpsModule.getCharsProcessed());
+    }
+    
+    // Show speed or time
+    display.setCursor(0, 53);
+    if (hasLocation) {
+      float speed = gpsModule.getSpeed();
+      display.print("Spd: ");
+      display.print(speed, 1);
+      display.print("km/h");
+    } else {
+      display.print("Time: ");
+      display.print(millis() / 1000);
+      display.print("s");
+    }
+    
+    if (hasLocation) {
+      Serial.printf("GPS LOCK: %.6f, %.6f | Alt: %.1fm | Sats: %d\n", 
+                    lat, lon, gpsModule.getAltitude(), sats);
+    } else {
+      Serial.printf("GPS SEARCH: Sats: %d | Chars: %d | Time: %ds\n", 
+                    sats, gpsModule.getCharsProcessed(), millis()/1000);
+    }
+    
+    display.display();
+  }
+  
+  delay(10);  // Small delay to prevent overwhelming the serial port
 }

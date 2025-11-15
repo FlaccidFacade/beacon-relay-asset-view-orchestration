@@ -2,13 +2,13 @@
 
 **Bluetooth Radio Advanced Visual Orchestration**
 
-ESP32 firmware for B.R.A.V.O. collars and dongle with LoRa communication, GPS tracking, IMU motion sensing, BLE configuration, and OTA updates.
+ESP32 firmware for B.R.A.V.O. beacons and relays with LoRa communication, GPS tracking, IMU motion sensing, BLE configuration, and OTA updates.
 
 ## Project Overview
 
-This firmware powers both the collar devices and the dongle in the B.R.A.V.O. system. It provides:
+This firmware powers both the beacon devices and the relay devices in the B.R.A.V.O. system. It provides:
 
-- **LoRa Communication**: Long-range radio communication between collars and dongle (915 MHz)
+- **LoRa Communication**: Long-range radio communication between beacons and relays (915 MHz)
 - **GPS Tracking**: Real-time location tracking using GPS module
 - **IMU Sensing**: Motion and activity detection using MPU6050 accelerometer/gyroscope
 - **BLE Configuration**: Bluetooth Low Energy interface for device configuration via mobile app
@@ -17,34 +17,57 @@ This firmware powers both the collar devices and the dongle in the B.R.A.V.O. sy
 
 ## Hardware Requirements
 
-### ESP32 Development Board
-- ESP32-DevKitC or compatible board
-- USB cable for programming
+### Heltec WiFi LoRa 32 V3 Development Board
+- ESP32-S3FN8 processor
+- Built-in SX1262 LoRa radio (863-928 MHz)
+- Built-in 0.96" OLED display
+- USB-C connector for programming
+- LiPo battery connector with charging circuit
+
+**Official Documentation & Pinout:**
+- [Heltec WiFi LoRa 32 V3 Pin Map](https://resource.heltec.cn/download/WiFi_LoRa32_V3/HTIT-WB32LA(F)_V3.png)
+- [Heltec WiFi LoRa 32 V3 Docs](https://heltec.org/project/wifi-lora-32-v3/)
+- [Hardware Reference](https://docs.heltec.org/en/nodeheltec_wifi_lora_32_V3/esp32/wifi_lora_32/hardware_update_log.html#v3)
 
 ### Peripherals
-- **LoRa Module**: SX1276/SX1278 (915 MHz for North America, 868 MHz for Europe)
-- **GPS Module**: NEO-6M or compatible UART GPS
+- **GPS Module**: NEO-6M Navigation Satellite Positioning Module
+  - High sensitivity ceramic antenna
+  - UART interface (TTL level)
+  - Update rate: 1Hz (default), up to 5Hz
+  - Compatible with Arduino, STM32, ESP32
+  - Operating voltage: 3.3V-5V
+  - Cold start: ~27s, Hot start: ~1s
+  - Position accuracy: 2.5m (CEP)
 - **IMU**: MPU6050 accelerometer/gyroscope (I2C)
-- **Power**: LiPo battery with charging circuit (recommended 3.7V 1000mAh+)
+- **Power**: 3.7V LiPo battery (recommended 1000mAh+)
 
-### Pin Connections
+### Pin Connections for Heltec WiFi LoRa 32 V3
 
-#### LoRa Module (SPI)
-- SCK: GPIO 5
-- MISO: GPIO 19
-- MOSI: GPIO 27
-- CS: GPIO 18
-- RST: GPIO 14
-- DIO0: GPIO 26
+#### LoRa Module (Built-in, pre-configured)
+- SCK: GPIO 9
+- MISO: GPIO 11
+- MOSI: GPIO 10
+- CS: GPIO 8
+- RST: GPIO 12
+- DIO0: GPIO 14
 
-#### GPS Module (UART)
-- RX: GPIO 16
-- TX: GPIO 17
-- Baud: 9600
+#### GPS Module NEO-6M (UART)
+**Connections:**
+- GPS VCC → 3.3V or 5V (both supported by NEO-6M)
+- GPS GND → GND
+- GPS TX → ESP32 GPIO 33 (RX pin)
+- GPS RX → ESP32 GPIO 34 (TX pin, input only on ESP32-S3)
+
+**Configuration:**
+- Baud Rate: 9600 (default)
+- Protocol: NMEA 0183
+- Update Rate: 1Hz (configurable)
+
+**Note**: The NEO-6M module typically comes with a ceramic patch antenna. Ensure the antenna has clear view of the sky for optimal GPS fix acquisition.
 
 #### IMU (I2C)
-- SDA: GPIO 21
-- SCL: GPIO 22
+- SDA: GPIO 41
+- SCL: GPIO 42
 
 ## Software Requirements
 
@@ -123,7 +146,7 @@ pio device monitor
 Edit `src/main.cpp` to set device type:
 
 ```cpp
-#define DEVICE_TYPE_COLLAR  true  // Set to false for dongle
+#define DEVICE_TYPE  DEVICE_TYPE_BEACON  // Set to DEVICE_TYPE_BEACON or DEVICE_TYPE_RELAY
 ```
 
 ### Device ID
@@ -178,7 +201,7 @@ LoRaComm lora;
 lora.begin();
 
 // Send message
-lora.sendMessage("Hello from collar!");
+lora.sendMessage("Hello from beacon!");
 
 // Receive message
 if (lora.available()) {
@@ -231,7 +254,7 @@ Provides Bluetooth Low Energy interface for device configuration.
 **Example:**
 ```cpp
 BLEConfig ble;
-ble.begin("BRAVO_COLLAR_001");
+ble.begin("BRAVO_BEACON_001");
 
 void loop() {
     ble.update();
@@ -288,7 +311,7 @@ OTA ota;
 
 void setup() {
     if (ota.connectWiFi("MyNetwork", "MyPassword")) {
-        ota.begin("BRAVO_COLLAR_001", "secure_password");
+        ota.begin("BRAVO_BEACON_001", "secure_password");
     }
 }
 
@@ -389,11 +412,20 @@ build_flags =
 - Ensure antennas are connected
 - Check SPI communication
 
-### GPS Not Getting Fix
-- Use outdoors with clear sky view
-- Allow 1-2 minutes for cold start
-- Check UART connections
-- Verify baud rate (9600)
+### GPS Not Getting Fix (NEO-6M Module)
+- **Location**: Use outdoors with clear view of the sky. NEO-6M requires line-of-sight to satellites
+- **Cold Start Time**: Allow 27+ seconds for initial satellite acquisition
+- **Hot Start Time**: Should acquire fix within 1 second if recently powered on same location
+- **Antenna**: Ensure ceramic patch antenna is properly connected and positioned horizontally
+- **UART Connections**: 
+  - Verify GPS TX connects to ESP32 GPIO 33
+  - Verify GPS RX connects to ESP32 GPIO 34
+  - Check GND connection
+- **Baud Rate**: Confirm 9600 baud (NEO-6M default)
+- **Power**: NEO-6M requires stable 3.3V-5V supply (typically draws 45mA when acquiring)
+- **LED Indicator**: Most NEO-6M modules have LED that blinks when satellites are being tracked
+- **Serial Monitor**: Check for NMEA sentences being received (use `pio device monitor`)
+- **Interference**: Keep away from LoRa antenna and WiFi when testing
 
 ### IMU Not Responding
 - Check I2C connections (SDA/SCL)
@@ -455,7 +487,7 @@ For issues and questions:
 ## Roadmap
 
 - [ ] Add encryption for LoRa communications
-- [ ] Implement mesh networking for multi-collar systems
+- [ ] Implement mesh networking for multi-beacon systems
 - [ ] Add geofencing and alert zones
 - [ ] Implement power-saving modes
 - [ ] Add data logging to SD card

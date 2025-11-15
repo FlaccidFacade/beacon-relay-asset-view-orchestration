@@ -36,7 +36,7 @@ BLEConfig::BLEConfig() : pServer(nullptr), pService(nullptr),
     config.loraPower = 20;
     config.gpsInterval = 5000;
     config.telemetryInterval = 10000;
-    strcpy(config.deviceName, "BRAVO_COLLAR");
+    strcpy(config.deviceName, "BRAVO_BEACON");
 }
 
 bool BLEConfig::begin(const char* deviceName) {

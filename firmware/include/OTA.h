@@ -3,7 +3,7 @@
  * @brief OTA (Over-The-Air) update module for B.R.A.V.O. firmware
  * 
  * This module handles wireless firmware updates via WiFi for remote
- * collar and dongle updates.
+ * beacon and relay updates.
  */
 
 #ifndef OTA_H

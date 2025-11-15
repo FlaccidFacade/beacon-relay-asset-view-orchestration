@@ -1,8 +1,8 @@
 /**
  * @file LoRaComm.h
- * @brief LoRa communication module for B.R.A.V.O. collar and dongle
+ * @brief LoRa communication module for B.R.A.V.O. beacons and relays
  * 
- * This module handles long-range radio communication between collars and dongle
+ * This module handles long-range radio communication between beacons and relays
  * using the LoRa protocol.
  */
 
@@ -10,15 +10,15 @@
 #define LORA_COMM_H
 
 #include <Arduino.h>
-#include <LoRa.h>
+#include "heltec.h"
 
-// LoRa pin definitions for ESP32
-#define LORA_SCK    5
-#define LORA_MISO   19
-#define LORA_MOSI   27
-#define LORA_CS     18
-#define LORA_RST    14
-#define LORA_DIO0   26
+// LoRa pin definitions for Heltec WiFi LoRa 32 V3
+#define LORA_SCK    9
+#define LORA_MISO   11
+#define LORA_MOSI   10
+#define LORA_CS     8
+#define LORA_RST    12
+#define LORA_DIO0   14
 
 // LoRa configuration
 #define LORA_BAND   915E6  // 915 MHz (North America)
