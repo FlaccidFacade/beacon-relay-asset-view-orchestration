@@ -21,7 +21,7 @@ fi
 
 # Set permissions
 echo "Setting permissions..."
-sudo chmod 666 "$PORT"
+sudo chmod 666 $PORT
 
 # Upload
 echo "Uploading firmware..."

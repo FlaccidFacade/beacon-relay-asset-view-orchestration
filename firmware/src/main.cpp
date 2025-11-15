@@ -28,12 +28,6 @@
 #define OLED_RST 21
 #define Vext 36
 
-// LoRa RST pin - Required for some Heltec V3 boards
-// This pin needs to be toggled during initialization to properly reset
-// the LoRa radio module. Some V3 board variants require an explicit
-// reset sequence to ensure the SX1262 radio is in a known state.
-#define LORA_RST_PIN 12
-
 // Button pin
 #define BUTTON_PIN 0  // PRG button
 
@@ -89,14 +83,14 @@ void setup() {
   Serial.println("Step 1: Vext enabled OK");
   Serial.flush();
   
-  // Reset LoRa radio module
-  // Some V3 boards need this explicit reset sequence
-  pinMode(LORA_RST_PIN, OUTPUT);
-  digitalWrite(LORA_RST_PIN, HIGH);
+  // Also enable LoRa power if separate pin exists
+  // Some V3 boards need this
+  pinMode(12, OUTPUT);  // RST pin - try enabling
+  digitalWrite(12, HIGH);
   delay(10);
-  digitalWrite(LORA_RST_PIN, LOW);
+  digitalWrite(12, LOW);
   delay(10);
-  digitalWrite(LORA_RST_PIN, HIGH);
+  digitalWrite(12, HIGH);
   delay(100);
   Serial.println("Step 1a: LoRa reset toggled");
   Serial.flush();
@@ -113,8 +107,6 @@ void setup() {
   Wire.begin(OLED_SDA, OLED_SCL);
   if(!display.begin(SSD1306_SWITCHCAPVCC, OLED_ADDR)) {
     Serial.println("Step 2: Display init failed!");
-    Serial.flush();
-    while (1); // Halt execution if display init fails
   } else {
     Serial.println("Step 2: Display initialized OK");
   }
@@ -302,9 +294,9 @@ void runRelayMode() {
   }
   
   // Update display every second even without packets
-  static unsigned long lastRelayUpdate = 0;
-  if (millis() - lastRelayUpdate >= 1000) {
-    lastRelayUpdate = millis();
+  static unsigned long lastUpdate = 0;
+  if (millis() - lastUpdate >= 1000) {
+    lastUpdate = millis();
     
     display.clearDisplay();
     display.setTextSize(1);
