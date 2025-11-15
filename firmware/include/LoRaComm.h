@@ -84,6 +84,18 @@ public:
      * @return SNR value
      */
     float getSNR();
+    
+    /**
+     * @brief Get RSSI of last received packet (alias for getRSSI)
+     * @return RSSI value in dBm
+     */
+    int getLastPacketRSSI();
+    
+    /**
+     * @brief Get SNR of last received packet (alias for getSNR)
+     * @return SNR value
+     */
+    float getLastPacketSNR();
 
 private:
     bool initialized;
