@@ -296,9 +296,9 @@ void runRelayMode() {
   }
   
   // Update display every second even without packets
-  static unsigned long lastUpdate = 0;
-  if (millis() - lastUpdate >= 1000) {
-    lastUpdate = millis();
+  static unsigned long lastRelayUpdate = 0;
+  if (millis() - lastRelayUpdate >= 1000) {
+    lastRelayUpdate = millis();
     
     display.clearDisplay();
     display.setTextSize(1);
