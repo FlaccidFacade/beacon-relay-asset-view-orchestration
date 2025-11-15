@@ -34,6 +34,27 @@ Sharing this project allows other pet owners and IoT enthusiasts to:
 * Adapt the system for different use cases, like personal tracking, gear monitoring, or IoT experiments.
 
 
+## 🔧 Development Setup
+
+### VS Code Setup (Recommended)
+
+This project includes a preconfigured VS Code workspace with recommended extensions for all technologies used in the monorepo.
+
+**Quick Start:**
+1. Open this repository in VS Code
+2. When prompted, click "Install All" to install recommended extensions
+3. Alternatively, run the installation script:
+   ```bash
+   # macOS/Linux
+   .vscode/install-extensions.sh
+   
+   # Windows
+   .vscode\install-extensions.bat
+   ```
+
+See [`.vscode/README.md`](.vscode/README.md) for detailed information about the extensions and workspace settings.
+
+
 ## 🛠 Contribution
 
 We welcome contributions!
