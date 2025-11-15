@@ -24,7 +24,11 @@ When making changes, maintain this architectural separation.
 ## Development Setup
 
 1. Fork the repository
-2. Clone your fork locally
+2. Clone your fork locally:
+   ```bash
+   git clone https://github.com/YOUR_USERNAME/beacon-relay-asset-view-orchestration.git
+   cd beacon-relay-asset-view-orchestration/mobile
+   ```
 3. Open the project in Android Studio
 4. Create a new branch for your feature
 

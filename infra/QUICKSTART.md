@@ -14,8 +14,8 @@ Get your B.R.A.V.O. infrastructure up and running in minutes.
 ### 1. Clone and Install (2 minutes)
 
 ```bash
-git clone https://github.com/beacon-relay-asset-view-orchestration/infra
-cd infra
+git clone https://github.com/FlaccidFacade/beacon-relay-asset-view-orchestration.git
+cd beacon-relay-asset-view-orchestration/infra
 npm install
 ```
 

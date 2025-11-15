@@ -7,7 +7,7 @@ sidebar_label: "Hardware BOM"
 
 This document lists the **Bill of Materials** for the B.R.A.V.O. prototype, including the **collar** and **dongle** for breadboard testing and development.
 
-For more details, see the [firmware](https://github.com/BT-Radio-Advanced-Visual-Orchestration/firmware) and [web dashboard](https://github.com/BT-Radio-Advanced-Visual-Orchestration/web) repos.
+For more details, see the [firmware](../firmware/) and [web dashboard](../web/) directories in this monorepo.
 
 ---
 
