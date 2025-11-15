@@ -59,8 +59,8 @@ web/
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/BT-Radio-Advanced-Visual-Orchestration/web.git
-cd web
+git clone https://github.com/FlaccidFacade/beacon-relay-asset-view-orchestration.git
+cd beacon-relay-asset-view-orchestration/web
 ```
 
 2. Install dependencies:
@@ -205,7 +205,7 @@ This project is part of the B.R.A.V.O. system.
 
 ## Support
 
-For issues and questions, please open an issue on GitHub.
+For issues and questions, please open an issue in the [main repository](https://github.com/FlaccidFacade/beacon-relay-asset-view-orchestration/issues).
 
 ## Acknowledgments
 
