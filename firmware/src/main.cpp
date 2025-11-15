@@ -107,6 +107,8 @@ void setup() {
   Wire.begin(OLED_SDA, OLED_SCL);
   if(!display.begin(SSD1306_SWITCHCAPVCC, OLED_ADDR)) {
     Serial.println("Step 2: Display init failed!");
+    Serial.flush();
+    while (1); // Halt execution if display init fails
   } else {
     Serial.println("Step 2: Display initialized OK");
   }
