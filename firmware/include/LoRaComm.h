@@ -10,7 +10,7 @@
 #define LORA_COMM_H
 
 #include <Arduino.h>
-#include "heltec.h"
+#include <RadioLib.h>
 
 // LoRa pin definitions for Heltec WiFi LoRa 32 V3
 #define LORA_SCK    9
@@ -18,7 +18,8 @@
 #define LORA_MOSI   10
 #define LORA_CS     8
 #define LORA_RST    12
-#define LORA_DIO0   14
+#define LORA_DIO1   14
+#define LORA_BUSY   13
 
 // LoRa configuration
 #define LORA_BAND   915E6  // 915 MHz (North America)
@@ -99,6 +100,15 @@ public:
 
 private:
     bool initialized;
+    SPIClass* spi;
+    Module* module;
+    SX1262* radio;
+    bool pendingMessage;
+    String pendingPayload;
+    int lastPacketRSSI;
+    float lastPacketSNR;
+    void resetPending();
+    bool fetchPacket();
 };
 
 #endif // LORA_COMM_H
