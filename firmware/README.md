@@ -149,23 +149,76 @@ pio run
 pio device monitor
 ```
 
+## Operation
+
+### Device Operation Mode
+
+Each device operates in a **unified mode** that simultaneously:
+
+1. **Records GPS Data**: Continuously acquires and processes GPS location data
+2. **Transmits LoRa Packets**: Sends packets every 3 seconds containing:
+   - Device ID
+   - Packet number
+   - GPS coordinates (if available)
+3. **Receives LoRa Packets**: Listens for packets from other devices and records:
+   - Message content
+   - Signal strength (RSSI)
+   - Signal-to-noise ratio (SNR)
+   - Reception timestamps
+4. **Updates Display**: Refreshes the screen every 500ms with current data
+
+### Display Navigation
+
+- **PRG Button (GPIO 0)**: Press to cycle through display pages
+- **Page Order**: GPS → Communication → Device Info → Combined → (loops back to GPS)
+- **Auto-Update**: All pages automatically refresh with live data
+
+### Multi-Device Communication
+
+When you load this firmware to two or more devices:
+
+- Each device transmits its location and identification
+- All devices can receive packets from others
+- Communication status is visible on the Communication and Combined pages
+- Signal quality metrics (RSSI/SNR) help assess link quality
+
+**Example Setup**:
+
+1. Load firmware on Device 1 (set `DEVICE_ID` to `"BRAVO_001"`)
+2. Load firmware on Device 2 (set `DEVICE_ID` to `"BRAVO_002"`)
+3. Power on both devices
+4. Navigate to Communication or Combined page to see inter-device communication
+
 ## Configuration
 
-### Device Type
+### Single Firmware for Multiple Devices
 
-Edit `src/main.cpp` to set device type:
+The firmware now uses a **unified design** that can be loaded on multiple devices. Each device automatically:
 
-```cpp
-#define DEVICE_TYPE  DEVICE_TYPE_BEACON  // Set to DEVICE_TYPE_BEACON or DEVICE_TYPE_RELAY
-```
+- Records GPS information on screen
+- Communicates with other devices via LoRa
+- Displays multiple pages of data that can be scrolled through
 
 ### Device ID
 
-Set unique device identifier in `src/main.cpp`:
+Set a unique device identifier in `src/main.cpp` for each device:
 
 ```cpp
-#define DEVICE_ID  "BRAVO_001"  // Change for each device
+#define DEVICE_ID  "BRAVO_001"  // Change to BRAVO_002, BRAVO_003, etc. for other devices
 ```
+
+**Important**: Change this value for each device you program to uniquely identify them.
+
+### Display Pages
+
+The firmware supports **multi-page display** that can be navigated using the PRG button:
+
+1. **GPS Page** - Shows current GPS coordinates, satellite count, altitude, and speed
+2. **Communication Page** - Shows LoRa transmission and reception statistics (packets sent/received, RSSI, SNR)
+3. **Device Info Page** - Shows device ID, uptime, and module status
+4. **Combined Page** - Shows GPS location and communication status together on one screen
+
+Press the **PRG button** to cycle through pages. The screen updates every 500ms with current data.
 
 ### LoRa Frequency
 

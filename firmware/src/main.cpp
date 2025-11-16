@@ -1,10 +1,14 @@
 /**
- * B.R.A.V.O. Multi-Mode Test
+ * B.R.A.V.O. Device Firmware
  * 
- * Press PRG button to cycle through modes:
- * 1) RELAY - Receive LoRa packets
- * 2) BEACON - Transmit LoRa packets  
- * 3) GPS - Display GPS coordinates
+ * Single firmware instance that can be loaded to multiple devices.
+ * Records GPS info on screen and communicates with other devices via LoRa.
+ * 
+ * Press PRG button to cycle through display pages:
+ * 1) GPS Location - Current GPS coordinates and satellite info
+ * 2) Communication - LoRa packet transmission/reception status
+ * 3) Device Info - Device ID and system information
+ * 4) Combined View - GPS + Communication status together
  */
 
 #include "LoRaComm.h"
@@ -35,29 +39,42 @@
 #define SCREEN_HEIGHT 64
 #define OLED_ADDR 0x3C
 
+// Device Configuration - Set unique ID for each device
+#define DEVICE_ID "BRAVO_001"  // Change to BRAVO_002, etc. for other devices
+
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RST);
 LoRaComm lora;
 GPS gpsModule;
 
-// Mode system
-enum SystemMode {
-  MODE_RELAY = 0,
-  MODE_BEACON = 1,
-  MODE_GPS = 2
+// Multi-page display system
+enum DisplayPage {
+  PAGE_GPS = 0,
+  PAGE_COMMUNICATION = 1,
+  PAGE_DEVICE_INFO = 2,
+  PAGE_COMBINED = 3,
+  PAGE_COUNT = 4  // Total number of pages
 };
 
-SystemMode currentMode = MODE_RELAY;
+DisplayPage currentPage = PAGE_GPS;
 int packetCount = 0;
 int receivedCount = 0;
 int lastRSSI = 0;
+float lastSNR = 0;
+String lastReceivedMessage = "";
 unsigned long lastButtonPress = 0;
 bool buttonPressed = false;
+unsigned long lastTxTime = 0;
+unsigned long lastRxTime = 0;
 
 // Function declarations
-void switchMode();
-void runRelayMode();
-void runBeaconMode();
-void runGPSMode();
+void switchPage();
+void updateDisplay();
+void showGPSPage();
+void showCommunicationPage();
+void showDeviceInfoPage();
+void showCombinedPage();
+void sendLoRaPacket();
+void receiveLoRaPacket();
 
 void setup() {
   // Initialize Serial IMMEDIATELY
@@ -154,60 +171,70 @@ void setup() {
   display.clearDisplay();
   display.setTextSize(1);
   display.setCursor(0, 0);
-  display.println("B.R.A.V.O. System");
+  display.println("B.R.A.V.O. Device");
   display.drawLine(0, 10, 128, 10, SSD1306_WHITE);
   display.setCursor(0, 20);
-  display.println("Multi-Mode Ready");
+  display.print("ID: ");
+  display.println(DEVICE_ID);
   display.setCursor(0, 35);
-  display.println("Press PRG button");
+  display.println("GPS + LoRa Ready");
   display.setCursor(0, 45);
-  display.println("to change mode");
+  display.println("Press PRG: Pages");
   display.display();
   delay(3000);
   
-  Serial.println("System ready! Press button to change mode.");
+  Serial.print("Device ");
+  Serial.print(DEVICE_ID);
+  Serial.println(" ready! Press button to change page.");
 }
 
-void switchMode() {
-  currentMode = (SystemMode)((currentMode + 1) % 3);
-  packetCount = 0;
-  receivedCount = 0;
+void switchPage() {
+  currentPage = (DisplayPage)((currentPage + 1) % PAGE_COUNT);
   
-  Serial.print("Switching to mode: ");
-  Serial.println(currentMode);
+  Serial.print("Switching to page: ");
+  Serial.println(currentPage);
   
   display.clearDisplay();
   display.setTextSize(2);
   display.setTextColor(SSD1306_WHITE);
-  display.setCursor(20, 10);
+  display.setCursor(10, 10);
   
-  switch(currentMode) {
-    case MODE_RELAY:
-      display.println("RELAY");
+  switch(currentPage) {
+    case PAGE_GPS:
+      display.println("GPS");
       display.setTextSize(1);
-      display.setCursor(30, 40);
-      display.println("Receive Mode");
-      Serial.println(">>> RELAY MODE <<<");
+      display.setCursor(20, 40);
+      display.println("Location Data");
+      Serial.println(">>> GPS PAGE <<<");
       break;
-    case MODE_BEACON:
-      display.println("BEACON");
+    case PAGE_COMMUNICATION:
+      display.println("COMM");
       display.setTextSize(1);
-      display.setCursor(25, 40);
-      display.println("Transmit Mode");
-      Serial.println(">>> BEACON MODE <<<");
+      display.setCursor(15, 40);
+      display.println("LoRa Status");
+      Serial.println(">>> COMMUNICATION PAGE <<<");
       break;
-    case MODE_GPS:
-      display.println(" GPS");
+    case PAGE_DEVICE_INFO:
+      display.println("INFO");
       display.setTextSize(1);
-      display.setCursor(25, 40);
-      display.println("Location Mode");
-      Serial.println(">>> GPS MODE <<<");
+      display.setCursor(15, 40);
+      display.println("Device Info");
+      Serial.println(">>> DEVICE INFO PAGE <<<");
+      break;
+    case PAGE_COMBINED:
+      display.println("ALL");
+      display.setTextSize(1);
+      display.setCursor(10, 40);
+      display.println("Combined View");
+      Serial.println(">>> COMBINED PAGE <<<");
+      break;
+    default:
       break;
   }
   display.display();
-  delay(1500);
+  delay(1000);
   
-  // Force immediate screen update for new mode
+  // Force immediate screen update for new page
   display.clearDisplay();
   display.display();
 }
@@ -220,7 +247,7 @@ void loop() {
     buttonPressed = true;
     lastButtonPress = millis();
     Serial.println("BUTTON PRESSED!");
-    switchMode();
+    switchPage();
     delay(200); // Give time to release button
   }
   if (buttonState == HIGH && buttonPressed) {
@@ -230,212 +257,290 @@ void loop() {
   // Update GPS continuously
   gpsModule.update();
   
-  // Run current mode
-  switch(currentMode) {
-    case MODE_RELAY:
-      runRelayMode();
-      break;
-    case MODE_BEACON:
-      runBeaconMode();
-      break;
-    case MODE_GPS:
-      runGPSMode();
-      break;
-  }
+  // Handle LoRa communication (both send and receive)
+  sendLoRaPacket();
+  receiveLoRaPacket();
+  
+  // Update display based on current page
+  updateDisplay();
   
   delay(10);
 }
 
-void runRelayMode() {
-  // RELAY MODE - Receive LoRa packets
-  if (lora.available()) {
-    String message = lora.receiveMessage();
-    lastRSSI = lora.getLastPacketRSSI();
-    receivedCount++;
-    
-    Serial.print("Received [RSSI: ");
-    Serial.print(lastRSSI);
-    Serial.print(" dBm]: ");
-    Serial.println(message);
-    
-    // Update display
-    display.clearDisplay();
-    display.setTextSize(1);
-    display.setCursor(0, 0);
-    display.println("RELAY");
-    display.drawLine(0, 10, 128, 10, SSD1306_WHITE);
-    
-    display.setCursor(0, 15);
-    display.print("Rcvd: ");
-    display.print(receivedCount);
-    
-    display.setCursor(0, 25);
-    display.print("Last: ");
-    if (message.length() > 11) {
-      display.print(message.substring(0, 11));
-    } else {
-      display.print(message);
-    }
-    
-    display.setCursor(0, 35);
-    display.print("RSSI: ");
-    display.print(lastRSSI);
-    display.print(" dBm");
-    
-    display.setCursor(0, 45);
-    display.print("SNR: ");
-    display.print(lora.getLastPacketSNR());
-    display.print(" dB");
-    
-    display.setCursor(0, 55);
-    display.print("BTN=Switch");
-    
-    display.display();
-  }
+void updateDisplay() {
+  static unsigned long lastDisplayUpdate = 0;
   
-  // Update display every second even without packets
-  static unsigned long lastUpdate = 0;
-  if (millis() - lastUpdate >= 1000) {
-    lastUpdate = millis();
-    
-    display.clearDisplay();
-    display.setTextSize(1);
-    display.setCursor(0, 0);
-    display.println("RELAY");
-    display.drawLine(0, 10, 128, 10, SSD1306_WHITE);
-    
-    display.setCursor(0, 15);
-    display.print("Waiting...");
-    
-    display.setCursor(0, 25);
-    display.print("Received: ");
-    display.print(receivedCount);
-    
-    if (receivedCount > 0) {
-      display.setCursor(0, 35);
-      display.print("Last RSSI: ");
-      display.print(lastRSSI);
-      display.print("dBm");
-    }
-    
-    display.setCursor(0, 55);
-    display.print("BTN=Switch");
-    
-    display.display();
+  // Update display every 500ms
+  if (millis() - lastDisplayUpdate < 500) {
+    return;
+  }
+  lastDisplayUpdate = millis();
+  
+  switch(currentPage) {
+    case PAGE_GPS:
+      showGPSPage();
+      break;
+    case PAGE_COMMUNICATION:
+      showCommunicationPage();
+      break;
+    case PAGE_DEVICE_INFO:
+      showDeviceInfoPage();
+      break;
+    case PAGE_COMBINED:
+      showCombinedPage();
+      break;
   }
 }
 
-void runBeaconMode() {
-  // BEACON MODE - Transmit LoRa packets
+void showGPSPage() {
+  double lat, lon;
+  bool hasLocation = gpsModule.getLocation(lat, lon);
+  uint8_t sats = gpsModule.getSatellites();
+  
+  display.clearDisplay();
+  display.setTextSize(1);
+  display.setTextColor(SSD1306_WHITE);
+  
+  // Header
+  display.setCursor(0, 0);
+  display.print("GPS | Sats:");
+  display.print(sats);
+  display.print(" ");
+  display.print(hasLocation ? "LOCK" : "SRCH");
+  display.drawLine(0, 10, 128, 10, SSD1306_WHITE);
+  
+  // Coordinates
+  display.setCursor(0, 13);
+  display.print("Lat:");
+  if (hasLocation) {
+    display.print(lat, 6);
+  } else {
+    display.print(" Searching...");
+  }
+  
+  display.setCursor(0, 23);
+  display.print("Lon:");
+  if (hasLocation) {
+    display.print(lon, 6);
+  } else {
+    display.print(" Searching...");
+  }
+  
+  // Additional info
+  display.setCursor(0, 33);
+  if (hasLocation) {
+    double alt = gpsModule.getAltitude();
+    float speed = gpsModule.getSpeed();
+    display.print("Alt:");
+    display.print(alt, 1);
+    display.print("m");
+  } else {
+    display.print("Chars:");
+    display.print(gpsModule.getCharsProcessed());
+  }
+  
+  display.setCursor(0, 43);
+  if (hasLocation) {
+    float speed = gpsModule.getSpeed();
+    display.print("Spd:");
+    display.print(speed, 1);
+    display.print("km/h");
+  }
+  
+  display.setCursor(0, 55);
+  display.print("BTN=Next Page");
+  
+  display.display();
+}
+
+void showCommunicationPage() {
+  display.clearDisplay();
+  display.setTextSize(1);
+  display.setTextColor(SSD1306_WHITE);
+  
+  // Header
+  display.setCursor(0, 0);
+  display.println("LoRa Communication");
+  display.drawLine(0, 10, 128, 10, SSD1306_WHITE);
+  
+  // Transmission stats
+  display.setCursor(0, 13);
+  display.print("Sent: ");
+  display.print(packetCount);
+  display.print(" pkts");
+  
+  display.setCursor(0, 23);
+  display.print("Rcvd: ");
+  display.print(receivedCount);
+  display.print(" pkts");
+  
+  // Last received info
+  if (receivedCount > 0) {
+    display.setCursor(0, 33);
+    display.print("RSSI: ");
+    display.print(lastRSSI);
+    display.print("dBm");
+    
+    display.setCursor(0, 43);
+    display.print("SNR: ");
+    display.print(lastSNR, 1);
+    display.print("dB");
+  } else {
+    display.setCursor(0, 33);
+    display.print("Listening...");
+  }
+  
+  display.setCursor(0, 55);
+  display.print("BTN=Next Page");
+  
+  display.display();
+}
+
+void showDeviceInfoPage() {
+  display.clearDisplay();
+  display.setTextSize(1);
+  display.setTextColor(SSD1306_WHITE);
+  
+  // Header
+  display.setCursor(0, 0);
+  display.println("Device Information");
+  display.drawLine(0, 10, 128, 10, SSD1306_WHITE);
+  
+  // Device ID
+  display.setCursor(0, 13);
+  display.print("ID: ");
+  display.println(DEVICE_ID);
+  
+  // Uptime
+  display.setCursor(0, 23);
+  display.print("Uptime: ");
+  unsigned long uptime = millis() / 1000;
+  display.print(uptime);
+  display.print("s");
+  
+  // Module status
+  display.setCursor(0, 33);
+  display.print("GPS: ");
+  display.print(gpsModule.hasFix() ? "Active" : "Search");
+  
+  display.setCursor(0, 43);
+  display.print("LoRa: Active");
+  
+  display.setCursor(0, 55);
+  display.print("BTN=Next Page");
+  
+  display.display();
+}
+
+void showCombinedPage() {
+  double lat, lon;
+  bool hasLocation = gpsModule.getLocation(lat, lon);
+  uint8_t sats = gpsModule.getSatellites();
+  
+  display.clearDisplay();
+  display.setTextSize(1);
+  display.setTextColor(SSD1306_WHITE);
+  
+  // Header with device ID
+  display.setCursor(0, 0);
+  display.print(DEVICE_ID);
+  display.drawLine(0, 8, 128, 8, SSD1306_WHITE);
+  
+  // GPS Status (compact)
+  display.setCursor(0, 10);
+  display.print("GPS:");
+  if (hasLocation) {
+    display.print(lat, 4);
+    display.print(",");
+    display.print(lon, 4);
+  } else {
+    display.print("Searching(");
+    display.print(sats);
+    display.print(")");
+  }
+  
+  // LoRa TX Status
+  display.setCursor(0, 20);
+  display.print("TX: ");
+  display.print(packetCount);
+  display.print(" pkts");
+  
+  // LoRa RX Status
+  display.setCursor(0, 30);
+  display.print("RX: ");
+  display.print(receivedCount);
+  if (receivedCount > 0) {
+    display.print(" (");
+    display.print(lastRSSI);
+    display.print("dBm)");
+  } else {
+    display.print(" pkts");
+  }
+  
+  // Last activity
+  display.setCursor(0, 40);
+  unsigned long now = millis();
+  if (lastTxTime > 0) {
+    display.print("LstTx:");
+    display.print((now - lastTxTime) / 1000);
+    display.print("s");
+  }
+  
+  display.setCursor(0, 50);
+  if (lastRxTime > 0) {
+    display.print("LstRx:");
+    display.print((now - lastRxTime) / 1000);
+    display.print("s");
+  }
+  
+  display.display();
+}
+
+void sendLoRaPacket() {
   static unsigned long lastTx = 0;
   
-  if (millis() - lastTx >= 2000) {  // Send every 2 seconds
+  // Send packet every 3 seconds
+  if (millis() - lastTx >= 3000) {
     lastTx = millis();
     packetCount++;
     
-    String message = "BRAVO_PKT_" + String(packetCount);
+    // Create packet with device ID and GPS data
+    String message = String(DEVICE_ID) + "_PKT_" + String(packetCount);
+    
+    double lat, lon;
+    if (gpsModule.getLocation(lat, lon)) {
+      message += "_GPS:" + String(lat, 6) + "," + String(lon, 6);
+    }
     
     Serial.print("Sending: ");
     Serial.println(message);
     
     bool success = lora.sendMessage(message);
     
-    // Update display
-    display.clearDisplay();
-    display.setTextSize(1);
-    display.setCursor(0, 0);
-    display.println("BEACON");
-    display.drawLine(0, 10, 128, 10, SSD1306_WHITE);
-    
-    display.setCursor(0, 15);
-    display.print("Sent: ");
-    display.print(packetCount);
-    
-    display.setCursor(0, 25);
-    display.print("Last: PKT_");
-    display.print(packetCount);
-    
-    display.setCursor(0, 35);
-    display.print("Status: ");
-    display.print(success ? "OK" : "FAIL");
-    
-    display.setCursor(0, 45);
-    display.print("Time: ");
-    display.print(millis() / 1000);
-    display.print("s");
-    
-    display.setCursor(0, 55);
-    display.print("BTN=Switch");
-    
-    display.display();
+    if (success) {
+      lastTxTime = millis();
+      Serial.println("Packet sent successfully");
+    } else {
+      Serial.println("Packet send failed");
+    }
   }
 }
 
-void runGPSMode() {
-  // GPS MODE - Display GPS coordinates
-  static unsigned long lastUpdate = 0;
-  
-  if (millis() - lastUpdate >= 1000) {
-    lastUpdate = millis();
+void receiveLoRaPacket() {
+  // Check for incoming LoRa packets
+  if (lora.available()) {
+    String message = lora.receiveMessage();
+    lastRSSI = lora.getLastPacketRSSI();
+    lastSNR = lora.getLastPacketSNR();
+    lastReceivedMessage = message;
+    receivedCount++;
+    lastRxTime = millis();
     
-    double lat, lon;
-    bool hasLocation = gpsModule.getLocation(lat, lon);
-    uint8_t sats = gpsModule.getSatellites();
-    
-    display.clearDisplay();
-    display.setTextSize(1);
-    display.setTextColor(SSD1306_WHITE);
-    
-    // Header
-    display.setCursor(0, 0);
-    display.println("GPS MODE");
-    display.drawLine(0, 10, 128, 10, SSD1306_WHITE);
-    
-    // GPS Status
-    display.setCursor(0, 13);
-    display.print("Sats: ");
-    display.print(sats);
-    display.print(" | ");
-    display.print(hasLocation ? "LOCK" : "SEARCH");
-    
-    // Coordinates
-    display.setCursor(0, 23);
-    display.print("Lat:");
-    if (hasLocation) {
-      display.print(lat, 6);
-    } else {
-      display.print(" No Fix");
-    }
-    
-    display.setCursor(0, 33);
-    display.print("Lon:");
-    if (hasLocation) {
-      display.print(lon, 6);
-    } else {
-      display.print(" No Fix");
-    }
-    
-    // Status info
-    display.setCursor(0, 43);
-    if (hasLocation) {
-      double alt = gpsModule.getAltitude();
-      display.print("Alt: ");
-      display.print(alt, 1);
-      display.print("m");
-    } else {
-      display.print("Chars: ");
-      display.print(gpsModule.getCharsProcessed());
-    }
-    
-    display.setCursor(0, 55);
-    display.print("BTN=Switch");
-    
-    display.display();
-    
-    if (hasLocation) {
-      Serial.printf("GPS: %.6f, %.6f | Sats: %d\n", lat, lon, sats);
-    } else {
-      Serial.printf("GPS: Searching | Sats: %d\n", sats);
-    }
+    Serial.print("Received [RSSI: ");
+    Serial.print(lastRSSI);
+    Serial.print(" dBm, SNR: ");
+    Serial.print(lastSNR);
+    Serial.print(" dB]: ");
+    Serial.println(message);
   }
 }
