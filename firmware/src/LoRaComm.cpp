@@ -9,19 +9,49 @@ LoRaComm::LoRaComm() : initialized(false) {
 }
 
 bool LoRaComm::begin() {
-    // Initialize LoRa using Heltec library (handles pins internally)
-    // Note: Heltec.begin() should be called in main.cpp before this
-    // Second parameter is PABOOST - true for high power mode
+    Serial.println("LoRaComm: Starting initialization...");
     
-    // Initialize LoRa module
-    if (!Heltec.LoRa.begin(LORA_BAND, true)) {
-        Serial.println("LoRa init failed!");
-        return false;
+    Serial.print("LoRaComm: Calling Heltec.LoRa.begin(");
+    Serial.print(LORA_BAND);
+    Serial.println(", PABOOST=true)...");
+    Serial.println("LoRaComm: This may take a moment...");
+    Serial.flush();
+    
+    // Try with PABOOST=true first
+    bool result = Heltec.LoRa.begin(LORA_BAND, true);
+    
+    Serial.println("LoRaComm: Heltec.LoRa.begin() returned!");
+    
+    if (!result) {
+        Serial.println("LoRaComm: Failed with PABOOST=true, trying PABOOST=false...");
+        Serial.flush();
+        
+        // Try without PABOOST
+        result = Heltec.LoRa.begin(LORA_BAND, false);
+        
+        if (!result) {
+            Serial.println("LoRaComm: Both attempts failed!");
+            Serial.println("LoRaComm: Check:");
+            Serial.println("  1. Antenna is connected");
+            Serial.println("  2. LoRa radio has power");
+            Serial.println("  3. Correct frequency for region");
+            return false;
+        }
+        Serial.println("LoRaComm: Success with PABOOST=false!");
+    } else {
+        Serial.println("LoRaComm: Success with PABOOST=true!");
     }
 
+    Serial.println("LoRaComm: Heltec.LoRa.begin() succeeded");
+    
     // Configure LoRa parameters
+    Serial.println("LoRaComm: Setting spreading factor...");
     Heltec.LoRa.setSpreadingFactor(LORA_SPREAD);
+    
+    Serial.println("LoRaComm: Setting bandwidth...");
     Heltec.LoRa.setSignalBandwidth(LORA_BANDWIDTH);
+    
+    Serial.println("LoRaComm: Enabling CRC...");
     Heltec.LoRa.enableCrc();
 
     initialized = true;
@@ -91,4 +121,12 @@ int LoRaComm::getRSSI() {
 
 float LoRaComm::getSNR() {
     return Heltec.LoRa.packetSnr();
+}
+
+int LoRaComm::getLastPacketRSSI() {
+    return getRSSI();
+}
+
+float LoRaComm::getLastPacketSNR() {
+    return getSNR();
 }
