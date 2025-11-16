@@ -28,6 +28,12 @@
 #define OLED_RST 21
 #define Vext 36
 
+// LoRa RST pin - Required for some Heltec V3 boards
+// This pin needs to be toggled during initialization to properly reset
+// the LoRa radio module. Some V3 board variants require an explicit
+// reset sequence to ensure the SX1262 radio is in a known state.
+#define LORA_RST_PIN 12
+
 // Button pin
 #define BUTTON_PIN 0  // PRG button
 
@@ -83,14 +89,14 @@ void setup() {
   Serial.println("Step 1: Vext enabled OK");
   Serial.flush();
   
-  // Also enable LoRa power if separate pin exists
-  // Some V3 boards need this
-  pinMode(12, OUTPUT);  // RST pin - try enabling
-  digitalWrite(12, HIGH);
+  // Reset LoRa radio module
+  // Some V3 boards need this explicit reset sequence
+  pinMode(LORA_RST_PIN, OUTPUT);
+  digitalWrite(LORA_RST_PIN, HIGH);
   delay(10);
-  digitalWrite(12, LOW);
+  digitalWrite(LORA_RST_PIN, LOW);
   delay(10);
-  digitalWrite(12, HIGH);
+  digitalWrite(LORA_RST_PIN, HIGH);
   delay(100);
   Serial.println("Step 1a: LoRa reset toggled");
   Serial.flush();
