@@ -7,6 +7,7 @@ This document provides practical examples for using the B.R.A.V.O API.
 ### 1. Complete Device Lifecycle
 
 #### Step 1: Register a Device
+
 ```bash
 curl -X POST https://your-api-gateway-url/devices \
   -H "Content-Type: application/json" \
@@ -18,6 +19,7 @@ curl -X POST https://your-api-gateway-url/devices \
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -33,6 +35,7 @@ curl -X POST https://your-api-gateway-url/devices \
 ```
 
 #### Step 2: Submit Telemetry Data
+
 ```bash
 curl -X POST https://your-api-gateway-url/telemetry \
   -H "Content-Type: application/json" \
@@ -48,11 +51,13 @@ curl -X POST https://your-api-gateway-url/telemetry \
 ```
 
 #### Step 3: Retrieve Device Telemetry History
+
 ```bash
 curl https://your-api-gateway-url/devices/550e8400-e29b-41d4-a716-446655440000/telemetry
 ```
 
 #### Step 4: Create an OTA Update
+
 ```bash
 curl -X POST https://your-api-gateway-url/ota-updates \
   -H "Content-Type: application/json" \
@@ -64,6 +69,7 @@ curl -X POST https://your-api-gateway-url/ota-updates \
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -80,6 +86,7 @@ curl -X POST https://your-api-gateway-url/ota-updates \
 ```
 
 #### Step 5: Update OTA Status (simulating device progress)
+
 ```bash
 # Mark as in progress
 curl -X PATCH https://your-api-gateway-url/ota-updates/660e8400-e29b-41d4-a716-446655440001/status \
@@ -95,11 +102,13 @@ curl -X PATCH https://your-api-gateway-url/ota-updates/660e8400-e29b-41d4-a716-4
 ### 2. Multi-Device Monitoring
 
 #### Get All Devices
+
 ```bash
 curl https://your-api-gateway-url/devices
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -131,6 +140,7 @@ curl https://your-api-gateway-url/devices
 ### 1. Using GraphQL Playground
 
 The GraphQL endpoint includes an interactive playground when accessed via browser:
+
 ```
 https://your-api-gateway-url/graphql
 ```
@@ -138,23 +148,28 @@ https://your-api-gateway-url/graphql
 ### 2. Complete Device Lifecycle with GraphQL
 
 #### Register Multiple Devices
+
 ```graphql
 mutation RegisterMultipleDevices {
-  sensor1: registerDevice(input: {
-    name: "Temperature Sensor - Floor 1"
-    type: "temperature_sensor"
-    firmwareVersion: "1.0.0"
-  }) {
+  sensor1: registerDevice(
+    input: {
+      name: "Temperature Sensor - Floor 1"
+      type: "temperature_sensor"
+      firmwareVersion: "1.0.0"
+    }
+  ) {
     deviceId
     name
     status
   }
-  
-  sensor2: registerDevice(input: {
-    name: "Humidity Sensor - Floor 2"
-    type: "humidity_sensor"
-    firmwareVersion: "1.0.0"
-  }) {
+
+  sensor2: registerDevice(
+    input: {
+      name: "Humidity Sensor - Floor 2"
+      type: "humidity_sensor"
+      firmwareVersion: "1.0.0"
+    }
+  ) {
     deviceId
     name
     status
@@ -163,6 +178,7 @@ mutation RegisterMultipleDevices {
 ```
 
 #### Query Devices with Telemetry
+
 ```graphql
 query DevicesWithRecentTelemetry {
   devices {
@@ -177,17 +193,20 @@ query DevicesWithRecentTelemetry {
 ```
 
 #### Submit Telemetry
+
 ```graphql
 mutation SubmitSensorData {
-  submitTelemetry(input: {
-    deviceId: "550e8400-e29b-41d4-a716-446655440000"
-    data: {
-      temperature: 24.5
-      humidity: 62.0
-      signal_strength: -42
-      battery_level: 85
+  submitTelemetry(
+    input: {
+      deviceId: "550e8400-e29b-41d4-a716-446655440000"
+      data: {
+        temperature: 24.5
+        humidity: 62.0
+        signal_strength: -42
+        battery_level: 85
+      }
     }
-  }) {
+  ) {
     telemetryId
     timestamp
     data {
@@ -201,6 +220,7 @@ mutation SubmitSensorData {
 ```
 
 #### Get Device with Telemetry History
+
 ```graphql
 query DeviceWithHistory($deviceId: ID!) {
   device(deviceId: $deviceId) {
@@ -210,7 +230,7 @@ query DeviceWithHistory($deviceId: ID!) {
     firmwareVersion
     status
   }
-  
+
   deviceTelemetry(deviceId: $deviceId) {
     telemetryId
     timestamp
@@ -225,6 +245,7 @@ query DeviceWithHistory($deviceId: ID!) {
 ```
 
 **Variables:**
+
 ```json
 {
   "deviceId": "550e8400-e29b-41d4-a716-446655440000"
@@ -232,13 +253,16 @@ query DeviceWithHistory($deviceId: ID!) {
 ```
 
 #### Create and Monitor OTA Update
+
 ```graphql
 mutation CreateAndMonitorOTA {
-  createOTAUpdate(input: {
-    deviceId: "550e8400-e29b-41d4-a716-446655440000"
-    toVersion: "2.0.0"
-    downloadUrl: "https://firmware-bucket.s3.amazonaws.com/sensor-v2.0.0.bin"
-  }) {
+  createOTAUpdate(
+    input: {
+      deviceId: "550e8400-e29b-41d4-a716-446655440000"
+      toVersion: "2.0.0"
+      downloadUrl: "https://firmware-bucket.s3.amazonaws.com/sensor-v2.0.0.bin"
+    }
+  ) {
     updateId
     deviceId
     fromVersion
@@ -251,6 +275,7 @@ mutation CreateAndMonitorOTA {
 ```
 
 #### Update OTA Status
+
 ```graphql
 mutation UpdateOTAProgress {
   updateOTAUpdateStatus(
@@ -265,6 +290,7 @@ mutation UpdateOTAProgress {
 ```
 
 #### Query All OTA Updates for Device
+
 ```graphql
 query DeviceOTAHistory {
   deviceOTAUpdates(deviceId: "550e8400-e29b-41d4-a716-446655440000") {
@@ -286,35 +312,35 @@ query DeviceOTAHistory {
 ```javascript
 // Register a device
 async function registerDevice() {
-  const response = await fetch('https://your-api-gateway-url/devices', {
-    method: 'POST',
+  const response = await fetch("https://your-api-gateway-url/devices", {
+    method: "POST",
     headers: {
-      'Content-Type': 'application/json',
+      "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      name: 'Smart Thermostat',
-      type: 'thermostat',
-      firmwareVersion: '1.0.0'
-    })
+      name: "Smart Thermostat",
+      type: "thermostat",
+      firmwareVersion: "1.0.0",
+    }),
   });
-  
+
   const result = await response.json();
   return result.data;
 }
 
 // Submit telemetry
 async function submitTelemetry(deviceId, data) {
-  const response = await fetch('https://your-api-gateway-url/telemetry', {
-    method: 'POST',
+  const response = await fetch("https://your-api-gateway-url/telemetry", {
+    method: "POST",
     headers: {
-      'Content-Type': 'application/json',
+      "Content-Type": "application/json",
     },
     body: JSON.stringify({
       deviceId,
-      data
-    })
+      data,
+    }),
   });
-  
+
   return await response.json();
 }
 
@@ -323,7 +349,7 @@ const device = await registerDevice();
 await submitTelemetry(device.deviceId, {
   temperature: 22.0,
   humidity: 45.0,
-  battery_level: 92
+  battery_level: 92,
 });
 ```
 
@@ -332,17 +358,17 @@ await submitTelemetry(device.deviceId, {
 ```javascript
 // Using fetch
 async function graphqlRequest(query, variables = {}) {
-  const response = await fetch('https://your-api-gateway-url/graphql', {
-    method: 'POST',
+  const response = await fetch("https://your-api-gateway-url/graphql", {
+    method: "POST",
     headers: {
-      'Content-Type': 'application/json',
+      "Content-Type": "application/json",
     },
     body: JSON.stringify({
       query,
-      variables
-    })
+      variables,
+    }),
   });
-  
+
   const result = await response.json();
   return result.data;
 }
@@ -360,10 +386,10 @@ const registerMutation = `
 
 const device = await graphqlRequest(registerMutation, {
   input: {
-    name: 'Smart Light',
-    type: 'light',
-    firmwareVersion: '1.0.0'
-  }
+    name: "Smart Light",
+    type: "light",
+    firmwareVersion: "1.0.0",
+  },
 });
 
 // Query devices
@@ -522,16 +548,16 @@ async function getDevice(deviceId) {
     const response = await fetch(
       `https://your-api-gateway-url/devices/${deviceId}`
     );
-    
+
     const result = await response.json();
-    
+
     if (!result.success) {
       throw new Error(result.error);
     }
-    
+
     return result.data;
   } catch (error) {
-    console.error('Failed to get device:', error.message);
+    console.error("Failed to get device:", error.message);
     return null;
   }
 }
@@ -541,21 +567,21 @@ async function getDevice(deviceId) {
 
 ```javascript
 async function registerDevice(data) {
-  const response = await fetch('https://your-api-gateway-url/devices', {
-    method: 'POST',
+  const response = await fetch("https://your-api-gateway-url/devices", {
+    method: "POST",
     headers: {
-      'Content-Type': 'application/json',
+      "Content-Type": "application/json",
     },
-    body: JSON.stringify(data)
+    body: JSON.stringify(data),
   });
-  
+
   const result = await response.json();
-  
+
   if (response.status === 400) {
-    console.error('Validation error:', result.error);
+    console.error("Validation error:", result.error);
     return null;
   }
-  
+
   return result.data;
 }
 ```
@@ -563,6 +589,7 @@ async function registerDevice(data) {
 ## Monitoring and Debugging
 
 ### Check Device Status
+
 ```bash
 # Get device details
 curl https://your-api-gateway-url/devices/550e8400-e29b-41d4-a716-446655440000
@@ -575,6 +602,7 @@ curl https://your-api-gateway-url/devices/550e8400-e29b-41d4-a716-446655440000/o
 ```
 
 ### GraphQL Introspection
+
 ```graphql
 query IntrospectionQuery {
   __schema {

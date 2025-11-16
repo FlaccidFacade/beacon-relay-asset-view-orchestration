@@ -9,7 +9,7 @@ on:
     branches:
       - main
     paths:
-      - '.github/labels.yml'
+      - ".github/labels.yml"
   workflow_dispatch:
 
 permissions:
@@ -26,7 +26,7 @@ jobs:
       - name: Sync labels
         run: |
           echo "Syncing labels from .github/labels.yml"
-          
+
           # Parse YAML and create/update labels
           while IFS= read -r line; do
             if [[ "$line" =~ ^-[[:space:]]*name:[[:space:]]*\"(.*)\" ]]; then
@@ -55,7 +55,7 @@ jobs:
                 --repo "${{ github.repository }}"
             fi
           done < .github/labels.yml
-          
+
           echo ""
           echo "Label sync completed!"
         env:

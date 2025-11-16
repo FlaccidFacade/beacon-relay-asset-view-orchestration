@@ -83,6 +83,7 @@ The B.R.A.V.O API is a serverless IoT device management platform built on AWS La
 **Purpose**: Entry point for all API requests
 
 **Features**:
+
 - Route management for REST endpoints
 - Request/response transformation
 - CORS configuration
@@ -91,15 +92,18 @@ The B.R.A.V.O API is a serverless IoT device management platform built on AWS La
 - Request validation
 
 **Endpoints**:
+
 - REST API: `/devices`, `/telemetry`, `/ota-updates`
 - GraphQL API: `/graphql`
 
 ### Lambda Functions
 
 #### bravo-api-rest
+
 **Purpose**: Handles all REST API requests
 
 **Features**:
+
 - Request routing based on path and HTTP method
 - Input validation
 - Business logic execution
@@ -108,9 +112,11 @@ The B.R.A.V.O API is a serverless IoT device management platform built on AWS La
 **Handler**: `lambda/rest.handler`
 
 #### bravo-api-graphql
+
 **Purpose**: Handles GraphQL API requests
 
 **Features**:
+
 - GraphQL schema enforcement
 - Query and mutation resolution
 - GraphQL introspection
@@ -121,11 +127,13 @@ The B.R.A.V.O API is a serverless IoT device management platform built on AWS La
 ### Business Logic Layer
 
 #### Handlers
+
 - **devices.ts**: Device registration, retrieval, and deletion
 - **telemetry.ts**: Telemetry data submission and retrieval
 - **ota.ts**: OTA update creation, status tracking, and retrieval
 
 #### Utils
+
 - **database.ts**: Data access layer (abstraction for storage operations)
 - **validator.ts**: Input validation functions
 - **response.ts**: Standardized API response formatting
@@ -133,6 +141,7 @@ The B.R.A.V.O API is a serverless IoT device management platform built on AWS La
 ### Data Models
 
 #### Device
+
 ```typescript
 {
   deviceId: string;        // Unique identifier
@@ -146,6 +155,7 @@ The B.R.A.V.O API is a serverless IoT device management platform built on AWS La
 ```
 
 #### Telemetry
+
 ```typescript
 {
   telemetryId: string;     // Unique identifier
@@ -162,6 +172,7 @@ The B.R.A.V.O API is a serverless IoT device management platform built on AWS La
 ```
 
 #### OTA Update
+
 ```typescript
 {
   updateId: string;        // Unique identifier
@@ -179,6 +190,7 @@ The B.R.A.V.O API is a serverless IoT device management platform built on AWS La
 ## Data Flow
 
 ### Device Registration Flow
+
 ```
 1. Client → API Gateway → Lambda (REST/GraphQL)
 2. Lambda → Validate input
@@ -190,6 +202,7 @@ The B.R.A.V.O API is a serverless IoT device management platform built on AWS La
 ```
 
 ### Telemetry Submission Flow
+
 ```
 1. Device → API Gateway → Lambda
 2. Lambda → Validate device exists
@@ -201,6 +214,7 @@ The B.R.A.V.O API is a serverless IoT device management platform built on AWS La
 ```
 
 ### OTA Update Flow
+
 ```
 1. Admin → API Gateway → Lambda (Create OTA)
 2. Lambda → Validate device exists
@@ -225,11 +239,13 @@ The B.R.A.V.O API is a serverless IoT device management platform built on AWS La
 ## Scaling Considerations
 
 ### Lambda Auto-Scaling
+
 - Lambda functions automatically scale based on request volume
 - Concurrent execution limit: 1000 (default, can be increased)
 - Cold start mitigation: Provisioned concurrency (optional)
 
 ### API Gateway Limits
+
 - Default: 10,000 requests per second
 - Burst: 5,000 requests
 - Can be increased via AWS support
@@ -237,11 +253,13 @@ The B.R.A.V.O API is a serverless IoT device management platform built on AWS La
 ### Database Scaling
 
 #### DynamoDB (Recommended for Serverless)
+
 - On-demand capacity: Automatically scales
 - Provisioned capacity: Manual scaling or auto-scaling
 - Single-table design for optimal performance
 
 #### RDS/Aurora
+
 - Read replicas for read scaling
 - Aurora Auto Scaling for write scaling
 - Connection pooling required (use RDS Proxy)
@@ -249,9 +267,11 @@ The B.R.A.V.O API is a serverless IoT device management platform built on AWS La
 ## Security
 
 ### Authentication & Authorization
+
 **Current**: None (development)
 
 **Production Options**:
+
 - AWS Cognito
 - API Gateway API Keys
 - IAM authorization
@@ -259,13 +279,16 @@ The B.R.A.V.O API is a serverless IoT device management platform built on AWS La
 - OAuth 2.0 / OpenID Connect
 
 ### Data Protection
+
 - HTTPS/TLS for data in transit
 - Encryption at rest (DynamoDB, S3)
 - VPC for Lambda functions (optional)
 - Secrets Manager for sensitive data
 
 ### IAM Permissions
+
 **Lambda Execution Role**:
+
 ```json
 {
   "Version": "2012-10-17",
@@ -293,9 +316,7 @@ The B.R.A.V.O API is a serverless IoT device management platform built on AWS La
     },
     {
       "Effect": "Allow",
-      "Action": [
-        "s3:GetObject"
-      ],
+      "Action": ["s3:GetObject"],
       "Resource": "arn:aws:s3:::bravo-firmware/*"
     }
   ]
@@ -305,6 +326,7 @@ The B.R.A.V.O API is a serverless IoT device management platform built on AWS La
 ## Monitoring & Observability
 
 ### CloudWatch Metrics
+
 - Lambda invocations
 - Lambda duration
 - Lambda errors
@@ -313,17 +335,20 @@ The B.R.A.V.O API is a serverless IoT device management platform built on AWS La
 - DynamoDB read/write capacity
 
 ### CloudWatch Logs
+
 - Lambda function logs
 - API Gateway access logs
 - Structured logging for easier querying
 
 ### Alarms
+
 - High error rate
 - High latency (p99 > threshold)
 - Throttling events
 - DynamoDB capacity exceeded
 
 ### X-Ray (Optional)
+
 - End-to-end request tracing
 - Service map visualization
 - Performance bottleneck identification
@@ -331,23 +356,27 @@ The B.R.A.V.O API is a serverless IoT device management platform built on AWS La
 ## Cost Optimization
 
 ### Lambda
+
 - Right-size memory allocation
 - Use ARM64 (Graviton2) for 20% cost savings
 - Optimize cold starts
 - Consider Lambda reserved concurrency
 
 ### API Gateway
+
 - Use regional endpoints (cheaper than edge-optimized)
 - Enable caching for read-heavy workloads
 - Consider HTTP API vs REST API (cheaper, simpler)
 
 ### Database
+
 - DynamoDB: Use on-demand for unpredictable workloads
 - DynamoDB: Use provisioned for predictable workloads
 - Enable DynamoDB auto-scaling
 - Use TTL for automatic data expiration
 
 ### S3 (Firmware Storage)
+
 - Use S3 Intelligent-Tiering
 - Enable lifecycle policies
 - Use CloudFront for global firmware distribution
@@ -355,12 +384,14 @@ The B.R.A.V.O API is a serverless IoT device management platform built on AWS La
 ## Disaster Recovery
 
 ### Backup Strategy
+
 - DynamoDB: Point-in-time recovery (PITR)
 - DynamoDB: On-demand backups
 - Lambda: Code in Git (version controlled)
 - Infrastructure as Code (Terraform/CloudFormation)
 
 ### Multi-Region Considerations
+
 - Route 53 for DNS failover
 - DynamoDB Global Tables
 - Lambda deployment in multiple regions

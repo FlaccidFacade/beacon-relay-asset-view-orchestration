@@ -1,9 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect } from "react";
 
 export interface Device {
   id: string;
   name: string;
-  status: 'online' | 'offline' | 'warning';
+  status: "online" | "offline" | "warning";
   battery: number;
   signal: number;
   temperature: number;
@@ -28,23 +28,23 @@ export function useDevices() {
         setLoading(true);
         // In a real app, this would be an API call
         await new Promise((resolve) => setTimeout(resolve, 500));
-        
+
         const mockDevices: Device[] = [
           {
-            id: '1',
-            name: 'Device Alpha',
-            status: 'online',
+            id: "1",
+            name: "Device Alpha",
+            status: "online",
             battery: 85,
             signal: 92,
             temperature: 23,
             lat: 40.7128,
-            lng: -74.0060,
+            lng: -74.006,
             lastUpdate: new Date(),
           },
           {
-            id: '2',
-            name: 'Device Beta',
-            status: 'online',
+            id: "2",
+            name: "Device Beta",
+            status: "online",
             battery: 67,
             signal: 78,
             temperature: 25,
@@ -53,9 +53,9 @@ export function useDevices() {
             lastUpdate: new Date(),
           },
           {
-            id: '3',
-            name: 'Device Gamma',
-            status: 'warning',
+            id: "3",
+            name: "Device Gamma",
+            status: "warning",
             battery: 45,
             signal: 55,
             temperature: 28,
@@ -64,22 +64,24 @@ export function useDevices() {
             lastUpdate: new Date(),
           },
           {
-            id: '4',
-            name: 'Device Delta',
-            status: 'offline',
+            id: "4",
+            name: "Device Delta",
+            status: "offline",
             battery: 12,
             signal: 0,
             temperature: 0,
             lat: 40.7489,
-            lng: -73.9680,
+            lng: -73.968,
             lastUpdate: new Date(Date.now() - 3600000),
           },
         ];
-        
+
         setDevices(mockDevices);
         setError(null);
       } catch (err) {
-        setError(err instanceof Error ? err : new Error('Failed to fetch devices'));
+        setError(
+          err instanceof Error ? err : new Error("Failed to fetch devices")
+        );
       } finally {
         setLoading(false);
       }

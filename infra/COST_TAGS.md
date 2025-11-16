@@ -6,49 +6,53 @@ This document lists all cost allocation tags used in the B.R.A.V.O. infrastructu
 
 These tags are automatically applied to all resources in the infrastructure:
 
-| Tag | Value | Purpose |
-|-----|-------|---------|
-| `Project` | `BRAVO` | Group all resources for the B.R.A.V.O. project |
-| `Stage` | `dev`/`prod` | Differentiate between development and production environments |
-| `ManagedBy` | `CDK` | Identify infrastructure managed by AWS CDK |
+| Tag         | Value        | Purpose                                                       |
+| ----------- | ------------ | ------------------------------------------------------------- |
+| `Project`   | `BRAVO`      | Group all resources for the B.R.A.V.O. project                |
+| `Stage`     | `dev`/`prod` | Differentiate between development and production environments |
+| `ManagedBy` | `CDK`        | Identify infrastructure managed by AWS CDK                    |
 
 ## Cost Center Tags
 
 Additional granular tags for cost tracking by service type:
 
 ### IoT Core Stack
-| Resource | CostCenter | Service |
-|----------|------------|---------|
-| Thing Type | `BRAVO-IoT` | `IoT-Core` |
+
+| Resource      | CostCenter  | Service    |
+| ------------- | ----------- | ---------- |
+| Thing Type    | `BRAVO-IoT` | `IoT-Core` |
 | Device Policy | `BRAVO-IoT` | `IoT-Core` |
 
 ### DynamoDB Stack
-| Resource | CostCenter | Service |
-|----------|------------|---------|
-| Device Table | `BRAVO-Storage` | `DynamoDB-Devices` |
+
+| Resource        | CostCenter      | Service              |
+| --------------- | --------------- | -------------------- |
+| Device Table    | `BRAVO-Storage` | `DynamoDB-Devices`   |
 | Telemetry Table | `BRAVO-Storage` | `DynamoDB-Telemetry` |
 
 ### S3/CloudFront Stack
-| Resource | CostCenter | Service |
-|----------|------------|---------|
-| S3 Bucket | `BRAVO-WebHosting` | `S3-Website` |
+
+| Resource                | CostCenter         | Service          |
+| ----------------------- | ------------------ | ---------------- |
+| S3 Bucket               | `BRAVO-WebHosting` | `S3-Website`     |
 | CloudFront Distribution | `BRAVO-WebHosting` | `CloudFront-CDN` |
 
 ### Lambda/API Gateway Stack
-| Resource | CostCenter | Service |
-|----------|------------|---------|
-| Device Lambda Function | `BRAVO-API` | `Lambda-Devices` |
+
+| Resource                  | CostCenter  | Service            |
+| ------------------------- | ----------- | ------------------ |
+| Device Lambda Function    | `BRAVO-API` | `Lambda-Devices`   |
 | Telemetry Lambda Function | `BRAVO-API` | `Lambda-Telemetry` |
-| API Gateway | `BRAVO-API` | `API-Gateway` |
+| API Gateway               | `BRAVO-API` | `API-Gateway`      |
 
 ## Cost Centers Summary
 
-| Cost Center | Services Included | Purpose |
-|-------------|-------------------|---------|
-| `BRAVO-IoT` | IoT Core | Device connectivity and messaging |
-| `BRAVO-Storage` | DynamoDB Tables | Data storage for devices and telemetry |
-| `BRAVO-WebHosting` | S3, CloudFront | Static website hosting and CDN |
-| `BRAVO-API` | Lambda, API Gateway | REST API backend services |
+| Cost Center        | Services Included   | Purpose                                |
+| ------------------ | ------------------- | -------------------------------------- |
+| `BRAVO-IoT`        | IoT Core            | Device connectivity and messaging      |
+| `BRAVO-Storage`    | DynamoDB Tables     | Data storage for devices and telemetry |
+| `BRAVO-WebHosting` | S3, CloudFront      | Static website hosting and CDN         |
+| `BRAVO-API`        | Lambda, API Gateway | REST API backend services              |
 
 ## Using Cost Allocation Tags
 
@@ -132,9 +136,10 @@ aws budgets create-budget \
 ### Query Examples
 
 #### 1. Total Monthly Cost by Cost Center
+
 ```sql
 -- Using AWS Athena on Cost and Usage Report
-SELECT 
+SELECT
   resource_tags_user_cost_center as CostCenter,
   SUM(line_item_unblended_cost) as TotalCost
 FROM cur_database.cost_and_usage_report
@@ -146,8 +151,9 @@ ORDER BY TotalCost DESC;
 ```
 
 #### 2. Cost Breakdown by Service
+
 ```sql
-SELECT 
+SELECT
   resource_tags_user_service as Service,
   resource_tags_user_cost_center as CostCenter,
   SUM(line_item_unblended_cost) as TotalCost
@@ -160,8 +166,9 @@ ORDER BY TotalCost DESC;
 ```
 
 #### 3. Development vs Production Cost Comparison
+
 ```sql
-SELECT 
+SELECT
   resource_tags_user_stage as Stage,
   SUM(line_item_unblended_cost) as TotalCost
 FROM cur_database.cost_and_usage_report
@@ -186,6 +193,7 @@ GROUP BY resource_tags_user_stage;
 **Problem**: Cost allocation tags don't show up in reports
 
 **Solution**:
+
 1. Activate tags in Billing Console → Cost Allocation Tags
 2. Wait 24 hours for tags to propagate
 3. Deploy new resources after activation
@@ -195,6 +203,7 @@ GROUP BY resource_tags_user_stage;
 **Problem**: Some resources don't have expected tags
 
 **Solution**:
+
 1. Rebuild and redeploy: `npm run build && npm run deploy`
 2. Verify tags in CloudFormation template: `npm run synth`
 3. Check AWS resource directly in console
@@ -204,6 +213,7 @@ GROUP BY resource_tags_user_stage;
 **Problem**: Cost data is aggregated, not detailed
 
 **Solution**:
+
 1. Enable Cost and Usage Report (CUR) in AWS Billing
 2. Use Athena to query detailed cost data
 3. Use tags to filter and group as needed

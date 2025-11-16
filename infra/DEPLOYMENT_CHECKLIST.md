@@ -5,12 +5,14 @@ Use this checklist to ensure a smooth deployment process.
 ## Pre-Deployment Checklist
 
 ### Local Environment
+
 - [ ] Node.js 18+ installed (`node --version`)
 - [ ] npm installed (`npm --version`)
 - [ ] AWS CLI installed (`aws --version`)
 - [ ] Git installed (`git --version`)
 
 ### AWS Account Preparation
+
 - [ ] AWS account created
 - [ ] AWS CLI configured (`aws configure`)
 - [ ] AWS credentials verified (`aws sts get-caller-identity`)
@@ -26,6 +28,7 @@ Use this checklist to ensure a smooth deployment process.
   - [ ] CloudWatch Logs
 
 ### Configuration
+
 - [ ] Update `config/stack-config.json` with your AWS account ID
 - [ ] Review and adjust region in `config/stack-config.json`
 - [ ] Review project name and stage
@@ -34,28 +37,33 @@ Use this checklist to ensure a smooth deployment process.
 ## Deployment Checklist
 
 ### Step 1: Setup
+
 - [ ] Clone repository
 - [ ] Run `npm install`
 - [ ] Run `npm run build`
 - [ ] Run `./scripts/validate.sh` (should pass all checks)
 
 ### Step 2: CDK Bootstrap (First-time only)
+
 - [ ] Run `npx cdk bootstrap`
 - [ ] Verify bootstrap stack in CloudFormation console
 
 ### Step 3: Review Stacks
+
 - [ ] Run `npx cdk synth` to generate CloudFormation templates
 - [ ] Review templates in `cdk.out/` directory
 - [ ] Verify resource definitions match requirements
 - [ ] Check for any security warnings
 
 ### Step 4: Deploy Infrastructure
+
 - [ ] Run `./scripts/deploy.sh` OR `npm run deploy`
 - [ ] Monitor deployment progress
 - [ ] Wait for all stacks to complete (15-20 minutes)
 - [ ] Verify all stacks show `CREATE_COMPLETE` status
 
 ### Step 5: Verify Deployment
+
 - [ ] Check CloudFormation console for stack outputs
 - [ ] Record important values:
   - [ ] IoT Endpoint: `___________________________`
@@ -66,6 +74,7 @@ Use this checklist to ensure a smooth deployment process.
 ### Step 6: Test Deployment
 
 #### Test API Gateway
+
 - [ ] Get API endpoint from stack outputs
 - [ ] Test device creation:
   ```bash
@@ -85,18 +94,21 @@ Use this checklist to ensure a smooth deployment process.
   ```
 
 #### Verify DynamoDB
+
 - [ ] Open DynamoDB console
 - [ ] Check `BRAVO-Devices-dev` table exists
 - [ ] Check `BRAVO-Telemetry-dev` table exists
 - [ ] Verify test data from API tests
 
 #### Verify S3/CloudFront
+
 - [ ] Open S3 console
 - [ ] Verify bucket created
 - [ ] Upload test `index.html` file
 - [ ] Access CloudFront URL in browser
 
 #### Verify IoT Core
+
 - [ ] Open IoT Core console
 - [ ] Verify Thing Type created
 - [ ] Verify Policy created
@@ -105,24 +117,28 @@ Use this checklist to ensure a smooth deployment process.
 ## Post-Deployment Checklist
 
 ### Monitoring Setup
+
 - [ ] Open CloudWatch console
 - [ ] Review log groups created
 - [ ] Set up CloudWatch alarms (optional)
 - [ ] Configure billing alerts
 
 ### Security Review
+
 - [ ] Review IAM roles and policies
 - [ ] Verify encryption enabled on all resources
 - [ ] Check S3 bucket policies
 - [ ] Review IoT device policies
 
 ### Documentation
+
 - [ ] Document stack outputs in team wiki
 - [ ] Share API endpoints with team
 - [ ] Update any external documentation
 - [ ] Record deployment date and version
 
 ### Backup and Disaster Recovery
+
 - [ ] Verify DynamoDB point-in-time recovery enabled
 - [ ] Verify S3 versioning enabled
 - [ ] Document rollback procedure
@@ -213,6 +229,7 @@ Deployment is successful when:
 ## Support
 
 For issues or questions:
+
 - Review [README.md](README.md)
 - Check [ARCHITECTURE.md](ARCHITECTURE.md)
 - Consult [QUICKSTART.md](QUICKSTART.md)

@@ -42,9 +42,9 @@ jobs:
           gh pr comment "${{ github.event.pull_request.number }}" \
             --repo "${{ github.repository }}" \
             --body "🧹 **Branch Auto-Deleted**
-          
+
           The branch \`${{ github.event.pull_request.head.ref }}\` has been automatically deleted after merge to keep the repository clean.
-          
+
           This is part of the B.R.A.V.O. organization's automated repository governance."
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

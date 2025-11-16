@@ -9,12 +9,14 @@ Before contributing, it's important to understand that:
 **The mobile phone does NOT receive LoRa radio signals directly.**
 
 The BRAVO system uses a relay architecture:
+
 ```
 [GPS Collar/Dongle] --LoRa Radio--> [ESP32 Relay] --USB/BLE--> [Mobile Phone]
     Transmitter                    LoRa Receiver              This App
 ```
 
 The mobile app:
+
 - Connects to ESP32 relay devices via USB or BLE
 - Receives telemetry data that was transmitted via LoRa to the relay
 - Cannot access LoRa information without the relay or an API/dashboard
@@ -76,6 +78,7 @@ When making changes, maintain this architectural separation.
 ## Reporting Issues
 
 When reporting bugs, include:
+
 - Android version
 - Device model
 - Steps to reproduce
