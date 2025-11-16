@@ -1,7 +1,9 @@
 # Implementation Summary
 
 ## Problem Statement
+
 The user wanted to:
+
 1. Load a single program instance to two separate devices
 2. Firmware should record GPS info on screen
 3. Try to communicate with the other device
@@ -12,18 +14,22 @@ The user wanted to:
 ### Changes Made
 
 #### 1. Main Firmware Logic (`firmware/src/main.cpp`)
+
 **Before:**
+
 - Three separate modes: RELAY (receive only), BEACON (transmit only), GPS (display only)
 - Button switched between mutually exclusive modes
 - Could not see GPS and communication status simultaneously
 
 **After:**
+
 - Unified operation: GPS + LoRa TX + LoRa RX all running simultaneously
 - Four display pages showing different views of the same live data
 - Button cycles through pages instead of modes
 - All functionality always active
 
 #### 2. Display System
+
 **Four Pages Available:**
 
 ```
@@ -76,22 +82,28 @@ Page 4: Combined View
 ```
 
 #### 3. Device Configuration
+
 Each device can be uniquely identified by changing one line:
+
 ```cpp
 #define DEVICE_ID "BRAVO_001"  // Change to BRAVO_002, BRAVO_003, etc.
 ```
 
 #### 4. LoRa Communication
+
 **Transmission (Every 3 seconds):**
+
 - Packet format: `BRAVO_001_PKT_123_GPS:40.712800,-74.006000`
 - Includes device ID, packet number, and GPS coordinates (if available)
 
 **Reception (Continuous):**
+
 - Listens for packets from other devices
 - Records RSSI, SNR, and message content
 - Updates communication statistics
 
 #### 5. GPS Integration
+
 - Continuously acquires GPS data
 - Displays on dedicated GPS page
 - Shows in compact form on Combined page
@@ -175,18 +187,22 @@ Device 1 (BRAVO_001)                Device 2 (BRAVO_002)
 ### For Two Devices:
 
 1. **Upload to Device 1:**
+
    ```cpp
    #define DEVICE_ID "BRAVO_001"
    ```
+
    ```bash
    cd firmware
    pio run --target upload
    ```
 
 2. **Upload to Device 2:**
+
    ```cpp
    #define DEVICE_ID "BRAVO_002"
    ```
+
    ```bash
    pio run --target upload
    ```
@@ -222,20 +238,24 @@ firmware/
 ## Requirements Met
 
 ✅ **Requirement 1**: Single program instance to multiple devices
-   - Same firmware, just change DEVICE_ID define
-   
+
+- Same firmware, just change DEVICE_ID define
+
 ✅ **Requirement 2**: Record GPS info on screen
-   - GPS page shows full coordinates
-   - Combined page shows compact GPS view
-   
+
+- GPS page shows full coordinates
+- Combined page shows compact GPS view
+
 ✅ **Requirement 3**: Communicate with other device
-   - LoRa TX/RX always active
-   - Packets include device ID and GPS data
-   
+
+- LoRa TX/RX always active
+- Packets include device ID and GPS data
+
 ✅ **Requirement 4**: Screen rolls through multiple pages
-   - 4 pages available
-   - PRG button cycles through them
-   - All data continuously updated
+
+- 4 pages available
+- PRG button cycles through them
+- All data continuously updated
 
 ## Next Steps for User
 

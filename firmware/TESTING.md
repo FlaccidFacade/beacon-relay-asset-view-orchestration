@@ -3,6 +3,7 @@
 ## Code Changes Summary
 
 ### Files Modified
+
 1. `firmware/src/main.cpp` - Complete refactor of main firmware logic
 2. `firmware/README.md` - Updated documentation for new features
 3. `firmware/QUICKSTART_MULTI_DEVICE.md` - New quick start guide (created)
@@ -10,12 +11,14 @@
 ### Key Changes in main.cpp
 
 #### Before (Old System)
+
 - Three separate modes: RELAY, BEACON, GPS
 - Button switches between modes
 - Each mode has separate display logic
 - Either transmit OR receive, not both
 
 #### After (New System)
+
 - Four display pages: GPS, Communication, Device Info, Combined
 - Button cycles through pages
 - All functionality runs simultaneously (GPS + TX + RX)
@@ -185,12 +188,14 @@
 ## Manual Validation Steps
 
 ### Visual Inspection
+
 1. Check display text is readable
 2. Verify coordinates format is correct
 3. Confirm page transitions are smooth
 4. Verify no flickering or artifacts
 
 ### Serial Monitor Validation
+
 1. Observe initialization sequence
 2. Check for error messages
 3. Verify transmission logs
@@ -198,6 +203,7 @@
 5. Confirm GPS data parsing
 
 ### Physical Testing
+
 1. Test in various environments
 2. Test at different ranges
 3. Test with obstacles (buildings, trees)
@@ -226,6 +232,7 @@
 ## Test Results Summary
 
 ### Expected Outcomes
+
 - All pages display correctly
 - GPS acquires fix outdoors within 60 seconds
 - Devices communicate successfully within 500m (line of sight)
@@ -235,6 +242,7 @@
 - Button responds instantly
 
 ### Success Criteria
+
 ✅ All 4 display pages work
 ✅ GPS data displays on screen
 ✅ Devices communicate via LoRa
@@ -245,6 +253,7 @@
 ## Conclusion
 
 The implementation meets all stated requirements:
+
 1. ✅ Single program instance loads to multiple devices
 2. ✅ Firmware records GPS info on screen
 3. ✅ Devices communicate with each other

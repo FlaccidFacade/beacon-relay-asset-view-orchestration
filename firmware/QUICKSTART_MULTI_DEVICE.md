@@ -5,6 +5,7 @@ This guide walks you through setting up two or more B.R.A.V.O. devices that can 
 ## Overview
 
 The updated firmware allows you to:
+
 - Load the **same firmware** on multiple devices
 - Each device records GPS info on its screen
 - Devices communicate with each other via LoRa
@@ -13,6 +14,7 @@ The updated firmware allows you to:
 ## Hardware Requirements
 
 For each device:
+
 - Heltec WiFi LoRa 32 V3 board
 - NEO-6M GPS module
 - LoRa antenna (915 MHz for North America, 868 MHz for Europe)
@@ -23,16 +25,19 @@ For each device:
 Before uploading to each device, edit `firmware/src/main.cpp` and set a unique ID:
 
 **Device 1:**
+
 ```cpp
 #define DEVICE_ID "BRAVO_001"
 ```
 
 **Device 2:**
+
 ```cpp
 #define DEVICE_ID "BRAVO_002"
 ```
 
 **Device 3 (optional):**
+
 ```cpp
 #define DEVICE_ID "BRAVO_003"
 ```
@@ -92,6 +97,7 @@ With both devices powered on and running:
 ## Display Pages Reference
 
 ### Page 1: GPS Location
+
 - Satellite count and lock status
 - Latitude and longitude (6 decimal places)
 - Altitude in meters
@@ -99,6 +105,7 @@ With both devices powered on and running:
 - Status: Shows "LOCK" when GPS fix acquired, "SRCH" when searching
 
 ### Page 2: Communication
+
 - Packets sent count
 - Packets received count
 - Last packet RSSI (signal strength in dBm)
@@ -106,12 +113,14 @@ With both devices powered on and running:
 - "Listening..." shown when no packets received yet
 
 ### Page 3: Device Info
+
 - Device ID (BRAVO_001, BRAVO_002, etc.)
 - Uptime in seconds
 - GPS module status (Active/Search)
 - LoRa module status (Active)
 
 ### Page 4: Combined View
+
 - Device ID at top
 - GPS coordinates or search status
 - TX packet count
@@ -122,17 +131,20 @@ With both devices powered on and running:
 ## Troubleshooting
 
 ### Device Not Initializing
+
 - Check USB connection
 - Verify LoRa antenna is connected
 - Check Serial monitor for error messages: `pio device monitor`
 
 ### No GPS Fix
+
 - Ensure you're outdoors with clear sky view
 - Allow 30-60 seconds for initial satellite acquisition
 - Check GPS wiring: TX→GPIO33, RX→GPIO34, VCC→3.3V, GND→GND
 - Verify GPS module has power (LED should blink)
 
 ### Devices Not Communicating
+
 - Verify both devices initialized successfully
 - Check antennas are connected on both devices
 - Bring devices closer together (< 2 meters) for initial test
@@ -140,11 +152,13 @@ With both devices powered on and running:
 - Check Serial monitor on both devices for "Sending:" and "Received:" messages
 
 ### Display Not Showing Data
+
 - Check Vext power (should be enabled in firmware)
 - Verify I2C connections (SDA=17, SCL=18)
 - Check Serial output for display initialization status
 
 ### Button Not Working
+
 - PRG button is GPIO 0
 - Press and release (don't hold)
 - 300ms debounce delay between presses
@@ -159,6 +173,7 @@ pio device monitor
 ```
 
 You should see:
+
 - Initialization messages for display, LoRa, and GPS
 - "Sending: BRAVO_001_PKT_1..." every 3 seconds
 - "Received [RSSI: -45 dBm]..." when packets arrive
@@ -180,6 +195,7 @@ Once devices are working:
 ## Power Consumption Tips
 
 For battery-powered operation:
+
 - GPS and LoRa radio are active continuously
 - Display updates every 500ms
 - Packet transmission every 3 seconds
@@ -196,6 +212,7 @@ For battery-powered operation:
 ## Support
 
 For issues or questions:
+
 - Check Serial monitor output for errors
 - Review main README.md for detailed module documentation
 - Open an issue on GitHub with Serial output and description

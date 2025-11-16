@@ -176,12 +176,14 @@ Each device operates in a **unified mode** that simultaneously:
 ### Multi-Device Communication
 
 When you load this firmware to two or more devices:
+
 - Each device transmits its location and identification
 - All devices can receive packets from others
 - Communication status is visible on the Communication and Combined pages
 - Signal quality metrics (RSSI/SNR) help assess link quality
 
 **Example Setup**:
+
 1. Load firmware on Device 1 (set `DEVICE_ID` to `"BRAVO_001"`)
 2. Load firmware on Device 2 (set `DEVICE_ID` to `"BRAVO_002"`)
 3. Power on both devices
@@ -192,6 +194,7 @@ When you load this firmware to two or more devices:
 ### Single Firmware for Multiple Devices
 
 The firmware now uses a **unified design** that can be loaded on multiple devices. Each device automatically:
+
 - Records GPS information on screen
 - Communicates with other devices via LoRa
 - Displays multiple pages of data that can be scrolled through
