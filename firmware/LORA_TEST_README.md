@@ -5,6 +5,7 @@
 You need **TWO** Heltec WiFi LoRa 32 V3 boards to test LoRa communication.
 
 ### Board 1: TRANSMITTER
+
 1. Edit `src/main.cpp`
 2. Make sure this line is UNCOMMENTED:
    ```cpp
@@ -18,6 +19,7 @@ You need **TWO** Heltec WiFi LoRa 32 V3 boards to test LoRa communication.
 5. Disconnect and power via USB battery or separate power
 
 ### Board 2: RECEIVER
+
 1. Edit `src/main.cpp`
 2. Make sure this line is COMMENTED:
    ```cpp
@@ -33,6 +35,7 @@ You need **TWO** Heltec WiFi LoRa 32 V3 boards to test LoRa communication.
 ## What You'll See
 
 ### Transmitter Display:
+
 ```
 TRANSMITTER
 -----------
@@ -43,6 +46,7 @@ Time: 50s
 ```
 
 ### Receiver Display:
+
 ```
 RECEIVER
 --------
@@ -54,6 +58,7 @@ Time: 50s
 ```
 
 ### Serial Monitor (Receiver):
+
 ```
 Received [RSSI: -45 dBm]: BRAVO_PKT_1
 Received [RSSI: -46 dBm]: BRAVO_PKT_2
@@ -87,6 +92,7 @@ Received [RSSI: -44 dBm]: BRAVO_PKT_3
 ## Troubleshooting
 
 ### No packets received:
+
 1. Check both boards show "LoRa initialized successfully" on display
 2. Verify one board is TX and other is RX
 3. Make sure both use same frequency (915 MHz)
@@ -94,11 +100,13 @@ Received [RSSI: -44 dBm]: BRAVO_PKT_3
 5. Try moving boards closer together
 
 ### Intermittent reception:
+
 - Normal at long distances
 - Try adjusting antenna orientation
 - Metal obstacles can block signal
 
 ### Low RSSI even when close:
+
 - Check antenna is properly connected
 - Antenna should be perpendicular to board
 - Try outdoor test (walls absorb signal)
