@@ -12,6 +12,7 @@ This monorepo contains all components of the B.R.A.V.O. (Beacon Relay Asset View
 
 ## The first steps to take
 
+- [ ] read [README.md](../README.md) - Project overview and monorepo structure
 - [ ] read [api/QUICKSTART.md](../api/QUICKSTART.md) - API quick start guide
 - [ ] read [api/README.md](../api/README.md) - Backend API setup and deployment
 - [ ] read [docs/README.md](../docs/README.md) - Additional project documentation
