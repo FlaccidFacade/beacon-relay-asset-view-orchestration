@@ -67,4 +67,5 @@ We welcome contributions!
 ## 🌐 Contact
 
 - **Email:** [bravo-gps@proton.me](mailto:bravo-gps@proton.me)
+- **Discord:** [Community](https://discord.gg/CUHwmhy9xd)
 - **Issues:** Use the [Issues tab](https://github.com/FlaccidFacade/beacon-relay-asset-view-orchestration/issues) for project questions and bug reports.
