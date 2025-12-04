@@ -1,12 +1,12 @@
 #!/bin/bash
 
-# B.R.A.V.O Infrastructure Validation Script
+# B.R.A.V.O. Infrastructure Validation Script
 # This script validates the CDK setup and AWS configuration
 
 set -e
 
 echo "======================================"
-echo "B.R.A.V.O Infrastructure Validation"
+echo "B.R.A.V.O. Infrastructure Validation"
 echo "======================================"
 echo ""
 

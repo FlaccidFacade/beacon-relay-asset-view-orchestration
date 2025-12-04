@@ -1,6 +1,6 @@
-# AWS Setup Guide for B.R.A.V.O API
+# AWS Setup Guide for B.R.A.V.O. API
 
-This guide walks through setting up the required AWS infrastructure for the B.R.A.V.O API.
+This guide walks through setting up the required AWS infrastructure for the B.R.A.V.O. API.
 
 ## Prerequisites
 
@@ -226,7 +226,7 @@ aws lambda create-function \
 # Create API
 API_ID=$(aws apigateway create-rest-api \
   --name "BRAVO-API" \
-  --description "B.R.A.V.O IoT Device Management API" \
+  --description "B.R.A.V.O. IoT Device Management API" \
   --endpoint-configuration types=REGIONAL \
   --query 'id' \
   --output text)

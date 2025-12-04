@@ -1,6 +1,6 @@
-# B.R.A.V.O API Usage Examples
+# B.R.A.V.O. API Usage Examples
 
-This document provides practical examples for using the B.R.A.V.O API.
+This document provides practical examples for using the B.R.A.V.O. API.
 
 ## REST API Examples
 

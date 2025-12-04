@@ -1,4 +1,4 @@
-# B.R.A.V.O API
+# B.R.A.V.O. API
 
 **B**eacon **R**elay **A**sset **V**iew **O**rchestration API
 

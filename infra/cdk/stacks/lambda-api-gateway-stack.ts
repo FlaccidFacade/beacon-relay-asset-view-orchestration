@@ -299,7 +299,7 @@ export class LambdaApiGatewayStack extends cdk.Stack {
     // API Gateway REST API
     this.api = new apigateway.RestApi(this, 'BravoApi', {
       restApiName: `${props.projectName}-API-${props.stage}`,
-      description: 'B.R.A.V.O REST API',
+      description: 'B.R.A.V.O. REST API',
       deployOptions: {
         stageName: 'prod',
         throttlingRateLimit: 1000,

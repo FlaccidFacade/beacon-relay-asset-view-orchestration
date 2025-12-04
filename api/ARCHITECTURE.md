@@ -1,8 +1,8 @@
-# B.R.A.V.O API Architecture
+# B.R.A.V.O. API Architecture
 
 ## Overview
 
-The B.R.A.V.O API is a serverless IoT device management platform built on AWS Lambda and API Gateway, providing both REST and GraphQL interfaces for device registration, telemetry collection, and OTA firmware updates.
+The B.R.A.V.O. API is a serverless IoT device management platform built on AWS Lambda and API Gateway, providing both REST and GraphQL interfaces for device registration, telemetry collection, and OTA firmware updates.
 
 ## Architecture Diagram
 

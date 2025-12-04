@@ -1,12 +1,12 @@
 #!/bin/bash
 
-# B.R.A.V.O Infrastructure Destroy Script
+# B.R.A.V.O. Infrastructure Destroy Script
 # This script destroys all CDK stacks from AWS
 
 set -e
 
 echo "======================================"
-echo "B.R.A.V.O Infrastructure Destruction"
+echo "B.R.A.V.O. Infrastructure Destruction"
 echo "======================================"
 echo ""
 echo "WARNING: This will delete all infrastructure resources!"

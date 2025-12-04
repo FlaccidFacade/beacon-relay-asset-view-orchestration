@@ -1,7 +1,7 @@
 {
   "name": "bravo-infra",
   "version": "1.0.0",
-  "description": "AWS Infrastructure-as-Code project for B.R.A.V.O using CDK",
+  "description": "AWS Infrastructure-as-Code project for B.R.A.V.O. using CDK",
   "main": "index.js",
   "scripts": {
     "build": "tsc",

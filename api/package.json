@@ -1,7 +1,7 @@
 {
   "name": "bravo-api",
   "version": "1.0.0",
-  "description": "B.R.A.V.O (Beacon Relay Asset View Orchestration) API - REST/GraphQL endpoints for device registration, telemetry, and OTA updates",
+  "description": "B.R.A.V.O. (Beacon Relay Asset View Orchestration) API - REST/GraphQL endpoints for device registration, telemetry, and OTA updates",
   "main": "dist/lambda/rest.js",
   "scripts": {
     "build": "tsc",

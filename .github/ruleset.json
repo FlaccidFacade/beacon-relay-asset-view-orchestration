@@ -1,7 +1,7 @@
 {
-  "_comment": "Repository Ruleset for B.R.A.V.O Organization - Defines governance rules for all repositories. This ruleset enforces: 1) Required code owner reviews before merging, 2) Required status checks (build, test, lint), 3) Non-fast-forward protection to prevent force pushes, 4) Required commit signatures for security, 5) Branch deletion protection, 6) Linear history requirement for clean git logs. Apply this to repositories via GitHub Settings > Rules > Rulesets.",
+  "_comment": "Repository Ruleset for B.R.A.V.O. Organization - Defines governance rules for all repositories. This ruleset enforces: 1) Required code owner reviews before merging, 2) Required status checks (build, test, lint), 3) Non-fast-forward protection to prevent force pushes, 4) Required commit signatures for security, 5) Branch deletion protection, 6) Linear history requirement for clean git logs. Apply this to repositories via GitHub Settings > Rules > Rulesets.",
   "$schema": "https://docs.github.com/en/rest/repos/rules#create-a-repository-ruleset",
-  "name": "B.R.A.V.O Organization Protection Rules",
+  "name": "B.R.A.V.O. Organization Protection Rules",
   "target": "branch",
   "enforcement": "active",
   "conditions": {

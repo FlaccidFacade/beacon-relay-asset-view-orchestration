@@ -1,6 +1,6 @@
 # Quick Start Guide
 
-Get the B.R.A.V.O API up and running in 5 minutes!
+Get the B.R.A.V.O. API up and running in 5 minutes!
 
 ## 🚀 Local Development
 
@@ -272,7 +272,7 @@ The project uses an **in-memory mock database** for development. This means:
 
 ## 🎯 What's Next?
 
-The B.R.A.V.O API is fully functional and ready for deployment! Here are suggested enhancements:
+The B.R.A.V.O. API is fully functional and ready for deployment! Here are suggested enhancements:
 
 1. **Add Authentication**: Secure your API with AWS Cognito
 2. **Switch to Real Database**: Replace mock DB with DynamoDB

@@ -14,11 +14,11 @@ export class IoTCoreStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props: IoTCoreStackProps) {
     super(scope, id, props);
 
-    // Create IoT Thing Type for B.R.A.V.O devices
+    // Create IoT Thing Type for B.R.A.V.O. devices
     const thingType = new iot.CfnThingType(this, 'BRAVOThingType', {
       thingTypeName: `${props.projectName}-Device-${props.stage}`,
       thingTypeProperties: {
-        thingTypeDescription: 'B.R.A.V.O IoT Device Type',
+        thingTypeDescription: 'B.R.A.V.O. IoT Device Type',
       },
     });
 

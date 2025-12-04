@@ -1,12 +1,12 @@
 #!/bin/bash
 
-# B.R.A.V.O Infrastructure Deployment Script
+# B.R.A.V.O. Infrastructure Deployment Script
 # This script deploys all CDK stacks to AWS
 
 set -e
 
 echo "======================================"
-echo "B.R.A.V.O Infrastructure Deployment"
+echo "B.R.A.V.O. Infrastructure Deployment"
 echo "======================================"
 echo ""
 
