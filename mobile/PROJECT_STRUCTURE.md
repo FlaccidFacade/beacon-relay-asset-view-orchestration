@@ -12,6 +12,7 @@ The BRAVO system uses a **relay-based architecture** for LoRa communication:
 ```
 
 **Key Point**: The mobile phone does NOT receive LoRa radio signals directly. LoRa information is only accessible through:
+
 1. **ESP32 Relay Device**: Receives LoRa transmissions and forwards data via USB or BLE
 2. **API/Dashboard**: Future alternative for accessing telemetry data remotely
 
@@ -80,36 +81,42 @@ mobile/
 ### Activities (UI Layer)
 
 **MainActivity**
+
 - Entry point of the application
 - Connection controls (BLE/USB)
 - Real-time telemetry display
 - Navigation to map view
 
 **MapActivity**
+
 - Interactive map with GPS tracking
 - Offline map support via OSMDroid
 - Path visualization
 - Telemetry info overlay
 
 **SettingsActivity**
+
 - Placeholder for app configuration
 - Future: Device selection, LoRa settings, preferences
 
 ### Services (Background Layer)
 
 **BLEConnectionService**
+
 - Foreground service for BLE connectivity
 - Manages connection to ESP32 relay via Bluetooth
 - Receives LoRa telemetry data forwarded from the relay
 - Broadcasts data to UI
 
 **LoRaReceiverService**
+
 - Foreground service for USB connectivity
 - USB serial communication with ESP32 relay
 - Receives LoRa packets forwarded by the relay
 - Telemetry data distribution
 
 **UsbBroadcastReceiver**
+
 - Handles USB device attach/detach events
 - Automatic connection on device plug-in
 - Permission management
@@ -117,6 +124,7 @@ mobile/
 ### Libraries (Core Logic)
 
 **LoRaReceiver**
+
 - Receives LoRa packet data from ESP32 relay via USB/BLE
 - Packet parsing and validation
 - Event-based listener pattern
@@ -124,12 +132,14 @@ mobile/
 - **Note**: Does NOT receive LoRa radio directly; processes forwarded data
 
 **TelemetryParser**
+
 - Converts LoRa packets to telemetry data
 - Supports JSON and binary formats
 - GPS coordinate validation
 - Data sanity checks
 
 **MapVisualization**
+
 - Map display management
 - Location marker updates
 - Path tracking visualization
@@ -139,6 +149,7 @@ mobile/
 ### Models (Data Layer)
 
 **TelemetryData**
+
 - GPS coordinates (lat/lon/alt)
 - Speed and movement data
 - Signal strength (RSSI/SNR) from LoRa transmission
@@ -147,6 +158,7 @@ mobile/
 - **Source**: Data originates from GPS collars, transmitted via LoRa to ESP32 relay, then forwarded to phone
 
 **LoRaPacket**
+
 - Raw packet data forwarded from ESP32 relay
 - Signal metadata from LoRa reception
 - Frequency and spreading factor
@@ -155,6 +167,7 @@ mobile/
 ### Utilities
 
 **Constants**
+
 - BLE/USB configuration
 - LoRa parameters
 - Map defaults
@@ -163,24 +176,28 @@ mobile/
 ## Key Features Implementation
 
 ### 1. Dual Connectivity (BLE/USB)
+
 - **Files**: `BLEConnectionService.java`, `LoRaReceiverService.java`
 - **Purpose**: Flexible connection options to ESP32 relay device
 - **Dependencies**: Nordic BLE library, USB Serial for Android
 - **Note**: Connects to relay, not directly to LoRa collars
 
 ### 2. LoRa Telemetry Reception
+
 - **Files**: `LoRaReceiver.java`, `TelemetryParser.java`
 - **Purpose**: Receive and parse GPS data forwarded from ESP32 relay
 - **Formats**: JSON and binary packet formats supported
 - **Data Path**: Collar/Dongle → LoRa → ESP32 Relay → USB/BLE → Phone
 
 ### 3. Map Visualization
+
 - **Files**: `MapActivity.java`, `MapVisualization.java`
 - **Purpose**: Display real-time GPS tracking on interactive map
 - **Features**: Offline maps, path tracking, location markers
 - **Dependencies**: OSMDroid
 
 ### 4. Background Services
+
 - **Files**: `BLEConnectionService.java`, `LoRaReceiverService.java`
 - **Purpose**: Continuous data reception even when app is minimized
 - **Type**: Foreground services with notifications
@@ -188,12 +205,14 @@ mobile/
 ## Configuration Files
 
 ### build.gradle (app-level)
+
 - Android SDK versions (min: 26, target: 34)
 - Dependencies (AndroidX, Maps, BLE, USB Serial, OSMDroid)
 - Build types and signing configs
 - View binding enabled
 
 ### AndroidManifest.xml
+
 - Permissions (BLE, Location, USB, Internet)
 - Activity declarations
 - Service declarations
@@ -201,6 +220,7 @@ mobile/
 - Google Maps API key placeholder
 
 ### gradle.properties
+
 - JVM arguments
 - AndroidX migration flags
 - Build optimization settings
@@ -208,10 +228,12 @@ mobile/
 ## Resource Files
 
 ### Layouts
+
 - `activity_main.xml`: Connection UI with buttons and telemetry display
 - `activity_map.xml`: Map view with telemetry overlay
 
 ### Values
+
 - `strings.xml`: All UI text and error messages (i18n ready)
 - `colors.xml`: Material Design color palette
 - `themes.xml`: App theme configuration
@@ -239,6 +261,7 @@ mobile/
 ## Dependencies
 
 See `app/build.gradle` for complete list:
+
 - AndroidX Core Libraries
 - Material Design Components
 - Google Play Services (Maps, Location)
@@ -268,6 +291,7 @@ See `app/build.gradle` for complete list:
 ## Support
 
 For questions about the project structure or implementation details, see:
+
 - README.md for setup and usage
 - CONTRIBUTING.md for development guidelines
 - GitHub Issues for bug reports and feature requests

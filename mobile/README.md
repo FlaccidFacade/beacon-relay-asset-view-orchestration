@@ -3,6 +3,7 @@
 Android application for the B.R.A.V.O. (Beacon-Relay-Asset-View-Orchestration) IoT system. This app connects to ESP32-based relay devices via USB or Bluetooth Low Energy (BLE) to access LoRa telemetry data, and displays GPS location information on an interactive map with offline support.
 
 **Important**: This mobile app does NOT receive LoRa radio signals directly. LoRa information is only accessible on the phone through:
+
 - **ESP32 Relay Device**: The phone connects to an ESP32 device (via USB or BLE) which receives LoRa transmissions from collars/dongles
 - **API/Dashboard**: Alternative access through a web API or dashboard interface (future feature)
 
@@ -29,6 +30,7 @@ The B.R.A.V.O. system uses a **relay architecture** for LoRa communication:
 ```
 
 The mobile phone **cannot receive LoRa radio directly**. Instead:
+
 1. GPS collar/dongle devices transmit location data via LoRa radio
 2. An ESP32 relay device receives these LoRa transmissions
 3. The mobile app connects to the ESP32 relay (via USB or BLE)
@@ -74,8 +76,8 @@ app/src/main/java/com/bravo/mobile/
 ### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/beacon-relay-asset-view-orchestration/mobile.git
-cd mobile
+git clone https://github.com/FlaccidFacade/beacon-relay-asset-view-orchestration.git
+cd beacon-relay-asset-view-orchestration/mobile
 ```
 
 ### 2. Open in Android Studio
@@ -106,6 +108,7 @@ If you want to use Google Maps instead of OpenStreetMap:
 ```
 
 Or use Android Studio:
+
 - Menu: Build → Make Project (Ctrl+F9 / Cmd+F9)
 
 ### 5. Run on Device or Emulator
@@ -115,6 +118,7 @@ Or use Android Studio:
 ```
 
 Or use Android Studio:
+
 - Menu: Run → Run 'app' (Shift+F10)
 
 **Note**: For USB connections, you must use a physical Android device with OTG support.
@@ -151,11 +155,13 @@ Or use Android Studio:
 ### Offline Maps
 
 Offline maps are automatically enabled. The app will:
+
 - Use cached tiles when available
 - Download new tiles when online
 - Continue showing cached areas when offline
 
 To pre-download map areas:
+
 1. While connected to WiFi, navigate to desired areas
 2. Zoom in and pan around to cache tiles
 3. These tiles will be available offline
@@ -177,6 +183,7 @@ The app requires the following permissions:
 The app supports two telemetry formats:
 
 ### JSON Format
+
 ```json
 {
   "lat": 37.7749,
@@ -189,6 +196,7 @@ The app supports two telemetry formats:
 ```
 
 ### Binary Format
+
 - 4 bytes: Latitude (float)
 - 4 bytes: Longitude (float)
 - 4 bytes: Altitude (float)
@@ -207,6 +215,7 @@ The app supports two telemetry formats:
 ### Testing on Hardware
 
 For best results, test with:
+
 - ESP32 DevKit with LoRa module (SX1276/SX1278) configured as a relay
 - GPS collar/dongle with LoRa transmitter
 - Android device with BLE 4.0+ support
@@ -217,6 +226,7 @@ For best results, test with:
 ### Debugging
 
 Enable verbose logging:
+
 ```bash
 adb logcat -s BLEConnectionService LoRaReceiverService MainActivity MapActivity
 ```
@@ -224,24 +234,28 @@ adb logcat -s BLEConnectionService LoRaReceiverService MainActivity MapActivity
 ## Troubleshooting
 
 ### BLE Connection Issues
+
 - Ensure Bluetooth is enabled
 - Grant location permissions (required for BLE scanning)
 - Make sure ESP32 is advertising
 - Check device name matches expected format
 
 ### USB Connection Issues
+
 - Use a quality OTG cable
 - Verify USB host support on your device
 - Check USB drivers are loaded
 - Grant USB permissions when prompted
 
 ### Map Not Loading
+
 - Check internet connection for first load
 - Verify storage permissions for offline caching
 - Clear app cache if tiles appear corrupted
 - Zoom out and pan to refresh tiles
 
 ### No Telemetry Data
+
 - Verify ESP32 relay is receiving LoRa transmissions
 - Verify GPS collar/dongle is transmitting via LoRa
 - Check serial baud rate matches (115200)
@@ -266,6 +280,7 @@ This project is part of the B.R.A.V.O. IoT system. Please refer to the main repo
 ## Contributing
 
 Contributions are welcome! Please:
+
 1. Fork the repository
 2. Create a feature branch
 3. Make your changes
@@ -274,12 +289,14 @@ Contributions are welcome! Please:
 ## Support
 
 For issues, questions, or contributions, please visit:
-- GitHub Issues: https://github.com/beacon-relay-asset-view-orchestration/mobile/issues
-- Main Project: https://github.com/beacon-relay-asset-view-orchestration
+
+- GitHub Issues: https://github.com/FlaccidFacade/beacon-relay-asset-view-orchestration/issues
+- Main Project: https://github.com/FlaccidFacade/beacon-relay-asset-view-orchestration
 
 ## Roadmap
 
 Future enhancements:
+
 - [ ] Multi-device tracking
 - [ ] Historical telemetry data export
 - [ ] Advanced map features (heatmaps, geofencing)

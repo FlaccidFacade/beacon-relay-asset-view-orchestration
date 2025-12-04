@@ -1,9 +1,9 @@
 /**
  * @file GPS.h
- * @brief GPS module for B.R.A.V.O. collar location tracking
+ * @brief GPS module for B.R.A.V.O. beacon location tracking
  * 
  * This module handles GPS data acquisition and parsing for tracking
- * collar locations.
+ * beacon locations.
  */
 
 #ifndef GPS_H
@@ -12,9 +12,10 @@
 #include <Arduino.h>
 #include <TinyGPSPlus.h>
 
-// GPS pin definitions for ESP32
-#define GPS_RX_PIN  16
-#define GPS_TX_PIN  17
+// GPS pin definitions for Heltec WiFi LoRa 32 V3
+// Using available GPIOs - adjust based on your wiring
+#define GPS_RX_PIN  33  // GPIO33 - UART RX for GPS TX
+#define GPS_TX_PIN  34  // GPIO34 - UART TX for GPS RX (input only, for monitoring)
 #define GPS_BAUD    9600
 
 struct GPSData {
@@ -90,6 +91,18 @@ public:
      * @return GPSData structure with all GPS information
      */
     GPSData getData();
+    
+    /**
+     * @brief Get number of characters processed from GPS
+     * @return Number of characters processed
+     */
+    uint32_t getCharsProcessed();
+    
+    /**
+     * @brief Get number of failed checksums
+     * @return Number of failed checksums
+     */
+    uint32_t getFailedChecksums();
 
 private:
     TinyGPSPlus gps;

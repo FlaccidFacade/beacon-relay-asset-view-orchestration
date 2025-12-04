@@ -1,4 +1,4 @@
-import Link from 'next/link';
+import Link from "next/link";
 
 export default function Home() {
   return (
@@ -54,8 +54,8 @@ export default function Home() {
             Getting Started
           </h3>
           <p className="text-gray-700">
-            Select a section from the navigation above or click on one of the cards
-            to explore the B.R.A.V.O. dashboard features.
+            Select a section from the navigation above or click on one of the
+            cards to explore the B.R.A.V.O. dashboard features.
           </p>
         </div>
       </div>

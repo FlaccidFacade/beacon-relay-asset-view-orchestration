@@ -56,17 +56,20 @@ api/
 ### Installation
 
 1. Clone the repository:
+
 ```bash
-git clone https://github.com/beacon-relay-asset-view-orchestration/api.git
-cd api
+git clone https://github.com/FlaccidFacade/beacon-relay-asset-view-orchestration.git
+cd beacon-relay-asset-view-orchestration/api
 ```
 
 2. Install dependencies:
+
 ```bash
 npm install
 ```
 
 3. Build the project:
+
 ```bash
 npm run build
 ```
@@ -92,6 +95,7 @@ npm run typecheck
 ### Device Management
 
 #### Register a Device
+
 ```http
 POST /devices
 Content-Type: application/json
@@ -104,6 +108,7 @@ Content-Type: application/json
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -119,16 +124,19 @@ Content-Type: application/json
 ```
 
 #### Get Device
+
 ```http
 GET /devices/{deviceId}
 ```
 
 #### List All Devices
+
 ```http
 GET /devices
 ```
 
 #### Delete Device
+
 ```http
 DELETE /devices/{deviceId}
 ```
@@ -136,6 +144,7 @@ DELETE /devices/{deviceId}
 ### Telemetry
 
 #### Submit Telemetry Data
+
 ```http
 POST /telemetry
 Content-Type: application/json
@@ -152,11 +161,13 @@ Content-Type: application/json
 ```
 
 #### Get Telemetry by ID
+
 ```http
 GET /telemetry/{telemetryId}
 ```
 
 #### Get Device Telemetry
+
 ```http
 GET /devices/{deviceId}/telemetry
 ```
@@ -164,6 +175,7 @@ GET /devices/{deviceId}/telemetry
 ### OTA Updates
 
 #### Create OTA Update
+
 ```http
 POST /ota-updates
 Content-Type: application/json
@@ -176,11 +188,13 @@ Content-Type: application/json
 ```
 
 #### Get OTA Update
+
 ```http
 GET /ota-updates/{updateId}
 ```
 
 #### Update OTA Status
+
 ```http
 PATCH /ota-updates/{updateId}/status
 Content-Type: application/json
@@ -193,6 +207,7 @@ Content-Type: application/json
 **Valid status values:** `PENDING`, `IN_PROGRESS`, `COMPLETED`, `FAILED`, `CANCELLED`
 
 #### Get Device OTA Updates
+
 ```http
 GET /devices/{deviceId}/ota-updates
 ```
@@ -200,6 +215,7 @@ GET /devices/{deviceId}/ota-updates
 ## GraphQL API
 
 ### GraphQL Endpoint
+
 ```
 POST /graphql
 ```
@@ -207,13 +223,16 @@ POST /graphql
 ### Example Queries
 
 #### Register a Device
+
 ```graphql
 mutation RegisterDevice {
-  registerDevice(input: {
-    name: "Temperature Sensor 1"
-    type: "sensor"
-    firmwareVersion: "1.0.0"
-  }) {
+  registerDevice(
+    input: {
+      name: "Temperature Sensor 1"
+      type: "sensor"
+      firmwareVersion: "1.0.0"
+    }
+  ) {
     deviceId
     name
     type
@@ -225,6 +244,7 @@ mutation RegisterDevice {
 ```
 
 #### Get All Devices
+
 ```graphql
 query GetDevices {
   devices {
@@ -239,17 +259,20 @@ query GetDevices {
 ```
 
 #### Submit Telemetry
+
 ```graphql
 mutation SubmitTelemetry {
-  submitTelemetry(input: {
-    deviceId: "device-uuid"
-    data: {
-      temperature: 23.5
-      humidity: 65.2
-      signal_strength: -45
-      battery_level: 87
+  submitTelemetry(
+    input: {
+      deviceId: "device-uuid"
+      data: {
+        temperature: 23.5
+        humidity: 65.2
+        signal_strength: -45
+        battery_level: 87
+      }
     }
-  }) {
+  ) {
     telemetryId
     deviceId
     timestamp
@@ -264,13 +287,16 @@ mutation SubmitTelemetry {
 ```
 
 #### Create OTA Update
+
 ```graphql
 mutation CreateOTAUpdate {
-  createOTAUpdate(input: {
-    deviceId: "device-uuid"
-    toVersion: "1.1.0"
-    downloadUrl: "https://example.com/firmware/v1.1.0.bin"
-  }) {
+  createOTAUpdate(
+    input: {
+      deviceId: "device-uuid"
+      toVersion: "1.1.0"
+      downloadUrl: "https://example.com/firmware/v1.1.0.bin"
+    }
+  ) {
     updateId
     deviceId
     fromVersion
@@ -283,6 +309,7 @@ mutation CreateOTAUpdate {
 ```
 
 #### Get Device Telemetry
+
 ```graphql
 query GetDeviceTelemetry {
   deviceTelemetry(deviceId: "device-uuid") {
@@ -313,6 +340,7 @@ Configure these secrets in your GitHub repository settings:
 #### Deployment Process
 
 1. Push to `main` branch:
+
 ```bash
 git push origin main
 ```
@@ -328,11 +356,13 @@ git push origin main
 ### Manual Deployment
 
 1. Build the project:
+
 ```bash
 npm run build
 ```
 
 2. Package for Lambda:
+
 ```bash
 cd dist
 npm install --production --no-package-lock
@@ -341,6 +371,7 @@ cd ..
 ```
 
 3. Deploy REST API Lambda:
+
 ```bash
 aws lambda create-function \
   --function-name bravo-api-rest \
@@ -354,6 +385,7 @@ aws lambda create-function \
 ```
 
 4. Deploy GraphQL API Lambda:
+
 ```bash
 aws lambda create-function \
   --function-name bravo-api-graphql \
@@ -493,4 +525,4 @@ ISC
 
 ## Support
 
-For issues and questions, please open a GitHub issue in the repository.
+For issues and questions, please open a GitHub issue in the [main repository](https://github.com/FlaccidFacade/beacon-relay-asset-view-orchestration/issues).

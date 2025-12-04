@@ -1,10 +1,10 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import dynamic from 'next/dynamic';
+import { useState, useEffect } from "react";
+import dynamic from "next/dynamic";
 
 // Dynamically import the map component to avoid SSR issues
-const MapComponent = dynamic(() => import('@/components/MapComponent'), {
+const MapComponent = dynamic(() => import("@/components/MapComponent"), {
   ssr: false,
   loading: () => (
     <div className="w-full h-[600px] bg-gray-200 rounded-lg shadow-md flex items-center justify-center">
@@ -18,7 +18,7 @@ interface Device {
   name: string;
   lat: number;
   lng: number;
-  status: 'online' | 'offline' | 'warning';
+  status: "online" | "offline" | "warning";
 }
 
 export default function MapPage() {
@@ -28,39 +28,39 @@ export default function MapPage() {
     // Mock device data with coordinates around New York City
     const mockDevices: Device[] = [
       {
-        id: '1',
-        name: 'Device Alpha',
+        id: "1",
+        name: "Device Alpha",
         lat: 40.7128,
-        lng: -74.0060,
-        status: 'online',
+        lng: -74.006,
+        status: "online",
       },
       {
-        id: '2',
-        name: 'Device Beta',
+        id: "2",
+        name: "Device Beta",
         lat: 40.7589,
         lng: -73.9851,
-        status: 'online',
+        status: "online",
       },
       {
-        id: '3',
-        name: 'Device Gamma',
+        id: "3",
+        name: "Device Gamma",
         lat: 40.6782,
         lng: -73.9442,
-        status: 'warning',
+        status: "warning",
       },
       {
-        id: '4',
-        name: 'Device Delta',
+        id: "4",
+        name: "Device Delta",
         lat: 40.7489,
-        lng: -73.9680,
-        status: 'offline',
+        lng: -73.968,
+        status: "offline",
       },
       {
-        id: '5',
-        name: 'Device Epsilon',
+        id: "5",
+        name: "Device Epsilon",
         lat: 40.7282,
         lng: -74.0776,
-        status: 'online',
+        status: "online",
       },
     ];
     setDevices(mockDevices);
@@ -68,20 +68,24 @@ export default function MapPage() {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold mb-6 text-gray-900">Map Visualization</h1>
+      <h1 className="text-3xl font-bold mb-6 text-gray-900">
+        Map Visualization
+      </h1>
 
       <div className="mb-6 bg-white rounded-lg shadow-md p-4">
-        <h2 className="text-lg font-semibold mb-3 text-gray-900">Device Locations</h2>
+        <h2 className="text-lg font-semibold mb-3 text-gray-900">
+          Device Locations
+        </h2>
         <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
           {devices.map((device) => (
             <div key={device.id} className="flex items-center space-x-2">
               <span
                 className={`w-3 h-3 rounded-full ${
-                  device.status === 'online'
-                    ? 'bg-green-500'
-                    : device.status === 'warning'
-                    ? 'bg-yellow-500'
-                    : 'bg-red-500'
+                  device.status === "online"
+                    ? "bg-green-500"
+                    : device.status === "warning"
+                      ? "bg-yellow-500"
+                      : "bg-red-500"
                 }`}
               />
               <span className="text-sm text-gray-700">{device.name}</span>
@@ -100,7 +104,10 @@ export default function MapPage() {
           <li>Click on markers to view device details</li>
           <li>Zoom in/out using the controls or mouse wheel</li>
           <li>Pan by clicking and dragging the map</li>
-          <li>Marker colors indicate device status (green: online, yellow: warning, red: offline)</li>
+          <li>
+            Marker colors indicate device status (green: online, yellow:
+            warning, red: offline)
+          </li>
         </ul>
       </div>
     </div>

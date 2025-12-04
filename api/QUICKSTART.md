@@ -5,20 +5,24 @@ Get the B.R.A.V.O. API up and running in 5 minutes!
 ## 🚀 Local Development
 
 ### 1. Prerequisites
+
 - Node.js 20.x or later
 - npm 10.x or later
 
 ### 2. Install Dependencies
+
 ```bash
 npm install
 ```
 
 ### 3. Build the Project
+
 ```bash
 npm run build
 ```
 
 ### 4. Verify Everything Works
+
 ```bash
 npm run lint
 npm run typecheck
@@ -29,6 +33,7 @@ npm run typecheck
 ## 📦 What You Just Built
 
 ### Project Structure
+
 ```
 api/
 ├── src/
@@ -47,6 +52,7 @@ api/
 ### API Endpoints
 
 #### REST API
+
 - `POST /devices` - Register a device
 - `GET /devices` - List all devices
 - `GET /devices/{id}` - Get device details
@@ -60,6 +66,7 @@ api/
 - `GET /devices/{id}/ota-updates` - Get device OTA updates
 
 #### GraphQL API
+
 - `POST /graphql` - GraphQL endpoint with queries and mutations
 
 ## 🔧 Development Commands
@@ -94,6 +101,7 @@ npm run package
    - `AWS_LAMBDA_ROLE_ARN`
 
 2. **Push to main branch**:
+
    ```bash
    git push origin main
    ```
@@ -105,6 +113,7 @@ npm run package
 Follow the detailed guide in [AWS_SETUP.md](AWS_SETUP.md)
 
 **Quick version:**
+
 ```bash
 # Build and package
 npm run build
@@ -125,6 +134,7 @@ aws lambda update-function-code \
 ## 🧪 Test Your API
 
 ### Test REST API (after deployment)
+
 ```bash
 API_URL="https://YOUR_API_ID.execute-api.us-east-1.amazonaws.com/prod"
 
@@ -142,6 +152,7 @@ curl $API_URL/devices
 ```
 
 ### Test GraphQL API
+
 ```bash
 # Open GraphQL Playground in browser
 open $API_URL/graphql
@@ -157,11 +168,13 @@ curl -X POST $API_URL/graphql \
 ## 📚 Next Steps
 
 ### For Development
+
 - [ ] Read [README.md](README.md) for detailed API documentation
 - [ ] Review [examples.md](examples.md) for usage examples
 - [ ] Explore [ARCHITECTURE.md](ARCHITECTURE.md) to understand the system
 
 ### For Production
+
 - [ ] Follow [AWS_SETUP.md](AWS_SETUP.md) to set up AWS infrastructure
 - [ ] Replace mock database with DynamoDB or RDS
 - [ ] Set up authentication (AWS Cognito, API Keys, etc.)
@@ -170,16 +183,17 @@ curl -X POST $API_URL/graphql \
 - [ ] Enable CloudWatch Logs for debugging
 
 ### For Customization
+
 - [ ] Modify `src/types/index.ts` to add custom data models
 - [ ] Update `src/handlers/` to add custom business logic
 - [ ] Extend `src/graphql/schema.ts` with new queries/mutations
 - [ ] Add authentication middleware in Lambda handlers
 - [ ] Integrate with external services (SNS, SES, etc.)
 
-
 ## 🐛 Troubleshooting
 
 ### Build Errors
+
 ```bash
 # Clear everything and rebuild
 npm run clean
@@ -189,6 +203,7 @@ npm run build
 ```
 
 ### TypeScript Errors
+
 ```bash
 # Check for type errors
 npm run typecheck
@@ -199,6 +214,7 @@ npm run typecheck
 ```
 
 ### Linting Errors
+
 ```bash
 # Auto-fix most issues
 npm run lint:fix
@@ -208,6 +224,7 @@ npm run lint
 ```
 
 ### AWS Deployment Issues
+
 ```bash
 # Test Lambda function locally
 cd dist
@@ -230,18 +247,22 @@ aws iam get-role --role-name bravo-api-lambda-role
 ## 📝 Important Notes
 
 ### Current Database
+
 The project uses an **in-memory mock database** for development. This means:
+
 - ✅ No setup required for local development
 - ✅ Easy testing and debugging
 - ⚠️ Data is lost when Lambda restarts
 - ❌ Not suitable for production
 
 **For production**, replace the mock database in `src/utils/database.ts` with:
+
 - DynamoDB (recommended for serverless)
 - RDS (PostgreSQL/MySQL)
 - Aurora Serverless
 
 ### Security Notes
+
 - Currently, there's **no authentication** (development mode)
 - For production, add authentication:
   - AWS Cognito
@@ -250,6 +271,7 @@ The project uses an **in-memory mock database** for development. This means:
   - OAuth 2.0 / JWT
 
 ### Cost Considerations
+
 - AWS Lambda Free Tier: 1M requests/month
 - API Gateway Free Tier: 1M requests/month (first 12 months)
 - DynamoDB Free Tier: 25GB storage + 25 RCU/WCU

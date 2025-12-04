@@ -14,6 +14,7 @@ This guide walks through setting up the required AWS infrastructure for the B.R.
 ### 1. Create IAM Role for Lambda
 
 #### Create Trust Policy
+
 Create a file `lambda-trust-policy.json`:
 
 ```json
@@ -32,6 +33,7 @@ Create a file `lambda-trust-policy.json`:
 ```
 
 #### Create IAM Role
+
 ```bash
 aws iam create-role \
   --role-name bravo-api-lambda-role \
@@ -39,6 +41,7 @@ aws iam create-role \
 ```
 
 #### Attach Basic Execution Policy
+
 ```bash
 aws iam attach-role-policy \
   --role-name bravo-api-lambda-role \
@@ -46,6 +49,7 @@ aws iam attach-role-policy \
 ```
 
 #### Create Custom Policy for Additional Permissions
+
 Create `lambda-permissions-policy.json`:
 
 ```json
@@ -66,10 +70,7 @@ Create `lambda-permissions-policy.json`:
     },
     {
       "Effect": "Allow",
-      "Action": [
-        "s3:GetObject",
-        "s3:PutObject"
-      ],
+      "Action": ["s3:GetObject", "s3:PutObject"],
       "Resource": "arn:aws:s3:::bravo-firmware/*"
     }
   ]
@@ -89,6 +90,7 @@ aws iam attach-role-policy \
 ### 2. Create DynamoDB Tables (Recommended for Production)
 
 #### Devices Table
+
 ```bash
 aws dynamodb create-table \
   --table-name bravo-devices \
@@ -101,6 +103,7 @@ aws dynamodb create-table \
 ```
 
 #### Telemetry Table
+
 ```bash
 aws dynamodb create-table \
   --table-name bravo-telemetry \
@@ -117,6 +120,7 @@ aws dynamodb create-table \
 ```
 
 #### OTA Updates Table
+
 ```bash
 aws dynamodb create-table \
   --table-name bravo-ota-updates \
@@ -174,12 +178,14 @@ aws s3api put-bucket-policy \
 ### 4. Build and Deploy Lambda Functions
 
 #### Build the Project
+
 ```bash
 npm install
 npm run build
 ```
 
 #### Package Lambda Functions
+
 ```bash
 cd dist
 npm install --production --no-package-lock
@@ -188,6 +194,7 @@ cd ..
 ```
 
 #### Deploy REST API Lambda
+
 ```bash
 # Get the role ARN
 ROLE_ARN=$(aws iam get-role --role-name bravo-api-lambda-role --query 'Role.Arn' --output text)
@@ -206,6 +213,7 @@ aws lambda create-function \
 ```
 
 #### Deploy GraphQL API Lambda
+
 ```bash
 aws lambda create-function \
   --function-name bravo-api-graphql \
@@ -222,6 +230,7 @@ aws lambda create-function \
 ### 5. Create API Gateway
 
 #### Create REST API
+
 ```bash
 # Create API
 API_ID=$(aws apigateway create-rest-api \
@@ -329,6 +338,7 @@ aws lambda add-permission \
 ```
 
 #### Deploy API
+
 ```bash
 aws apigateway create-deployment \
   --rest-api-id $API_ID \
@@ -503,6 +513,7 @@ aws sns delete-topic --topic-arn $TOPIC_ARN
 ## Troubleshooting
 
 ### Lambda Function Errors
+
 ```bash
 # View recent logs
 aws logs tail /aws/lambda/bravo-api-rest --follow
@@ -512,6 +523,7 @@ aws lambda get-function-configuration --function-name bravo-api-rest
 ```
 
 ### API Gateway Issues
+
 ```bash
 # Test invoke Lambda directly
 aws lambda invoke \
@@ -523,6 +535,7 @@ cat response.json
 ```
 
 ### Permission Issues
+
 ```bash
 # Check Lambda execution role
 aws iam get-role --role-name bravo-api-lambda-role
@@ -534,6 +547,7 @@ aws iam list-attached-role-policies --role-name bravo-api-lambda-role
 ## Cost Estimation
 
 **Monthly costs for moderate usage:**
+
 - Lambda: 1M requests, 512MB, 1s avg duration = ~$5
 - API Gateway: 1M requests = ~$3.50
 - DynamoDB: 1M writes, 1M reads (on-demand) = ~$2
@@ -543,6 +557,7 @@ aws iam list-attached-role-policies --role-name bravo-api-lambda-role
 **Total: ~$12/month**
 
 For production workloads, costs will vary based on:
+
 - Request volume
 - Lambda execution time
 - Data storage

@@ -102,3 +102,11 @@ GPSData GPS::getData() {
 
     return data;
 }
+
+uint32_t GPS::getCharsProcessed() {
+    return gps.charsProcessed();
+}
+
+uint32_t GPS::getFailedChecksums() {
+    return gps.failedChecksum();
+}

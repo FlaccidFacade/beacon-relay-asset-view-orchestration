@@ -1,10 +1,19 @@
-import { v4 as uuidv4 } from 'uuid';
-import { Device, Telemetry, OTAUpdate, DeviceStatus, OTAUpdateStatus } from '../types';
-import { database } from '../utils/database';
+import { v4 as uuidv4 } from "uuid";
+import {
+  Device,
+  Telemetry,
+  OTAUpdate,
+  DeviceStatus,
+  OTAUpdateStatus,
+} from "../types";
+import { database } from "../utils/database";
 
 export const resolvers = {
   Query: {
-    device: async (_: unknown, { deviceId }: { deviceId: string }): Promise<Device | null> => {
+    device: async (
+      _: unknown,
+      { deviceId }: { deviceId: string }
+    ): Promise<Device | null> => {
       return await database.getDevice(deviceId);
     },
 
@@ -12,25 +21,42 @@ export const resolvers = {
       return await database.getAllDevices();
     },
 
-    telemetry: async (_: unknown, { telemetryId }: { telemetryId: string }): Promise<Telemetry | null> => {
+    telemetry: async (
+      _: unknown,
+      { telemetryId }: { telemetryId: string }
+    ): Promise<Telemetry | null> => {
       return await database.getTelemetry(telemetryId);
     },
 
-    deviceTelemetry: async (_: unknown, { deviceId }: { deviceId: string }): Promise<Telemetry[]> => {
+    deviceTelemetry: async (
+      _: unknown,
+      { deviceId }: { deviceId: string }
+    ): Promise<Telemetry[]> => {
       return await database.getTelemetryByDevice(deviceId);
     },
 
-    otaUpdate: async (_: unknown, { updateId }: { updateId: string }): Promise<OTAUpdate | null> => {
+    otaUpdate: async (
+      _: unknown,
+      { updateId }: { updateId: string }
+    ): Promise<OTAUpdate | null> => {
       return await database.getOTAUpdate(updateId);
     },
 
-    deviceOTAUpdates: async (_: unknown, { deviceId }: { deviceId: string }): Promise<OTAUpdate[]> => {
+    deviceOTAUpdates: async (
+      _: unknown,
+      { deviceId }: { deviceId: string }
+    ): Promise<OTAUpdate[]> => {
       return await database.getOTAUpdatesByDevice(deviceId);
     },
   },
 
   Mutation: {
-    registerDevice: async (_: unknown, { input }: { input: { name: string; type: string; firmwareVersion: string } }): Promise<Device> => {
+    registerDevice: async (
+      _: unknown,
+      {
+        input,
+      }: { input: { name: string; type: string; firmwareVersion: string } }
+    ): Promise<Device> => {
       const device: Device = {
         deviceId: uuidv4(),
         name: input.name,
@@ -43,14 +69,27 @@ export const resolvers = {
       return await database.saveDevice(device);
     },
 
-    deleteDevice: async (_: unknown, { deviceId }: { deviceId: string }): Promise<boolean> => {
+    deleteDevice: async (
+      _: unknown,
+      { deviceId }: { deviceId: string }
+    ): Promise<boolean> => {
       return await database.deleteDevice(deviceId);
     },
 
-    submitTelemetry: async (_: unknown, { input }: { input: { deviceId: string; data: Record<string, number | string | boolean | undefined> } }): Promise<Telemetry> => {
+    submitTelemetry: async (
+      _: unknown,
+      {
+        input,
+      }: {
+        input: {
+          deviceId: string;
+          data: Record<string, number | string | boolean | undefined>;
+        };
+      }
+    ): Promise<Telemetry> => {
       const device = await database.getDevice(input.deviceId);
       if (!device) {
-        throw new Error('Device not found');
+        throw new Error("Device not found");
       }
 
       const telemetry: Telemetry = {
@@ -63,10 +102,15 @@ export const resolvers = {
       return await database.saveTelemetry(telemetry);
     },
 
-    createOTAUpdate: async (_: unknown, { input }: { input: { deviceId: string; toVersion: string; downloadUrl: string } }): Promise<OTAUpdate> => {
+    createOTAUpdate: async (
+      _: unknown,
+      {
+        input,
+      }: { input: { deviceId: string; toVersion: string; downloadUrl: string } }
+    ): Promise<OTAUpdate> => {
       const device = await database.getDevice(input.deviceId);
       if (!device) {
-        throw new Error('Device not found');
+        throw new Error("Device not found");
       }
 
       const otaUpdate: OTAUpdate = {
@@ -82,7 +126,10 @@ export const resolvers = {
       return await database.saveOTAUpdate(otaUpdate);
     },
 
-    updateOTAUpdateStatus: async (_: unknown, { updateId, status }: { updateId: string; status: OTAUpdateStatus }): Promise<OTAUpdate> => {
+    updateOTAUpdateStatus: async (
+      _: unknown,
+      { updateId, status }: { updateId: string; status: OTAUpdateStatus }
+    ): Promise<OTAUpdate> => {
       const updates: Partial<OTAUpdate> = { status };
 
       if (status === OTAUpdateStatus.IN_PROGRESS) {
@@ -97,7 +144,7 @@ export const resolvers = {
 
       const updatedUpdate = await database.updateOTAUpdate(updateId, updates);
       if (!updatedUpdate) {
-        throw new Error('OTA update not found');
+        throw new Error("OTA update not found");
       }
 
       return updatedUpdate;

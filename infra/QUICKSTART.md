@@ -14,8 +14,8 @@ Get your B.R.A.V.O. infrastructure up and running in minutes.
 ### 1. Clone and Install (2 minutes)
 
 ```bash
-git clone https://github.com/beacon-relay-asset-view-orchestration/infra
-cd infra
+git clone https://github.com/FlaccidFacade/beacon-relay-asset-view-orchestration.git
+cd beacon-relay-asset-view-orchestration/infra
 npm install
 ```
 
@@ -32,6 +32,7 @@ aws sts get-caller-identity
 ### 3. Update Configuration (1 minute)
 
 Edit `config/stack-config.json`:
+
 ```json
 {
   "aws": {
@@ -90,16 +91,19 @@ curl $API_ENDPOINT/devices
 ## Troubleshooting
 
 ### "CDK not bootstrapped" error
+
 ```bash
 npx cdk bootstrap
 ```
 
 ### "Credentials not found" error
+
 ```bash
 aws configure
 ```
 
 ### "Permission denied" on scripts
+
 ```bash
 chmod +x scripts/*.sh
 ```
@@ -107,6 +111,7 @@ chmod +x scripts/*.sh
 ## Clean Up
 
 To remove all resources:
+
 ```bash
 ./scripts/destroy.sh
 ```

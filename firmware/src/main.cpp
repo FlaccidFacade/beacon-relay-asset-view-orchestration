@@ -1,280 +1,331 @@
 /**
- * @file main.cpp
- * @brief Main firmware file for B.R.A.V.O. (Bluetooth Radio Advanced Visual Orchestration)
- * 
- * This is the main entry point for the ESP32 firmware running on both collars and dongle.
- * It integrates LoRa communication, GPS tracking, IMU motion sensing, BLE configuration,
- * OTA updates, and JSON telemetry formatting.
- * 
- * @author B.R.A.V.O. Team
- * @date 2025
+ * Button-driven status screens for GPS info and LoRa TX/RX stats.
  */
 
 #include <Arduino.h>
-#include "LoRaComm.h"
+#include <Wire.h>
+#include <Adafruit_GFX.h>
+#include <Adafruit_SSD1306.h>
+
+#ifdef BLACK
+#undef BLACK
+#endif
+#ifdef WHITE
+#undef WHITE
+#endif
+#ifdef INVERSE
+#undef INVERSE
+#endif
+
 #include "GPS.h"
-#include "BLEConfig.h"
-#include "IMU.h"
-#include "OTA.h"
-#include "Telemetry.h"
+#include "LoRaComm.h"
+#include "heltec.h"
 
-// Device configuration
-#define DEVICE_ID           "BRAVO_001"
-#define DEVICE_TYPE_COLLAR  true  // Set to false for dongle
+#define OLED_SDA 17
+#define OLED_SCL 18
+#define OLED_RST 21
+#define Vext 36
+#define BUTTON_PIN 0  // PRG button
 
-// Timing intervals (milliseconds)
-#define GPS_UPDATE_INTERVAL         1000   // Update GPS every 1 second
-#define IMU_UPDATE_INTERVAL         100    // Update IMU every 100ms
-#define TELEMETRY_SEND_INTERVAL     10000  // Send telemetry every 10 seconds
-#define STATUS_PRINT_INTERVAL       5000   // Print status every 5 seconds
+#define SCREEN_WIDTH 128
+#define SCREEN_HEIGHT 64
+#define OLED_ADDR 0x3C
 
-// Module instances
-LoRaComm lora;
+enum DeviceRole {
+  ROLE_BEACON = 0,
+  ROLE_RELAY = 1,
+  ROLE_BOTH = 2
+};
+
+#ifndef DEVICE_ROLE
+#define DEVICE_ROLE ROLE_BOTH
+#endif
+
+const char* DEVICE_ID = "BRAVO_TEST";
+
+enum ScreenMode {
+  SCREEN_GPS = 0,
+  SCREEN_RADIO = 1
+};
+
+Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RST);
 GPS gps;
-BLEConfig bleConfig;
-IMU imu;
-OTA ota;
-Telemetry telemetry;
+LoRaComm lora;
 
-// Timing variables
-unsigned long lastGPSUpdate = 0;
-unsigned long lastIMUUpdate = 0;
-unsigned long lastTelemetrySend = 0;
-unsigned long lastStatusPrint = 0;
+// Button state
+volatile bool buttonPressed = false;
+unsigned long lastDebounceTime = 0;
+const unsigned long debounceDelay = 200;
 
-// Battery monitoring (placeholder - implement based on hardware)
-uint8_t batteryLevel = 100;
+// Screen / data state
+ScreenMode currentScreen = SCREEN_GPS;
+unsigned long lastDisplayRefresh = 0;
+const unsigned long DISPLAY_REFRESH_INTERVAL = 1000;
 
-/**
- * @brief Get battery level percentage
- * @return Battery level 0-100
- */
-uint8_t getBatteryLevel() {
-    // TODO: Implement actual battery monitoring via ADC
-    // This is a placeholder that simulates battery drain
-    static uint8_t battery = 100;
-    if (battery > 0 && millis() % 60000 == 0) {
-        battery--;
-    }
-    return battery;
+// GPS state
+bool gpsReady = false;
+GPSData latestGpsData = {};
+unsigned long lastGpsSample = 0;
+const unsigned long GPS_SAMPLE_INTERVAL = 1000;
+
+// LoRa state
+bool loraReady = false;
+unsigned long lastHeartbeat = 0;
+const unsigned long HEARTBEAT_INTERVAL = 5000;
+uint32_t txCount = 0;
+uint32_t rxCount = 0;
+int lastRSSI = 0;
+float lastSNR = 0.0f;
+String lastLoRaMessage = "(none)";
+bool lastSendSuccess = false;
+
+void IRAM_ATTR buttonISR();
+void updateDisplay(bool force = false);
+void drawGpsScreen();
+void drawRadioScreen();
+void handleLoRa();
+const char* deviceRoleString();
+bool isBeaconRole();
+bool isRelayRole();
+
+void IRAM_ATTR buttonISR() {
+  unsigned long currentTime = millis();
+  if (currentTime - lastDebounceTime > debounceDelay) {
+    buttonPressed = true;
+    lastDebounceTime = currentTime;
+  }
 }
 
-/**
- * @brief Initialize all modules
- */
-void initializeModules() {
-    Serial.println("=== B.R.A.V.O. Firmware Initialization ===");
-    Serial.print("Device ID: ");
-    Serial.println(DEVICE_ID);
-    Serial.print("Device Type: ");
-    Serial.println(DEVICE_TYPE_COLLAR ? "Collar" : "Dongle");
-    
-    // Initialize LoRa
-    Serial.println("\nInitializing LoRa...");
-    if (lora.begin()) {
-        Serial.println("✓ LoRa ready");
-    } else {
-        Serial.println("✗ LoRa failed");
-    }
-
-    // Initialize GPS
-    Serial.println("\nInitializing GPS...");
-    if (gps.begin()) {
-        Serial.println("✓ GPS ready");
-    } else {
-        Serial.println("✗ GPS failed");
-    }
-
-    // Initialize IMU
-    Serial.println("\nInitializing IMU...");
-    if (imu.begin()) {
-        Serial.println("✓ IMU ready");
-    } else {
-        Serial.println("✗ IMU failed");
-    }
-
-    // Initialize BLE
-    Serial.println("\nInitializing BLE...");
-    if (bleConfig.begin(DEVICE_ID)) {
-        Serial.println("✓ BLE ready");
-    } else {
-        Serial.println("✗ BLE failed");
-    }
-
-    // Initialize OTA (optional - uncomment to enable WiFi OTA)
-    // Serial.println("\nInitializing OTA...");
-    // if (ota.connectWiFi("YourSSID", "YourPassword")) {
-    //     ota.begin(DEVICE_ID);
-    //     Serial.println("✓ OTA ready");
-    // } else {
-    //     Serial.println("✗ OTA WiFi connection failed");
-    // }
-
-    Serial.println("\n=== Initialization Complete ===\n");
-}
-
-/**
- * @brief Handle GPS updates
- */
-void handleGPS() {
-    gps.update();
-
-    if (millis() - lastGPSUpdate >= GPS_UPDATE_INTERVAL) {
-        lastGPSUpdate = millis();
-        
-        if (gps.hasFix()) {
-            double lat, lon;
-            gps.getLocation(lat, lon);
-            // GPS data is ready for telemetry
-        }
-    }
-}
-
-/**
- * @brief Handle IMU updates
- */
-void handleIMU() {
-    if (millis() - lastIMUUpdate >= IMU_UPDATE_INTERVAL) {
-        lastIMUUpdate = millis();
-        
-        if (imu.readSensor()) {
-            // IMU data is ready for telemetry
-            uint8_t activity = imu.getActivityLevel();
-            
-            // Check for motion events
-            if (imu.isInMotion(1.0)) {
-                // Motion detected - could trigger alert
-            }
-        }
-    }
-}
-
-/**
- * @brief Handle telemetry transmission
- */
-void handleTelemetry() {
-    if (millis() - lastTelemetrySend >= TELEMETRY_SEND_INTERVAL) {
-        lastTelemetrySend = millis();
-        
-        // Get current sensor data
-        GPSData gpsData = gps.getData();
-        IMUData imuData = imu.getData();
-        batteryLevel = getBatteryLevel();
-
-        // Create full telemetry packet
-        String telemetryJson = telemetry.createFullTelemetry(
-            gpsData, imuData, DEVICE_ID, batteryLevel
-        );
-
-        // Send via LoRa
-        if (lora.sendMessage(telemetryJson)) {
-            Serial.println("Telemetry sent via LoRa");
-        }
-
-        // Also send status to BLE if connected
-        if (bleConfig.isConnected()) {
-            bleConfig.sendStatus(telemetryJson);
-        }
-    }
-}
-
-/**
- * @brief Handle incoming LoRa messages
- */
-void handleLoRaReceive() {
-    if (lora.available()) {
-        String message = lora.receiveMessage();
-        int rssi = lora.getRSSI();
-        float snr = lora.getSNR();
-
-        Serial.println("=== LoRa Message Received ===");
-        Serial.print("Message: ");
-        Serial.println(message);
-        Serial.print("RSSI: ");
-        Serial.print(rssi);
-        Serial.println(" dBm");
-        Serial.print("SNR: ");
-        Serial.println(snr);
-
-        // Parse telemetry if it's JSON
-        if (telemetry.parseTelemetry(message)) {
-            Serial.println("Valid telemetry packet received");
-        }
-    }
-}
-
-/**
- * @brief Print status information
- */
-void printStatus() {
-    if (millis() - lastStatusPrint >= STATUS_PRINT_INTERVAL) {
-        lastStatusPrint = millis();
-        
-        Serial.println("\n=== Status Update ===");
-        Serial.print("Uptime: ");
-        Serial.print(millis() / 1000);
-        Serial.println(" seconds");
-        
-        Serial.print("Battery: ");
-        Serial.print(batteryLevel);
-        Serial.println("%");
-        
-        Serial.print("GPS Fix: ");
-        Serial.println(gps.hasFix() ? "Yes" : "No");
-        
-        if (gps.hasFix()) {
-            Serial.print("Satellites: ");
-            Serial.println(gps.getSatellites());
-        }
-        
-        Serial.print("BLE Connected: ");
-        Serial.println(bleConfig.isConnected() ? "Yes" : "No");
-        
-        Serial.print("Activity Level: ");
-        Serial.println(imu.getActivityLevel());
-        
-        Serial.println("====================\n");
-    }
-}
-
-/**
- * @brief Arduino setup function
- */
 void setup() {
-    // Initialize serial communication
-    Serial.begin(115200);
-    delay(1000);
-    Serial.println("\n\n");
+  Serial.begin(115200);
+  delay(1000);
+  Serial.println("Starting BRAVO status display...");
+  
+  // Setup button
+  pinMode(BUTTON_PIN, INPUT_PULLUP);
+  attachInterrupt(digitalPinToInterrupt(BUTTON_PIN), buttonISR, FALLING);
+  
+  // Enable Vext power
+  pinMode(Vext, OUTPUT);
+  digitalWrite(Vext, LOW);
+  delay(100);
 
-    // Initialize all modules
-    initializeModules();
+  Serial.println("Initializing Heltec core (peripherals only)...");
+  Heltec.begin(
+    false,      // Display handled manually
+    false,      // Skip Heltec LoRa init (we handle separately)
+    true,       // Serial
+    true,       // PA boost enabled when we start LoRa ourselves
+    LORA_BAND
+  );
+  Serial.println("Heltec core ready");
+  
+  // Initialize display
+  Wire.begin(OLED_SDA, OLED_SCL);
+  if(!display.begin(SSD1306_SWITCHCAPVCC, OLED_ADDR)) {
+    Serial.println("Display failed!");
+    while(1) {
+      delay(1000);
+    }
+  }
+  display.clearDisplay();
+  display.setTextSize(1);
+  display.setTextColor(SSD1306_WHITE);
+  display.setCursor(0, 0);
+  display.println("BRAVO Display");
+  display.println("Initializing...");
+  display.display();
+  Serial.println("Display OK!");
+
+  // Initialize modules
+  Serial.println("Bringing up GPS module...");
+  gpsReady = gps.begin();
+  Serial.println(gpsReady ? "GPS ready" : "GPS failed");
+
+  Serial.println("Bringing up LoRa module...");
+  loraReady = lora.begin();
+  Serial.println(loraReady ? "LoRa ready" : "LoRa failed");
+  latestGpsData = gps.getData();
+
+  if (!gpsReady) {
+    Serial.println("GPS init failed");
+    display.clearDisplay();
+    display.setCursor(0, 0);
+    display.println("GPS INIT FAIL");
+    display.display();
+    delay(1000);
+  }
+  if (!loraReady) {
+    Serial.println("LoRa init failed");
+    display.clearDisplay();
+    display.setCursor(0, 0);
+    display.println("LORA INIT FAIL");
+    display.display();
+    delay(1000);
+  }
+
+  updateDisplay(true);
+  Serial.println("Setup complete!");
 }
 
-/**
- * @brief Arduino main loop function
- */
 void loop() {
-    // Update GPS continuously
-    handleGPS();
+  gps.update();
 
-    // Update IMU periodically
-    handleIMU();
+  if (millis() - lastGpsSample >= GPS_SAMPLE_INTERVAL) {
+    lastGpsSample = millis();
+    latestGpsData = gps.getData();
+    if (currentScreen == SCREEN_GPS) {
+      updateDisplay(true);
+    }
+  }
 
-    // Handle BLE updates
-    bleConfig.update();
+  if (loraReady) {
+    handleLoRa();
+  }
 
-    // Handle OTA updates (if enabled)
-    // ota.handle();
+  if (buttonPressed) {
+    buttonPressed = false;
+    currentScreen = (currentScreen == SCREEN_GPS) ? SCREEN_RADIO : SCREEN_GPS;
+    Serial.print("Switched to screen: ");
+    Serial.println(currentScreen == SCREEN_GPS ? "GPS" : "RADIO");
+    updateDisplay(true);
+  }
 
-    // Send telemetry periodically
-    handleTelemetry();
+  updateDisplay();
+  delay(5);
+}
 
-    // Check for incoming LoRa messages
-    handleLoRaReceive();
+void updateDisplay(bool force) {
+  unsigned long now = millis();
+  if (!force && (now - lastDisplayRefresh) < DISPLAY_REFRESH_INTERVAL) {
+    return;
+  }
 
-    // Print status periodically
-    printStatus();
+  display.clearDisplay();
+  display.setTextSize(1);
+  display.setTextColor(SSD1306_WHITE);
 
-    // Small delay to prevent watchdog issues
-    delay(10);
+  if (currentScreen == SCREEN_GPS) {
+    drawGpsScreen();
+  } else {
+    drawRadioScreen();
+  }
+
+  display.display();
+  lastDisplayRefresh = now;
+}
+
+void drawGpsScreen() {
+  display.setCursor(0, 0);
+  display.println("GPS INFO");
+  display.print("Fix: ");
+  display.println(latestGpsData.valid ? "YES" : "NO");
+  display.print("Sat: ");
+  display.println(latestGpsData.satellites);
+  display.print("Lat: ");
+  if (latestGpsData.valid) {
+    display.println(latestGpsData.latitude, 5);
+  } else {
+    display.println("--");
+  }
+  display.print("Lon: ");
+  if (latestGpsData.valid) {
+    display.println(latestGpsData.longitude, 5);
+  } else {
+    display.println("--");
+  }
+  display.print("Alt: ");
+  display.print(latestGpsData.altitude, 1);
+  display.println("m");
+  display.print("Spd: ");
+  display.print(latestGpsData.speed, 1);
+  display.println("kmh");
+}
+
+void drawRadioScreen() {
+  display.setCursor(0, 0);
+  display.println("RADIO INFO");
+  display.print("Role: ");
+  display.println(deviceRoleString());
+  display.print("LoRa: ");
+  display.println(loraReady ? "READY" : "ERROR");
+  display.print("TX: ");
+  display.println(txCount);
+  display.print("RX: ");
+  display.println(rxCount);
+  display.print("RSSI: ");
+  if (rxCount > 0) {
+    display.println(lastRSSI);
+  } else {
+    display.println("--");
+  }
+  display.print("SNR: ");
+  if (rxCount > 0) {
+    display.println(lastSNR, 1);
+  } else {
+    display.println("--");
+  }
+  display.print("LastTX: ");
+  display.println(lastSendSuccess ? "OK" : "--");
+  display.print("Msg: ");
+  String preview = lastLoRaMessage;
+  if (preview.length() > 16) {
+    preview = preview.substring(0, 16);
+  }
+  display.println(preview);
+}
+
+void handleLoRa() {
+  unsigned long now = millis();
+
+  if (isBeaconRole()) {
+    if (now - lastHeartbeat >= HEARTBEAT_INTERVAL) {
+      lastHeartbeat = now;
+      String payload = String("BEACON|") + DEVICE_ID + "|" + String(now / 1000);
+      lastSendSuccess = lora.sendMessage(payload);
+      if (lastSendSuccess) {
+        txCount++;
+        Serial.println("LoRa TX: " + payload);
+      } else {
+        Serial.println("LoRa TX failed");
+      }
+      if (currentScreen == SCREEN_RADIO) {
+        updateDisplay(true);
+      }
+    }
+  }
+
+  if (lora.available()) {
+    String message = lora.receiveMessage();
+    if (message.length() > 0) {
+      rxCount++;
+      lastRSSI = lora.getRSSI();
+      lastSNR = lora.getSNR();
+      lastLoRaMessage = message;
+      Serial.println("LoRa RX: " + message);
+      if (currentScreen == SCREEN_RADIO) {
+        updateDisplay(true);
+      }
+    }
+  }
+}
+
+const char* deviceRoleString() {
+  switch (DEVICE_ROLE) {
+    case ROLE_BEACON:
+      return "Beacon";
+    case ROLE_RELAY:
+      return "Relay";
+    case ROLE_BOTH:
+    default:
+      return "Beacon+Relay";
+  }
+}
+
+bool isBeaconRole() {
+  return DEVICE_ROLE == ROLE_BEACON || DEVICE_ROLE == ROLE_BOTH;
+}
+
+bool isRelayRole() {
+  return DEVICE_ROLE == ROLE_RELAY || DEVICE_ROLE == ROLE_BOTH;
 }

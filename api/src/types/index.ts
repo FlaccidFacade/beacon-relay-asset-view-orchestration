@@ -10,10 +10,10 @@ export interface Device {
 }
 
 export enum DeviceStatus {
-  ACTIVE = 'ACTIVE',
-  INACTIVE = 'INACTIVE',
-  UPDATING = 'UPDATING',
-  ERROR = 'ERROR'
+  ACTIVE = "ACTIVE",
+  INACTIVE = "INACTIVE",
+  UPDATING = "UPDATING",
+  ERROR = "ERROR",
 }
 
 export interface DeviceRegistrationInput {
@@ -57,11 +57,11 @@ export interface OTAUpdate {
 }
 
 export enum OTAUpdateStatus {
-  PENDING = 'PENDING',
-  IN_PROGRESS = 'IN_PROGRESS',
-  COMPLETED = 'COMPLETED',
-  FAILED = 'FAILED',
-  CANCELLED = 'CANCELLED'
+  PENDING = "PENDING",
+  IN_PROGRESS = "IN_PROGRESS",
+  COMPLETED = "COMPLETED",
+  FAILED = "FAILED",
+  CANCELLED = "CANCELLED",
 }
 
 export interface OTAUpdateInput {

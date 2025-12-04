@@ -3,50 +3,94 @@
  * @brief LoRa communication module implementation
  */
 
+#include <algorithm>
+#include <cstring>
 #include "LoRaComm.h"
 
-LoRaComm::LoRaComm() : initialized(false) {
+#ifndef LORA_SPI_HOST
+#if defined(ARDUINO_ARCH_ESP32)
+#define LORA_SPI_HOST  FSPI
+#else
+#define LORA_SPI_HOST  HSPI
+#endif
+#endif
+
+LoRaComm::LoRaComm()
+    : initialized(false),
+      spi(nullptr),
+      module(nullptr),
+      radio(nullptr),
+      pendingMessage(false),
+      pendingPayload(""),
+      lastPacketRSSI(0),
+      lastPacketSNR(0.0f) {}
+
+void LoRaComm::resetPending() {
+    pendingMessage = false;
+    pendingPayload = "";
 }
 
 bool LoRaComm::begin() {
-    // Setup LoRa pins
-    SPI.begin(LORA_SCK, LORA_MISO, LORA_MOSI, LORA_CS);
-    LoRa.setPins(LORA_CS, LORA_RST, LORA_DIO0);
+    Serial.println("LoRaComm: Initializing SX1262 via RadioLib...");
 
-    // Initialize LoRa module
-    if (!LoRa.begin(LORA_BAND)) {
-        Serial.println("LoRa init failed!");
+    if (spi == nullptr) {
+        spi = new SPIClass(LORA_SPI_HOST);
+    }
+    spi->begin(LORA_SCK, LORA_MISO, LORA_MOSI, LORA_CS);
+
+    if (module == nullptr) {
+        module = new Module(LORA_CS, LORA_DIO1, LORA_RST, LORA_BUSY, *spi);
+    }
+    if (radio == nullptr) {
+        radio = new SX1262(module);
+    }
+
+    const float freqMHz = static_cast<float>(LORA_BAND) / 1000000.0f;
+    const float bandwidthKHz = static_cast<float>(LORA_BANDWIDTH) / 1000.0f;
+
+    int16_t state = radio->begin(freqMHz, bandwidthKHz, LORA_SPREAD, 7, RADIOLIB_SX126X_SYNC_WORD_PRIVATE, 17, 12, 1.8);
+    if (state != RADIOLIB_ERR_NONE) {
+        Serial.print("LoRaComm: RadioLib begin failed, code ");
+        Serial.println(state);
         return false;
     }
 
-    // Configure LoRa parameters
-    LoRa.setSpreadingFactor(LORA_SPREAD);
-    LoRa.setSignalBandwidth(LORA_BANDWIDTH);
-    LoRa.enableCrc();
+    radio->setDio2AsRfSwitch(true);
+    radio->setCRC(2);
+    radio->startReceive();
 
+    resetPending();
     initialized = true;
-    Serial.println("LoRa initialized successfully");
+    Serial.println("LoRaComm: SX1262 ready");
     return true;
 }
 
 bool LoRaComm::sendData(const uint8_t* data, size_t length) {
-    if (!initialized) {
+    if (!initialized || radio == nullptr || data == nullptr || length == 0) {
         return false;
     }
 
-    LoRa.beginPacket();
-    LoRa.write(data, length);
-    return LoRa.endPacket();
+    if (length > RADIOLIB_SX126X_MAX_PACKET_LENGTH) {
+        Serial.println("LoRaComm: payload too large");
+        return false;
+    }
+
+    uint8_t buffer[RADIOLIB_SX126X_MAX_PACKET_LENGTH];
+    memcpy(buffer, data, length);
+
+    int16_t state = radio->transmit(buffer, length);
+    radio->startReceive();
+    return state == RADIOLIB_ERR_NONE;
 }
 
 bool LoRaComm::sendMessage(const String& message) {
-    if (!initialized) {
+    if (!initialized || radio == nullptr) {
         return false;
     }
 
-    LoRa.beginPacket();
-    LoRa.print(message);
-    return LoRa.endPacket();
+    int16_t state = radio->transmit(message.c_str(), message.length());
+    radio->startReceive();
+    return state == RADIOLIB_ERR_NONE;
 }
 
 bool LoRaComm::available() {
@@ -54,41 +98,81 @@ bool LoRaComm::available() {
         return false;
     }
 
-    return LoRa.parsePacket() > 0;
+    if (pendingMessage) {
+        return true;
+    }
+
+    return fetchPacket();
 }
 
 int LoRaComm::receiveData(uint8_t* buffer, size_t maxLength) {
-    if (!initialized || !available()) {
+    if (!available()) {
         return 0;
     }
 
-    int packetSize = LoRa.parsePacket();
-    int bytesRead = 0;
-
-    while (LoRa.available() && bytesRead < maxLength) {
-        buffer[bytesRead++] = LoRa.read();
-    }
-
-    return bytesRead;
+    size_t toCopy = std::min(maxLength, static_cast<size_t>(pendingPayload.length()));
+    memcpy(buffer, pendingPayload.c_str(), toCopy);
+    resetPending();
+    return static_cast<int>(toCopy);
 }
 
 String LoRaComm::receiveMessage() {
-    if (!initialized || !available()) {
+    if (!available()) {
         return "";
     }
 
-    String message = "";
-    while (LoRa.available()) {
-        message += (char)LoRa.read();
-    }
-
+    String message = pendingPayload;
+    resetPending();
     return message;
 }
 
 int LoRaComm::getRSSI() {
-    return LoRa.packetRssi();
+    return lastPacketRSSI;
 }
 
 float LoRaComm::getSNR() {
-    return LoRa.packetSnr();
+    return lastPacketSNR;
+}
+
+int LoRaComm::getLastPacketRSSI() {
+    return getRSSI();
+}
+
+float LoRaComm::getLastPacketSNR() {
+    return getSNR();
+}
+bool LoRaComm::fetchPacket() {
+    if (!radio) {
+        return false;
+    }
+
+    // Ask RadioLib how long the last received packet was (if any).
+    // For SX1262, getPacketLength(true) will return 0 when there is no pending packet.
+    size_t length = radio->getPacketLength(true);
+    if (length == 0 || length > RADIOLIB_SX126X_MAX_PACKET_LENGTH) {
+        // No packet or bogus length, keep listening
+        radio->startReceive();
+        return false;
+    }
+
+    uint8_t buffer[RADIOLIB_SX126X_MAX_PACKET_LENGTH + 1];
+    int16_t state = radio->readData(buffer, length);
+    if (state != RADIOLIB_ERR_NONE) {
+        Serial.print("LoRaComm: readData failed code ");
+        Serial.println(state);
+        radio->startReceive();
+        return false;
+    }
+
+    buffer[length] = '\0';
+    pendingPayload = String(reinterpret_cast<char*>(buffer));
+    pendingMessage = true;
+
+    // These are public PhysicalLayer / SX126x methods
+    lastPacketRSSI = static_cast<int>(radio->getRSSI());
+    lastPacketSNR = radio->getSNR();
+
+    // Go back to RX for the next packet
+    radio->startReceive();
+    return true;
 }

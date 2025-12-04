@@ -16,6 +16,7 @@ This project defines and manages the complete AWS infrastructure for the B.R.A.V
 ### 💰 Cost-Efficient Serverless Design
 
 This infrastructure uses **100% serverless services** with **$0 fixed monthly costs** when idle:
+
 - Development/Testing: **$1-5/month**
 - Small Production: **$50-100/month**
 - Large Production: **$500-1,000/month**
@@ -34,6 +35,7 @@ Before deploying this infrastructure, ensure you have:
 ### AWS Permissions Required
 
 Your AWS credentials need permissions for:
+
 - CloudFormation (full access)
 - IAM (create roles and policies)
 - IoT Core (full access)
@@ -92,8 +94,8 @@ Edit `config/stack-config.json` to customize your deployment:
 
 ```bash
 # Clone the repository
-git clone https://github.com/beacon-relay-asset-view-orchestration/infra
-cd infra
+git clone https://github.com/FlaccidFacade/beacon-relay-asset-view-orchestration.git
+cd beacon-relay-asset-view-orchestration/infra
 
 # Install dependencies
 npm install
@@ -124,16 +126,19 @@ npx cdk bootstrap
 ### Option 1: Manual Deployment
 
 #### Deploy all stacks:
+
 ```bash
 npm run deploy
 ```
 
 #### Or use the deployment script:
+
 ```bash
 ./scripts/deploy.sh
 ```
 
 #### Deploy specific stack:
+
 ```bash
 npx cdk deploy BRAVO-IoTCore
 npx cdk deploy BRAVO-DynamoDB
@@ -161,6 +166,7 @@ git push origin main
 ```
 
 The workflow will:
+
 - Build the CDK project
 - Synthesize CloudFormation templates
 - Deploy all stacks to AWS (on push to main only)
@@ -171,11 +177,13 @@ The workflow will:
 ### 1. IoT Core Stack
 
 Creates and manages IoT infrastructure:
+
 - **Thing Type**: Template for B.R.A.V.O. devices.
 - **Device Policy**: Security policy for device connections and MQTT operations
 - **IoT Endpoint**: Connection endpoint for devices
 
 **Outputs**:
+
 - Thing Type Name
 - Device Policy Name
 - IoT Endpoint URL
@@ -185,6 +193,7 @@ Creates and manages IoT infrastructure:
 Creates two DynamoDB tables:
 
 #### Device Table
+
 - **Purpose**: Store device information and metadata
 - **Partition Key**: `deviceId` (String)
 - **Sort Key**: `timestamp` (Number)
@@ -192,6 +201,7 @@ Creates two DynamoDB tables:
 - **Features**: Point-in-time recovery, encryption, DynamoDB Streams
 
 #### Telemetry Table
+
 - **Purpose**: Store device telemetry data
 - **Partition Key**: `deviceId` (String)
 - **Sort Key**: `timestamp` (Number)
@@ -199,18 +209,21 @@ Creates two DynamoDB tables:
 - **Features**: TTL enabled (30 days), point-in-time recovery, encryption
 
 **Outputs**:
+
 - Device Table Name and ARN
 - Telemetry Table Name and ARN
 
 ### 3. S3/CloudFront Stack
 
 Creates static website hosting infrastructure:
+
 - **S3 Bucket**: Stores website files (versioned, encrypted)
 - **CloudFront Distribution**: CDN for global content delivery
 - **Origin Access Identity**: Secure access from CloudFront to S3
 - **Features**: HTTPS redirect, custom error pages, gzip compression
 
 **Outputs**:
+
 - S3 Bucket Name and ARN
 - CloudFront Distribution ID
 - Website URL
@@ -222,16 +235,19 @@ Creates REST API with Lambda functions:
 #### API Endpoints:
 
 **Device Management**:
+
 - `GET /devices` - List all devices
 - `GET /devices/{deviceId}` - Get specific device
 - `POST /devices` - Create new device
 - `DELETE /devices/{deviceId}` - Delete device
 
 **Telemetry Management**:
+
 - `GET /telemetry/{deviceId}` - Get device telemetry
 - `POST /telemetry` - Submit telemetry data
 
 **Features**:
+
 - CORS enabled
 - Request throttling (1000 req/sec, 2000 burst)
 - CloudWatch logging and metrics
@@ -239,6 +255,7 @@ Creates REST API with Lambda functions:
 - DynamoDB and IoT integration
 
 **Outputs**:
+
 - API Gateway Endpoint URL
 - Lambda Function Names
 
@@ -352,6 +369,7 @@ Run the cost analysis script to see detailed cost breakdowns and estimates:
 ```
 
 For comprehensive cost information including:
+
 - Detailed service-by-service cost breakdown
 - Cost optimization strategies
 - Monitoring and alerting setup
@@ -383,21 +401,27 @@ aws budgets create-budget \
 ## Troubleshooting
 
 ### CDK Bootstrap Error
+
 If you see bootstrap errors, run:
+
 ```bash
 npx cdk bootstrap aws://ACCOUNT-ID/REGION
 ```
 
 ### Permission Denied
+
 Ensure your AWS credentials have sufficient permissions for all services.
 
 ### Stack Update Failed
+
 Check CloudFormation events:
+
 ```bash
 aws cloudformation describe-stack-events --stack-name BRAVO-IoTCore
 ```
 
 ### API Gateway 403 Errors
+
 Verify CORS configuration and API Gateway deployment.
 
 ## Contributing
@@ -413,4 +437,4 @@ ISC
 
 ## Support
 
-For issues and questions, please open an issue in the repository.
+For issues and questions, please open an issue in the [main repository](https://github.com/FlaccidFacade/beacon-relay-asset-view-orchestration/issues).

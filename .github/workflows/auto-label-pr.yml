@@ -6,7 +6,7 @@
 name: Auto-label Pull Requests
 
 on:
-  pull_request:
+  pull_request_target:
     types: [opened, synchronize, reopened]
 
 permissions:
@@ -19,7 +19,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
@@ -29,10 +29,10 @@ jobs:
           # Get the list of changed files in this PR
           git fetch origin ${{ github.base_ref }}
           CHANGED_FILES=$(git diff --name-only origin/${{ github.base_ref }}...HEAD)
-          
+
           echo "Changed files:"
           echo "$CHANGED_FILES"
-          
+
           # Save to output
           echo "files<<EOF" >> $GITHUB_OUTPUT
           echo "$CHANGED_FILES" >> $GITHUB_OUTPUT
@@ -43,7 +43,7 @@ jobs:
         run: |
           CHANGED_FILES="${{ steps.changed-files.outputs.files }}"
           LABELS=""
-          
+
           # Function to add label if not already present
           add_label() {
             if [[ ! "$LABELS" =~ (^|,)$1(,|$) ]]; then
@@ -54,18 +54,18 @@ jobs:
               fi
             fi
           }
-          
+
           # Check for Copilot PR (branch name pattern)
           if [[ "${{ github.head_ref }}" =~ ^copilot/ ]]; then
             add_label "copilot"
           fi
-          
+
           # Check for Dependabot PR
           if [[ "${{ github.event.pull_request.user.login }}" == "dependabot[bot]" ]]; then
             add_label "dependabot"
             add_label "dependencies"
           fi
-          
+
           # Language detection based on file extensions
           while IFS= read -r file; do
             # Skip empty lines
@@ -166,17 +166,17 @@ jobs:
             fi
             
           done <<< "$CHANGED_FILES"
-          
+
           # Detect npm/yarn/pnpm lockfiles for dependencies
           if echo "$CHANGED_FILES" | grep -qE "(package-lock\.json|yarn\.lock|pnpm-lock\.yaml)"; then
             add_label "dependencies"
           fi
-          
+
           # Detect other dependency files
           if echo "$CHANGED_FILES" | grep -qE "(requirements\.txt|Pipfile\.lock|Gemfile\.lock|Cargo\.lock|go\.sum)"; then
             add_label "dependencies"
           fi
-          
+
           echo "Labels to apply: $LABELS"
           echo "labels=$LABELS" >> $GITHUB_OUTPUT
 
@@ -184,7 +184,7 @@ jobs:
         if: steps.labels.outputs.labels != ''
         run: |
           LABELS="${{ steps.labels.outputs.labels }}"
-          
+
           # Convert comma-separated labels to JSON array
           LABEL_ARRAY="["
           IFS=',' read -ra LABEL_LIST <<< "$LABELS"
@@ -195,9 +195,9 @@ jobs:
             LABEL_ARRAY="$LABEL_ARRAY\"${LABEL_LIST[$i]}\""
           done
           LABEL_ARRAY="$LABEL_ARRAY]"
-          
+
           echo "Applying labels: $LABEL_ARRAY"
-          
+
           # Apply labels using GitHub API with heredoc for safer JSON handling
           gh api \
             --method POST \
@@ -215,15 +215,15 @@ jobs:
         run: |
           LABELS="${{ steps.labels.outputs.labels }}"
           LABEL_LIST=$(echo "$LABELS" | tr ',' '\n' | sed 's/^/- `/' | sed 's/$/`/')
-          
+
           gh pr comment "${{ github.event.pull_request.number }}" \
             --repo "${{ github.repository }}" \
             --body "🏷️ **Auto-labeling Complete**
-          
+
           The following labels have been automatically applied based on the files changed in this PR:
-          
+
           $LABEL_LIST
-          
+
           This is part of the B.R.A.V.O. organization's automated PR management."
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
+import { useState } from "react";
 
 interface CacheRegion {
   id: string;
@@ -12,7 +12,7 @@ interface CacheRegion {
     west: number;
   };
   zoomLevels: number[];
-  status: 'cached' | 'downloading' | 'pending';
+  status: "cached" | "downloading" | "pending";
   size: string;
   lastUpdate: string;
 }
@@ -20,43 +20,53 @@ interface CacheRegion {
 export default function OfflineCachePage() {
   const [cacheRegions, setCacheRegions] = useState<CacheRegion[]>([
     {
-      id: '1',
-      name: 'New York City',
+      id: "1",
+      name: "New York City",
       bounds: { north: 40.8, south: 40.7, east: -73.9, west: -74.1 },
       zoomLevels: [10, 11, 12, 13, 14],
-      status: 'cached',
-      size: '124 MB',
-      lastUpdate: '2025-10-20',
+      status: "cached",
+      size: "124 MB",
+      lastUpdate: "2025-10-20",
     },
     {
-      id: '2',
-      name: 'Brooklyn Area',
+      id: "2",
+      name: "Brooklyn Area",
       bounds: { north: 40.75, south: 40.65, east: -73.85, west: -74.05 },
       zoomLevels: [12, 13, 14, 15],
-      status: 'cached',
-      size: '98 MB',
-      lastUpdate: '2025-10-19',
+      status: "cached",
+      size: "98 MB",
+      lastUpdate: "2025-10-19",
     },
   ]);
 
   const [newRegion, setNewRegion] = useState({
-    name: '',
-    north: '',
-    south: '',
-    east: '',
-    west: '',
-    minZoom: '10',
-    maxZoom: '14',
+    name: "",
+    north: "",
+    south: "",
+    east: "",
+    west: "",
+    minZoom: "10",
+    maxZoom: "14",
   });
 
   const handleAddRegion = () => {
-    if (!newRegion.name || !newRegion.north || !newRegion.south || !newRegion.east || !newRegion.west) {
-      alert('Please fill in all fields');
+    if (
+      !newRegion.name ||
+      !newRegion.north ||
+      !newRegion.south ||
+      !newRegion.east ||
+      !newRegion.west
+    ) {
+      alert("Please fill in all fields");
       return;
     }
 
     const zoomLevels = [];
-    for (let i = parseInt(newRegion.minZoom); i <= parseInt(newRegion.maxZoom); i++) {
+    for (
+      let i = parseInt(newRegion.minZoom);
+      i <= parseInt(newRegion.maxZoom);
+      i++
+    ) {
       zoomLevels.push(i);
     }
 
@@ -70,27 +80,29 @@ export default function OfflineCachePage() {
         west: parseFloat(newRegion.west),
       },
       zoomLevels,
-      status: 'pending',
-      size: '0 MB',
-      lastUpdate: new Date().toISOString().split('T')[0],
+      status: "pending",
+      size: "0 MB",
+      lastUpdate: new Date().toISOString().split("T")[0],
     };
 
     setCacheRegions([...cacheRegions, region]);
     setNewRegion({
-      name: '',
-      north: '',
-      south: '',
-      east: '',
-      west: '',
-      minZoom: '10',
-      maxZoom: '14',
+      name: "",
+      north: "",
+      south: "",
+      east: "",
+      west: "",
+      minZoom: "10",
+      maxZoom: "14",
     });
   };
 
   const handleDownload = (id: string) => {
     setCacheRegions(
       cacheRegions.map((region) =>
-        region.id === id ? { ...region, status: 'downloading' as const } : region
+        region.id === id
+          ? { ...region, status: "downloading" as const }
+          : region
       )
     );
 
@@ -101,7 +113,7 @@ export default function OfflineCachePage() {
           region.id === id
             ? {
                 ...region,
-                status: 'cached' as const,
+                status: "cached" as const,
                 size: `${Math.floor(Math.random() * 200) + 50} MB`,
               }
             : region
@@ -111,60 +123,76 @@ export default function OfflineCachePage() {
   };
 
   const handleDelete = (id: string) => {
-    if (confirm('Are you sure you want to delete this cached region?')) {
+    if (confirm("Are you sure you want to delete this cached region?")) {
       setCacheRegions(cacheRegions.filter((region) => region.id !== id));
     }
   };
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'cached':
-        return 'bg-green-100 text-green-800';
-      case 'downloading':
-        return 'bg-blue-100 text-blue-800';
-      case 'pending':
-        return 'bg-yellow-100 text-yellow-800';
+      case "cached":
+        return "bg-green-100 text-green-800";
+      case "downloading":
+        return "bg-blue-100 text-blue-800";
+      case "pending":
+        return "bg-yellow-100 text-yellow-800";
       default:
-        return 'bg-gray-100 text-gray-800';
+        return "bg-gray-100 text-gray-800";
     }
   };
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold mb-6 text-gray-900">Offline Map Cache</h1>
+      <h1 className="text-3xl font-bold mb-6 text-gray-900">
+        Offline Map Cache
+      </h1>
 
       <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-        <h2 className="text-xl font-semibold mb-4 text-gray-900">Add New Cache Region</h2>
+        <h2 className="text-xl font-semibold mb-4 text-gray-900">
+          Add New Cache Region
+        </h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Region Name</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Region Name
+            </label>
             <input
               type="text"
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
               value={newRegion.name}
-              onChange={(e) => setNewRegion({ ...newRegion, name: e.target.value })}
+              onChange={(e) =>
+                setNewRegion({ ...newRegion, name: e.target.value })
+              }
               placeholder="e.g., Manhattan District"
             />
           </div>
           <div className="grid grid-cols-2 gap-2">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Min Zoom</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Min Zoom
+              </label>
               <input
                 type="number"
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
                 value={newRegion.minZoom}
-                onChange={(e) => setNewRegion({ ...newRegion, minZoom: e.target.value })}
+                onChange={(e) =>
+                  setNewRegion({ ...newRegion, minZoom: e.target.value })
+                }
                 min="1"
                 max="19"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Max Zoom</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Max Zoom
+              </label>
               <input
                 type="number"
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
                 value={newRegion.maxZoom}
-                onChange={(e) => setNewRegion({ ...newRegion, maxZoom: e.target.value })}
+                onChange={(e) =>
+                  setNewRegion({ ...newRegion, maxZoom: e.target.value })
+                }
                 min="1"
                 max="19"
               />
@@ -173,46 +201,62 @@ export default function OfflineCachePage() {
         </div>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">North</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              North
+            </label>
             <input
               type="number"
               step="0.0001"
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
               value={newRegion.north}
-              onChange={(e) => setNewRegion({ ...newRegion, north: e.target.value })}
+              onChange={(e) =>
+                setNewRegion({ ...newRegion, north: e.target.value })
+              }
               placeholder="40.8"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">South</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              South
+            </label>
             <input
               type="number"
               step="0.0001"
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
               value={newRegion.south}
-              onChange={(e) => setNewRegion({ ...newRegion, south: e.target.value })}
+              onChange={(e) =>
+                setNewRegion({ ...newRegion, south: e.target.value })
+              }
               placeholder="40.7"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">East</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              East
+            </label>
             <input
               type="number"
               step="0.0001"
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
               value={newRegion.east}
-              onChange={(e) => setNewRegion({ ...newRegion, east: e.target.value })}
+              onChange={(e) =>
+                setNewRegion({ ...newRegion, east: e.target.value })
+              }
               placeholder="-73.9"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">West</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              West
+            </label>
             <input
               type="number"
               step="0.0001"
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
               value={newRegion.west}
-              onChange={(e) => setNewRegion({ ...newRegion, west: e.target.value })}
+              onChange={(e) =>
+                setNewRegion({ ...newRegion, west: e.target.value })
+              }
               placeholder="-74.1"
             />
           </div>
@@ -226,16 +270,27 @@ export default function OfflineCachePage() {
       </div>
 
       <div className="bg-white rounded-lg shadow-md p-6">
-        <h2 className="text-xl font-semibold mb-4 text-gray-900">Cached Regions</h2>
+        <h2 className="text-xl font-semibold mb-4 text-gray-900">
+          Cached Regions
+        </h2>
         <div className="space-y-4">
           {cacheRegions.length === 0 ? (
-            <p className="text-gray-500 text-center py-8">No cached regions yet. Add one above!</p>
+            <p className="text-gray-500 text-center py-8">
+              No cached regions yet. Add one above!
+            </p>
           ) : (
             cacheRegions.map((region) => (
-              <div key={region.id} className="border border-gray-200 rounded-lg p-4">
+              <div
+                key={region.id}
+                className="border border-gray-200 rounded-lg p-4"
+              >
                 <div className="flex items-center justify-between mb-2">
-                  <h3 className="text-lg font-semibold text-gray-900">{region.name}</h3>
-                  <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(region.status)}`}>
+                  <h3 className="text-lg font-semibold text-gray-900">
+                    {region.name}
+                  </h3>
+                  <span
+                    className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(region.status)}`}
+                  >
                     {region.status}
                   </span>
                 </div>
@@ -251,7 +306,9 @@ export default function OfflineCachePage() {
                   </div>
                   <div>
                     <span className="text-gray-600">Zoom Levels:</span>
-                    <p className="text-gray-900">{region.zoomLevels.join(', ')}</p>
+                    <p className="text-gray-900">
+                      {region.zoomLevels.join(", ")}
+                    </p>
                   </div>
                   <div>
                     <span className="text-gray-600">Size:</span>
@@ -263,7 +320,7 @@ export default function OfflineCachePage() {
                   </div>
                 </div>
                 <div className="flex gap-2">
-                  {region.status === 'pending' && (
+                  {region.status === "pending" && (
                     <button
                       onClick={() => handleDownload(region.id)}
                       className="px-3 py-1 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 transition-colors"
@@ -271,7 +328,7 @@ export default function OfflineCachePage() {
                       Download
                     </button>
                   )}
-                  {region.status === 'downloading' && (
+                  {region.status === "downloading" && (
                     <button
                       disabled
                       className="px-3 py-1 bg-gray-400 text-white text-sm rounded cursor-not-allowed"
@@ -279,7 +336,7 @@ export default function OfflineCachePage() {
                       Downloading...
                     </button>
                   )}
-                  {region.status === 'cached' && (
+                  {region.status === "cached" && (
                     <button
                       onClick={() => handleDownload(region.id)}
                       className="px-3 py-1 bg-green-600 text-white text-sm rounded hover:bg-green-700 transition-colors"
@@ -301,13 +358,19 @@ export default function OfflineCachePage() {
       </div>
 
       <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mt-6">
-        <h3 className="font-semibold mb-2 text-gray-900">About Offline Caching</h3>
+        <h3 className="font-semibold mb-2 text-gray-900">
+          About Offline Caching
+        </h3>
         <p className="text-sm text-gray-700 mb-2">
-          Offline map caching allows you to download map tiles for specific regions and zoom levels.
-          This enables the application to work without an internet connection.
+          Offline map caching allows you to download map tiles for specific
+          regions and zoom levels. This enables the application to work without
+          an internet connection.
         </p>
         <ul className="list-disc list-inside space-y-1 text-sm text-gray-700">
-          <li>Higher zoom levels result in more detailed maps but larger cache sizes</li>
+          <li>
+            Higher zoom levels result in more detailed maps but larger cache
+            sizes
+          </li>
           <li>Cache sizes are approximate and depend on the map content</li>
           <li>Downloaded regions can be updated to get the latest map data</li>
         </ul>

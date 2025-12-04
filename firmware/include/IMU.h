@@ -1,6 +1,6 @@
 /**
  * @file IMU.h
- * @brief IMU (Inertial Measurement Unit) module for B.R.A.V.O. collar
+ * @brief IMU (Inertial Measurement Unit) module for B.R.A.V.O. beacon
  * 
  * This module handles accelerometer and gyroscope data from the MPU6050
  * for activity tracking and motion detection.
@@ -13,9 +13,9 @@
 #include <Adafruit_MPU6050.h>
 #include <Adafruit_Sensor.h>
 
-// IMU I2C pins for ESP32
-#define IMU_SDA_PIN 21
-#define IMU_SCL_PIN 22
+// IMU I2C pins for Heltec WiFi LoRa 32 V3
+#define IMU_SDA_PIN 41  // GPIO41 - I2C SDA
+#define IMU_SCL_PIN 42  // GPIO42 - I2C SCL
 
 struct IMUData {
     float accelX;
