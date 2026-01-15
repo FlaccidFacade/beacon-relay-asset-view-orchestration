@@ -15,6 +15,6 @@
   "author": "Beacon Relay Asset View Orchestration",
   "license": "ISC",
   "devDependencies": {
-    "prettier": "^3.7.4"
+    "prettier": "^3.8.0"
   }
 }
