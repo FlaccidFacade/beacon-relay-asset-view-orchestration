@@ -49,7 +49,9 @@ flash_one() {
 
     echo "  Flashing $uf2 -> bus $bus addr $addr"
     picotool load "$uf2" --bus "$bus" --address "$addr" --force --verify
-    picotool reboot --bus "$bus" --address "$addr" 2>/dev/null || true
+    if ! picotool reboot --bus "$bus" --address "$addr" 2>&1; then
+        echo "  WARNING: picotool reboot failed for bus $bus addr $addr (device may need manual reset)"
+    fi
 }
 
 wait_for_pico() {

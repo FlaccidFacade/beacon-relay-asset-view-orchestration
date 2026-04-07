@@ -53,11 +53,12 @@ cmd_start() {
     echo "  Output: $VIDEO_FILE"
     echo "  Timeout: ${RECORD_TIMEOUT}s"
 
+    local cam_log="${ARTIFACTS_DIR}/camera.log"
     $cam \
         --timeout "$((RECORD_TIMEOUT * 1000))" \
         --width 1280 --height 720 \
         --framerate 15 \
-        --output "$VIDEO_FILE" &
+        --output "$VIDEO_FILE" 2>"$cam_log" &
     local pid=$!
     echo "$pid" >"$PIDFILE"
     echo "  PID:    $pid"

@@ -1,5 +1,8 @@
 name: Firmware Hardware Test
 
+permissions:
+  contents: read
+
 on:
   push:
     branches: [main]
