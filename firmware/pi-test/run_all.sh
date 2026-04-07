@@ -3,8 +3,8 @@
 #
 # Orchestrates:
 #   1. Build firmware for both device addresses
-#   2. Flash both Pico W boards
-#   3. Start RPi camera recording
+#   2. Start RPi camera recording (captures flash + test)
+#   3. Flash both Pico W boards
 #   4. Run communication tests
 #   5. Stop camera recording
 #   6. Collect artifacts
@@ -29,7 +29,7 @@ echo ""
 # ------------------------------------------------------------------
 # Step 1 — Build
 # ------------------------------------------------------------------
-echo ">>> Step 1/5: Build firmware"
+echo ">>> Step 1/6: Build firmware"
 if ! bash "$SCRIPT_DIR/build.sh" 2>&1 | tee "$ARTIFACTS_DIR/build.log"; then
     echo "FATAL: Build failed." >&2
     exit 1
@@ -37,26 +37,27 @@ fi
 echo ""
 
 # ------------------------------------------------------------------
-# Step 2 — Flash
+# Step 2 — Start camera (before flash so the full process is recorded)
 # ------------------------------------------------------------------
-echo ">>> Step 2/5: Flash devices"
+echo ">>> Step 2/6: Start camera recording"
+bash "$SCRIPT_DIR/record.sh" start "$ARTIFACTS_DIR" || true
+echo ""
+
+# ------------------------------------------------------------------
+# Step 3 — Flash
+# ------------------------------------------------------------------
+echo ">>> Step 3/6: Flash devices"
 if ! bash "$SCRIPT_DIR/flash.sh" 2>&1 | tee "$ARTIFACTS_DIR/flash.log"; then
     echo "FATAL: Flash failed." >&2
+    bash "$SCRIPT_DIR/record.sh" stop || true
     exit 1
 fi
 echo ""
 
 # ------------------------------------------------------------------
-# Step 3 — Start camera
-# ------------------------------------------------------------------
-echo ">>> Step 3/5: Start camera recording"
-bash "$SCRIPT_DIR/record.sh" start "$ARTIFACTS_DIR" || true
-echo ""
-
-# ------------------------------------------------------------------
 # Step 4 — Communication tests
 # ------------------------------------------------------------------
-echo ">>> Step 4/5: Run communication tests"
+echo ">>> Step 4/6: Run communication tests"
 TEST_EXIT=0
 bash "$SCRIPT_DIR/test_comms.sh" || TEST_EXIT=$?
 echo ""
@@ -64,7 +65,7 @@ echo ""
 # ------------------------------------------------------------------
 # Step 5 — Stop camera
 # ------------------------------------------------------------------
-echo ">>> Step 5/5: Stop camera recording"
+echo ">>> Step 5/6: Stop camera recording"
 bash "$SCRIPT_DIR/record.sh" stop || true
 echo ""
 
