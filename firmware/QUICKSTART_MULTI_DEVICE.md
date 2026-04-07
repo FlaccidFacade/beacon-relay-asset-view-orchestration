@@ -1,218 +1,207 @@
-# Quick Start Guide - Multi-Device Setup
+# Quick Start Guide - Multi-Device Setup (Pico W)
 
-This guide walks you through setting up two or more B.R.A.V.O. devices that can communicate with each other while displaying GPS information.
+This guide walks you through setting up two Raspberry Pi Pico W devices that share GPS location over LoRa.
 
 ## Overview
 
-The updated firmware allows you to:
+Each B.R.A.V.O. device:
 
-- Load the **same firmware** on multiple devices
-- Each device records GPS info on its screen
-- Devices communicate with each other via LoRa
-- Scroll through multiple pages of data using the PRG button
+- Reads GPS coordinates from a NEO-7m module
+- Broadcasts its GPS location over LoRa (RYLR896) every 5 seconds
+- Displays live GPS and radio stats on a 128×64 SSD1306 OLED
 
 ## Hardware Requirements
 
-For each device:
+For **each** device you need:
 
-- Heltec WiFi LoRa 32 V3 board
-- NEO-6M GPS module
-- LoRa antenna (915 MHz for North America, 868 MHz for Europe)
-- LiPo battery (optional, for portable operation)
+| Component | Notes |
+|-----------|-------|
+| Raspberry Pi Pico W | RP2040 + CYW43439 Wi-Fi |
+| REYAX RYLR896 | UART LoRa module, 915 MHz |
+| u-blox NEO-7m GPS | 9600 baud NMEA, 1 Hz PPS |
+| SSD1306 OLED 128×64 | I2C, address 0x3C |
+| Push-button | Momentary, normally open |
+| LoRa antenna | 915 MHz, SMA or U.FL |
+| 5V USB power supply | Powers VSYS, ≥500 mA |
+| Jumper wires |  |
 
-## Step 1: Configure Device IDs
+**Programmer**: Raspberry Pi 4B connected to Pico W via USB micro-B or USB-C.
 
-Before uploading to each device, edit `firmware/src/main.cpp` and set a unique ID:
+## Wiring (per device)
 
-**Device 1:**
+All peripherals run at **3.3V from Pico W Pin 36**.  
+Power the Pico W itself via **VSYS (Pin 39/40) with 5V**.
 
-```cpp
-#define DEVICE_ID "BRAVO_001"
+| Signal | Pico W GPIO | Physical Pin |
+|--------|-------------|-------------|
+| RYLR896 RXD ← | GP0 (TX) | 1 |
+| RYLR896 TXD → | GP1 (RX) | 2 |
+| OLED SDA | GP4 | 6 |
+| OLED SCL | GP5 | 7 |
+| GPS RXD ← | GP8 (TX) | 11 |
+| GPS TXD → | GP9 (RX) | 12 |
+| RYLR896 NRESET | GP14 | 19 |
+| GPS PPS | GP15 | 20 |
+| Button → GND | GP16 | 21 |
+| 3.3V supply | 3V3 OUT | 36 |
+| GND | GND | 38 |
+| 5V in | VSYS | 39 |
+
+## Step 1: Configure Device Addresses
+
+The two units exchange GPS payloads using LoRa addresses. Edit `firmware/platformio.ini` **before uploading to each unit**:
+
+**Unit 1 (Beacon):**
+```ini
+build_flags =
+    -D DEVICE_ADDRESS=1
+    -D TARGET_ADDRESS=2
 ```
 
-**Device 2:**
-
-```cpp
-#define DEVICE_ID "BRAVO_002"
+**Unit 2 (Relay):**
+```ini
+build_flags =
+    -D DEVICE_ADDRESS=2
+    -D TARGET_ADDRESS=1
 ```
 
-**Device 3 (optional):**
+## Step 2: Upload Firmware from Raspberry Pi 4B
 
-```cpp
-#define DEVICE_ID "BRAVO_003"
-```
+For **each** device:
 
-And so on for additional devices.
+1. Connect the Pico W to the Raspberry Pi 4B via USB **while holding BOOTSEL**.
+2. Release the BOOTSEL button — the Pico W appears as a mass-storage device (`RPI-RP2`).
+3. Run the upload helper:
 
-## Step 2: Upload Firmware
-
-For each device:
-
-1. Connect device via USB
-2. Upload firmware:
    ```bash
    cd firmware
-   pio run --target upload
+   chmod +x upload.sh
+   ./upload.sh
    ```
-3. Wait for upload to complete
-4. Disconnect and move to next device
+
+   The script detects the Pico W, builds the firmware, and flashes it automatically.
+
+4. After flashing, the Pico W reboots and starts running. Unplug USB.
+5. Change `DEVICE_ADDRESS` / `TARGET_ADDRESS` in `platformio.ini` for the second unit and repeat.
 
 ## Step 3: Test Individual Devices
 
-Before testing communication, verify each device works independently:
+Power on each device and check the OLED:
 
-1. Power on the device
-2. Wait for initialization (GPS and LoRa should initialize successfully)
-3. Press the PRG button to cycle through pages:
-   - **GPS Page**: Should show "Searching..." initially
-   - **Communication Page**: Should show 0 packets sent/received initially
-   - **Device Info Page**: Should show correct device ID
-   - **Combined Page**: Should show all info together
+1. **GPS screen** (default): "Fix: NO", satellite count climbs as the device acquires signal.
+2. Press the **button** (GP16) to switch to the **Radio screen**.
+3. Serial monitor (optional):
+
+   ```bash
+   pio device monitor --environment rpicow
+   # or
+   minicom -b 115200 -D /dev/ttyACM0
+   ```
+
+   You should see:
+
+   ```
+   [BRAVO] Pico W starting...
+   [Display] SSD1306 OK
+   [GPS] NEO-7m on UART1 ready
+   [LoRa] RYLR896 ready
+   [BRAVO] Setup complete
+   ```
 
 ## Step 4: Test Device Communication
 
-With both devices powered on and running:
+With both devices powered on:
 
-1. Place devices close together (within 1-2 meters for initial test)
-2. Navigate to the **Communication Page** on each device
+1. Place devices within a few metres of each other for the initial test.
+2. Navigate to the **Radio screen** on each (press button).
 3. Observe:
-   - "Sent" counter incrementing every 3 seconds
-   - "Rcvd" counter incrementing when receiving from other device
-   - RSSI and SNR values appear after first reception
+   - **TX** counter incrementing every 5 seconds.
+   - **RX** counter incrementing as each device receives the other's GPS payload.
+   - **RSSI** and **SNR** values appear after the first reception.
+4. Serial monitor shows:
 
-4. Navigate to the **Combined Page** to see GPS + communication status together
+   ```
+   [LoRa] TX → 1|40.71280|-74.00600|8
+   [LoRa] RX from 2: 2|40.71285|-74.00598|8 RSSI=-45 SNR=9.5
+   ```
 
-## Step 5: Test GPS Reception (Outdoor)
+## Step 5: Test GPS Outdoors
 
-1. Take devices outside with clear view of sky
-2. Wait 30-60 seconds for GPS fix (cold start)
-3. Navigate to **GPS Page** to see:
-   - Satellite count increasing
-   - Status changes from "SRCH" to "LOCK"
-   - Latitude and longitude coordinates appear
-   - Altitude and speed data shown
-
-4. Check **Communication Page** - transmitted packets should now include GPS coordinates
+1. Take both devices outside with a clear view of the sky.
+2. Allow **30–60 seconds** for cold-start GPS acquisition.
+3. The GPS screen shows:
+   - `Fix: YES` once a valid position is acquired.
+   - Live latitude, longitude, and altitude values.
+4. GPS coordinates are automatically included in every LoRa heartbeat.
 
 ## Display Pages Reference
 
-### Page 1: GPS Location
+### GPS Screen (default)
 
-- Satellite count and lock status
-- Latitude and longitude (6 decimal places)
-- Altitude in meters
-- Speed in km/h
-- Status: Shows "LOCK" when GPS fix acquired, "SRCH" when searching
+```
+-- GPS --
+Fix: YES
+Sat: 9
+Lat: 40.71280
+Lon: -74.00600
+Alt: 12.3m
+```
 
-### Page 2: Communication
+### Radio Screen (press button to switch)
 
-- Packets sent count
-- Packets received count
-- Last packet RSSI (signal strength in dBm)
-- Last packet SNR (signal-to-noise ratio in dB)
-- "Listening..." shown when no packets received yet
-
-### Page 3: Device Info
-
-- Device ID (BRAVO_001, BRAVO_002, etc.)
-- Uptime in seconds
-- GPS module status (Active/Search)
-- LoRa module status (Active)
-
-### Page 4: Combined View
-
-- Device ID at top
-- GPS coordinates or search status
-- TX packet count
-- RX packet count with RSSI
-- Time since last transmission
-- Time since last reception
+```
+-- RADIO --
+TX: 12
+RX: 11
+RSSI: -52
+SNR:  8.5
+Msg: 2|40.71285
+```
 
 ## Troubleshooting
 
-### Device Not Initializing
+### Pico W Not Detected on Raspberry Pi 4B
 
-- Check USB connection
-- Verify LoRa antenna is connected
-- Check Serial monitor for error messages: `pio device monitor`
+- Use a data-capable USB cable (not charge-only).
+- Run `lsusb` — in BOOTSEL mode you should see `2e8a:0003 Raspberry Pi RP2 Boot`.
+- Add your user to `dialout` for serial access:
+  ```bash
+  sudo usermod -aG dialout $USER
+  # log out and back in
+  ```
 
 ### No GPS Fix
 
-- Ensure you're outdoors with clear sky view
-- Allow 30-60 seconds for initial satellite acquisition
-- Check GPS wiring: TX→GPIO33, RX→GPIO34, VCC→3.3V, GND→GND
-- Verify GPS module has power (LED should blink)
+- Go outdoors — GPS won't work through walls.
+- Allow 27+ seconds for cold-start satellite acquisition.
+- Check wiring: GP8 → NEO-7m RXD, GP9 ← NEO-7m TXD.
 
 ### Devices Not Communicating
 
-- Verify both devices initialized successfully
-- Check antennas are connected on both devices
-- Bring devices closer together (< 2 meters) for initial test
-- Verify LoRa frequency matches your region (915 MHz or 868 MHz)
-- Check Serial monitor on both devices for "Sending:" and "Received:" messages
+- Confirm the LoRa antennas are attached.
+- Verify one unit has `DEVICE_ADDRESS=1, TARGET_ADDRESS=2` and the other has the reverse.
+- Ensure both units use the same `LORA_NETWORK_ID` and `LORA_FREQ_HZ` (see `PinConfig.h`).
+- Check the serial monitor on both devices for `[LoRa] No response from RYLR896`.
 
-### Display Not Showing Data
+### Display Not Showing
 
-- Check Vext power (should be enabled in firmware)
-- Verify I2C connections (SDA=17, SCL=18)
-- Check Serial output for display initialization status
+- Verify wiring: GP4 (SDA), GP5 (SCL), 3.3V (Pin 36), GND.
+- Confirm OLED I2C address is `0x3C` (`OLED_I2C_ADDR` in `PinConfig.h`).
 
-### Button Not Working
+## Range Expectations
 
-- PRG button is GPIO 0
-- Press and release (don't hold)
-- 300ms debounce delay between presses
-- Check Serial monitor for "BUTTON PRESSED!" message
+| Environment | Typical Range |
+|-------------|--------------|
+| Line-of-sight (open field) | 500 m – 2 km |
+| Urban / suburban | 100 m – 500 m |
+| Indoor | 50 m – 200 m |
 
-## Serial Monitor Output
-
-Use the serial monitor to debug and observe device operation:
-
-```bash
-pio device monitor
-```
-
-You should see:
-
-- Initialization messages for display, LoRa, and GPS
-- "Sending: BRAVO_001_PKT_1..." every 3 seconds
-- "Received [RSSI: -45 dBm]..." when packets arrive
-- "BUTTON PRESSED!" when PRG button is pressed
-- Page switching messages
-
-## Range Testing
-
-Once devices are working:
-
-1. Start with devices close together
-2. Gradually increase distance
-3. Monitor RSSI values (more negative = weaker signal)
-4. Typical ranges:
-   - Line of sight: 500m - 2km
-   - Urban environment: 100m - 500m
-   - Indoor: 50m - 200m
-
-## Power Consumption Tips
-
-For battery-powered operation:
-
-- GPS and LoRa radio are active continuously
-- Display updates every 500ms
-- Packet transmission every 3 seconds
-- Consider adding sleep modes for extended battery life (future enhancement)
+Monitor RSSI on the Radio screen — values closer to 0 dBm indicate a stronger link.
 
 ## Next Steps
 
-- Deploy devices in your use case (pet collar, asset tracking, etc.)
-- Monitor range and signal quality in different environments
-- Customize packet transmission rate if needed (currently 3 seconds)
-- Add additional sensors (IMU, temperature, etc.)
-- Implement cloud connectivity (AWS IoT, MQTT, etc.)
+- Increase LoRa transmit power in `PinConfig.h` (`AT+CRFOP` parameter).
+- Adjust `HEARTBEAT_INTERVAL` in `src/main.cpp` for faster or slower GPS updates.
+- Enable the Pico W's Wi-Fi to relay GPS data to a cloud backend (MQTT / HTTP).
+- Add additional devices by assigning unique `DEVICE_ADDRESS` values (0–65535).
 
-## Support
-
-For issues or questions:
-
-- Check Serial monitor output for errors
-- Review main README.md for detailed module documentation
-- Open an issue on GitHub with Serial output and description
