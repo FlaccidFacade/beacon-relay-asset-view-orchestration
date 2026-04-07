@@ -1,9 +1,11 @@
 /**
  * @file GPS.h
- * @brief GPS module for B.R.A.V.O. beacon location tracking
- * 
- * This module handles GPS data acquisition and parsing for tracking
- * beacon locations.
+ * @brief GPS module for B.R.A.V.O. — NEO-7m on Raspberry Pi Pico W
+ *
+ * UART1 (Serial2):  GP8 TX (Pico→GPS RXD),  GP9 RX (GPS TXD→Pico)
+ * PPS interrupt:    GP15 rising edge = 1 Hz timing pulse
+ * Power:            Pin 36 (3V3 OUT), any GND pin
+ * Baud rate:        9600 (NEO-7m default NMEA output)
  */
 
 #ifndef GPS_H
@@ -11,12 +13,7 @@
 
 #include <Arduino.h>
 #include <TinyGPSPlus.h>
-
-// GPS pin definitions for Heltec WiFi LoRa 32 V3
-// Using available GPIOs - adjust based on your wiring
-#define GPS_RX_PIN  33  // GPIO33 - UART RX for GPS TX
-#define GPS_TX_PIN  34  // GPIO34 - UART TX for GPS RX (input only, for monitoring)
-#define GPS_BAUD    9600
+#include "PinConfig.h"
 
 struct GPSData {
     double latitude;
@@ -104,10 +101,18 @@ public:
      */
     uint32_t getFailedChecksums();
 
+    /** True when a PPS pulse has arrived since last call to clearPPS() */
+    bool hasPPS() const { return ppsFlag; }
+    void clearPPS()     { ppsFlag = false; }
+
+    /** ISR called by the PPS interrupt — keep public so a free function can
+     *  forward the call.  Do not call directly from application code. */
+    void onPPS() { ppsFlag = true; }
+
 private:
     TinyGPSPlus gps;
-    HardwareSerial* gpsSerial;
-    bool initialized;
+    bool        initialized;
+    volatile bool ppsFlag;
 };
 
 #endif // GPS_H

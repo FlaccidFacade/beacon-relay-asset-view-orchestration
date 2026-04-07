@@ -1,114 +1,85 @@
 /**
  * @file LoRaComm.h
- * @brief LoRa communication module for B.R.A.V.O. beacons and relays
- * 
- * This module handles long-range radio communication between beacons and relays
- * using the LoRa protocol.
+ * @brief LoRa communication module for B.R.A.V.O. — REYAX RYLR896
+ *
+ * The RYLR896 is a UART-based LoRa transceiver controlled entirely via
+ * AT commands at 115 200 baud.  No SPI or external library required.
+ *
+ * AT command summary used here:
+ *   AT+RESET                          software reset
+ *   AT+ADDRESS=<n>                    set device address (0–65535)
+ *   AT+NETWORKID=<n>                  set network ID    (0–9, 18)
+ *   AT+BAND=<hz>                      carrier frequency in Hz
+ *   AT+PARAMETER=<SF>,<BW>,<CR>,<PP>  RF parameters
+ *   AT+SEND=<addr>,<len>,<payload>    transmit
+ *   → incoming: +RCV=<addr>,<len>,<payload>,<RSSI>,<SNR>
  */
 
 #ifndef LORA_COMM_H
 #define LORA_COMM_H
 
 #include <Arduino.h>
-#include <RadioLib.h>
+#include "PinConfig.h"
 
-// LoRa pin definitions for Heltec WiFi LoRa 32 V3
-#define LORA_SCK    9
-#define LORA_MISO   11
-#define LORA_MOSI   10
-#define LORA_CS     8
-#define LORA_RST    12
-#define LORA_DIO1   14
-#define LORA_BUSY   13
+// Maximum AT payload the RYLR896 can accept (bytes)
+#define RYLR_MAX_PAYLOAD 240
 
-// LoRa configuration
-#define LORA_BAND   915E6  // 915 MHz (North America)
-#define LORA_SPREAD 7
-#define LORA_BANDWIDTH 125E3
+struct LoRaPacket {
+    uint16_t srcAddress;
+    String   payload;
+    int      rssi;
+    float    snr;
+    bool     valid;
+};
 
 class LoRaComm {
 public:
-    /**
-     * @brief Constructor for LoRaComm
-     */
     LoRaComm();
 
     /**
-     * @brief Initialize LoRa module
-     * @return true if initialization successful, false otherwise
+     * Initialise UART0, hardware-reset the module, and configure RF params.
+     * @param deviceAddress  This device's LoRa address (0–65535)
+     * @return true on success
      */
-    bool begin();
+    bool begin(uint16_t deviceAddress);
 
     /**
-     * @brief Send data over LoRa
-     * @param data Data buffer to send
-     * @param length Length of data
-     * @return true if send successful, false otherwise
+     * Send a string payload to a specific address.
+     * @param targetAddress  Destination LoRa address
+     * @param message        Payload string (max RYLR_MAX_PAYLOAD chars)
+     * @return true if "+SEND=" acknowledgement received
      */
-    bool sendData(const uint8_t* data, size_t length);
+    bool sendMessage(uint16_t targetAddress, const String& message);
 
     /**
-     * @brief Send string message over LoRa
-     * @param message String message to send
-     * @return true if send successful, false otherwise
+     * Poll the UART receive buffer for an incoming +RCV packet.
+     * Non-blocking; call every loop iteration.
+     * @param out  Populated if a complete packet was parsed
+     * @return true if a new packet is available in `out`
      */
-    bool sendMessage(const String& message);
+    bool receive(LoRaPacket& out);
 
-    /**
-     * @brief Check if data is available to receive
-     * @return true if data available, false otherwise
-     */
-    bool available();
-
-    /**
-     * @brief Receive data from LoRa
-     * @param buffer Buffer to store received data
-     * @param maxLength Maximum length to receive
-     * @return Number of bytes received
-     */
-    int receiveData(uint8_t* buffer, size_t maxLength);
-
-    /**
-     * @brief Receive string message from LoRa
-     * @return Received message string
-     */
-    String receiveMessage();
-
-    /**
-     * @brief Get RSSI of last received packet
-     * @return RSSI value in dBm
-     */
-    int getRSSI();
-
-    /**
-     * @brief Get SNR of last received packet
-     * @return SNR value
-     */
-    float getSNR();
-    
-    /**
-     * @brief Get RSSI of last received packet (alias for getRSSI)
-     * @return RSSI value in dBm
-     */
-    int getLastPacketRSSI();
-    
-    /**
-     * @brief Get SNR of last received packet (alias for getSNR)
-     * @return SNR value
-     */
-    float getLastPacketSNR();
+    /** Last packet RSSI (dBm) */
+    int  getLastRSSI() const { return lastRSSI; }
+    /** Last packet SNR  (dB)  */
+    float getLastSNR()  const { return lastSNR;  }
+    /** Returns true if begin() succeeded */
+    bool isReady()      const { return initialized; }
 
 private:
-    bool initialized;
-    SPIClass* spi;
-    Module* module;
-    SX1262* radio;
-    bool pendingMessage;
-    String pendingPayload;
-    int lastPacketRSSI;
-    float lastPacketSNR;
-    void resetPending();
-    bool fetchPacket();
+    bool     initialized;
+    int      lastRSSI;
+    float    lastSNR;
+    String   rxBuffer;
+
+    /** Send raw AT command and wait up to `timeoutMs` for a line starting
+     *  with `expectedPrefix`.  Returns the matched response line. */
+    String sendAT(const String& cmd,
+                  const String& expectedPrefix,
+                  uint32_t      timeoutMs = 2000);
+
+    void   hardwareReset();
+    bool   parseRCV(const String& line, LoRaPacket& out);
 };
 
 #endif // LORA_COMM_H

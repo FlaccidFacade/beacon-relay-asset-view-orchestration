@@ -1,178 +1,189 @@
 /**
  * @file LoRaComm.cpp
- * @brief LoRa communication module implementation
+ * @brief REYAX RYLR896 LoRa driver — AT command interface over UART0 (Pico W)
+ *
+ * Hardware connections (Pico W):
+ *   GP0 (UART0 TX) → RYLR896 RXD
+ *   GP1 (UART0 RX) ← RYLR896 TXD
+ *   GP14           → RYLR896 NRESET  (active LOW)
+ *   Pin 36 (3V3)   → RYLR896 VCC
+ *   Any GND pin    → RYLR896 GND
  */
 
-#include <algorithm>
-#include <cstring>
 #include "LoRaComm.h"
 
-#ifndef LORA_SPI_HOST
-#if defined(ARDUINO_ARCH_ESP32)
-#define LORA_SPI_HOST  FSPI
-#else
-#define LORA_SPI_HOST  HSPI
-#endif
-#endif
+// UART0 is Serial1 in arduino-pico
+#define LORA_SERIAL Serial1
 
 LoRaComm::LoRaComm()
-    : initialized(false),
-      spi(nullptr),
-      module(nullptr),
-      radio(nullptr),
-      pendingMessage(false),
-      pendingPayload(""),
-      lastPacketRSSI(0),
-      lastPacketSNR(0.0f) {}
+    : initialized(false), lastRSSI(0), lastSNR(0.0f), rxBuffer("") {}
 
-void LoRaComm::resetPending() {
-    pendingMessage = false;
-    pendingPayload = "";
+// ── Private helpers ──────────────────────────────────────────────────────────
+
+void LoRaComm::hardwareReset() {
+    pinMode(PIN_LORA_RESET, OUTPUT);
+    digitalWrite(PIN_LORA_RESET, LOW);
+    delay(200);
+    digitalWrite(PIN_LORA_RESET, HIGH);
+    delay(1000);  // datasheet: wait ≥1 s after reset for module to be ready
 }
 
-bool LoRaComm::begin() {
-    Serial.println("LoRaComm: Initializing SX1262 via RadioLib...");
+/**
+ * Write an AT command, then block until a line containing `expectedPrefix`
+ * arrives or `timeoutMs` elapses.  Returns the full matching line, or "".
+ */
+String LoRaComm::sendAT(const String& cmd,
+                         const String& expectedPrefix,
+                         uint32_t      timeoutMs) {
+    // Flush stale bytes
+    while (LORA_SERIAL.available()) LORA_SERIAL.read();
 
-    if (spi == nullptr) {
-        spi = new SPIClass(LORA_SPI_HOST);
+    LORA_SERIAL.print(cmd);
+    LORA_SERIAL.print("\r\n");
+
+    uint32_t deadline = millis() + timeoutMs;
+    String   line;
+    while (millis() < deadline) {
+        while (LORA_SERIAL.available()) {
+            char c = (char)LORA_SERIAL.read();
+            if (c == '\n') {
+                line.trim();
+                if (line.startsWith(expectedPrefix)) {
+                    return line;
+                }
+                line = "";
+            } else if (c != '\r') {
+                line += c;
+            }
+        }
     }
-    spi->begin(LORA_SCK, LORA_MISO, LORA_MOSI, LORA_CS);
+    return "";  // timed out
+}
 
-    if (module == nullptr) {
-        module = new Module(LORA_CS, LORA_DIO1, LORA_RST, LORA_BUSY, *spi);
+// ── Public API ────────────────────────────────────────────────────────────────
+
+bool LoRaComm::begin(uint16_t deviceAddress) {
+    // Configure UART0 pins before Serial1.begin()
+    LORA_SERIAL.setTX(PIN_LORA_TX);
+    LORA_SERIAL.setRX(PIN_LORA_RX);
+    LORA_SERIAL.begin(LORA_BAUD);
+
+    Serial.println("[LoRa] Resetting RYLR896...");
+    hardwareReset();
+
+    // Verify module is alive
+    String resp = sendAT("AT", "+OK", 2000);
+    if (resp == "") {
+        // Try once more — some modules produce "Ready" rather than "+OK"
+        resp = sendAT("AT", "Ready", 1500);
+        if (resp == "") {
+            Serial.println("[LoRa] No response from RYLR896");
+            return false;
+        }
     }
-    if (radio == nullptr) {
-        radio = new SX1262(module);
-    }
 
-    const float freqMHz = static_cast<float>(LORA_BAND) / 1000000.0f;
-    const float bandwidthKHz = static_cast<float>(LORA_BANDWIDTH) / 1000.0f;
+    // Set device address
+    resp = sendAT("AT+ADDRESS=" + String(deviceAddress), "+ADDRESS=", 2000);
+    Serial.println("[LoRa] ADDRESS → " + resp);
 
-    int16_t state = radio->begin(freqMHz, bandwidthKHz, LORA_SPREAD, 7, RADIOLIB_SX126X_SYNC_WORD_PRIVATE, 17, 12, 1.8);
-    if (state != RADIOLIB_ERR_NONE) {
-        Serial.print("LoRaComm: RadioLib begin failed, code ");
-        Serial.println(state);
-        return false;
-    }
+    // Set network ID
+    resp = sendAT("AT+NETWORKID=" + String(LORA_NETWORK_ID), "+NETWORKID=", 2000);
+    Serial.println("[LoRa] NETWORKID → " + resp);
 
-    radio->setDio2AsRfSwitch(true);
-    radio->setCRC(2);
-    radio->startReceive();
+    // Set carrier frequency (Hz)
+    resp = sendAT("AT+BAND=" + String(LORA_FREQ_HZ), "+BAND=", 2000);
+    Serial.println("[LoRa] BAND → " + resp);
 
-    resetPending();
+    // Set RF parameters: SF, BW, CR, Preamble
+    String paramCmd = "AT+PARAMETER=" +
+                      String(LORA_PARAM_SF) + "," +
+                      String(LORA_PARAM_BW) + "," +
+                      String(LORA_PARAM_CR) + "," +
+                      String(LORA_PARAM_PP);
+    resp = sendAT(paramCmd, "+PARAMETER=", 2000);
+    Serial.println("[LoRa] PARAMETER → " + resp);
+
     initialized = true;
-    Serial.println("LoRaComm: SX1262 ready");
+    Serial.println("[LoRa] RYLR896 ready");
     return true;
 }
 
-bool LoRaComm::sendData(const uint8_t* data, size_t length) {
-    if (!initialized || radio == nullptr || data == nullptr || length == 0) {
+bool LoRaComm::sendMessage(uint16_t targetAddress, const String& message) {
+    if (!initialized) return false;
+
+    if (message.length() > RYLR_MAX_PAYLOAD) {
+        Serial.println("[LoRa] Payload too large");
         return false;
     }
 
-    if (length > RADIOLIB_SX126X_MAX_PACKET_LENGTH) {
-        Serial.println("LoRaComm: payload too large");
+    String cmd = "AT+SEND=" + String(targetAddress) + "," +
+                 String(message.length())          + "," +
+                 message;
+
+    String resp = sendAT(cmd, "+SEND=", 3000);
+    if (resp == "") {
+        Serial.println("[LoRa] sendMessage: no ACK");
         return false;
     }
-
-    uint8_t buffer[RADIOLIB_SX126X_MAX_PACKET_LENGTH];
-    memcpy(buffer, data, length);
-
-    int16_t state = radio->transmit(buffer, length);
-    radio->startReceive();
-    return state == RADIOLIB_ERR_NONE;
+    return true;
 }
 
-bool LoRaComm::sendMessage(const String& message) {
-    if (!initialized || radio == nullptr) {
-        return false;
+/**
+ * Non-blocking receive.  Accumulates characters into rxBuffer and checks for
+ * a complete "+RCV=..." line each call.
+ */
+bool LoRaComm::receive(LoRaPacket& out) {
+    while (LORA_SERIAL.available()) {
+        char c = (char)LORA_SERIAL.read();
+        if (c == '\n') {
+            rxBuffer.trim();
+            if (rxBuffer.startsWith("+RCV=")) {
+                bool parsed = parseRCV(rxBuffer, out);
+                rxBuffer = "";
+                if (parsed) {
+                    lastRSSI = out.rssi;
+                    lastSNR  = out.snr;
+                    return true;
+                }
+            }
+            rxBuffer = "";
+        } else if (c != '\r') {
+            rxBuffer += c;
+        }
     }
-
-    int16_t state = radio->transmit(message.c_str(), message.length());
-    radio->startReceive();
-    return state == RADIOLIB_ERR_NONE;
+    return false;
 }
 
-bool LoRaComm::available() {
-    if (!initialized) {
-        return false;
-    }
+/**
+ * Parse:  +RCV=<addr>,<len>,<payload>,<RSSI>,<SNR>
+ */
+bool LoRaComm::parseRCV(const String& line, LoRaPacket& out) {
+    // Strip "+RCV="
+    String body = line.substring(5);  // after "+RCV="
 
-    if (pendingMessage) {
-        return true;
-    }
+    // addr
+    int sep1 = body.indexOf(',');
+    if (sep1 < 0) return false;
+    out.srcAddress = (uint16_t)body.substring(0, sep1).toInt();
 
-    return fetchPacket();
-}
+    // len
+    int sep2 = body.indexOf(',', sep1 + 1);
+    if (sep2 < 0) return false;
+    int payloadLen = body.substring(sep1 + 1, sep2).toInt();
 
-int LoRaComm::receiveData(uint8_t* buffer, size_t maxLength) {
-    if (!available()) {
-        return 0;
-    }
+    // payload  (length chars after sep2+1)
+    if (sep2 + 1 + payloadLen > (int)body.length()) return false;
+    out.payload = body.substring(sep2 + 1, sep2 + 1 + payloadLen);
 
-    size_t toCopy = std::min(maxLength, static_cast<size_t>(pendingPayload.length()));
-    memcpy(buffer, pendingPayload.c_str(), toCopy);
-    resetPending();
-    return static_cast<int>(toCopy);
-}
+    // RSSI
+    int sep3 = body.indexOf(',', sep2 + 1 + payloadLen);
+    if (sep3 < 0) return false;
+    int sep4 = body.indexOf(',', sep3 + 1);
+    if (sep4 < 0) return false;
+    out.rssi = body.substring(sep3 + 1, sep4).toInt();
 
-String LoRaComm::receiveMessage() {
-    if (!available()) {
-        return "";
-    }
-
-    String message = pendingPayload;
-    resetPending();
-    return message;
-}
-
-int LoRaComm::getRSSI() {
-    return lastPacketRSSI;
-}
-
-float LoRaComm::getSNR() {
-    return lastPacketSNR;
-}
-
-int LoRaComm::getLastPacketRSSI() {
-    return getRSSI();
-}
-
-float LoRaComm::getLastPacketSNR() {
-    return getSNR();
-}
-bool LoRaComm::fetchPacket() {
-    if (!radio) {
-        return false;
-    }
-
-    // Ask RadioLib how long the last received packet was (if any).
-    // For SX1262, getPacketLength(true) will return 0 when there is no pending packet.
-    size_t length = radio->getPacketLength(true);
-    if (length == 0 || length > RADIOLIB_SX126X_MAX_PACKET_LENGTH) {
-        // No packet or bogus length, keep listening
-        radio->startReceive();
-        return false;
-    }
-
-    uint8_t buffer[RADIOLIB_SX126X_MAX_PACKET_LENGTH + 1];
-    int16_t state = radio->readData(buffer, length);
-    if (state != RADIOLIB_ERR_NONE) {
-        Serial.print("LoRaComm: readData failed code ");
-        Serial.println(state);
-        radio->startReceive();
-        return false;
-    }
-
-    buffer[length] = '\0';
-    pendingPayload = String(reinterpret_cast<char*>(buffer));
-    pendingMessage = true;
-
-    // These are public PhysicalLayer / SX126x methods
-    lastPacketRSSI = static_cast<int>(radio->getRSSI());
-    lastPacketSNR = radio->getSNR();
-
-    // Go back to RX for the next packet
-    radio->startReceive();
+    // SNR
+    out.snr   = body.substring(sep4 + 1).toFloat();
+    out.valid = true;
     return true;
 }
