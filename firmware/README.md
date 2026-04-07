@@ -48,20 +48,20 @@ This firmware powers both the beacon devices and the relay devices in the B.R.A.
 All peripherals run at **3.3V** from Pin 36 (3V3 OUT).
 Power the Pico W with 5V on **VSYS** (Pin 39 or 40).
 
-| Signal | Pico W Pin | GPIO | Notes |
-|--------|-----------|------|-------|
-| RYLR896 RXD | 1 | GP0 | UART0 TX |
-| RYLR896 TXD | 2 | GP1 | UART0 RX |
-| OLED SDA | 6 | GP4 | I2C0 SDA |
-| OLED SCL | 7 | GP5 | I2C0 SCL |
-| GPS RXD | 11 | GP8 | UART1 TX |
-| GPS TXD | 12 | GP9 | UART1 RX |
-| RYLR896 NRESET | 19 | GP14 | Active LOW |
-| GPS PPS | 20 | GP15 | 1 Hz rising edge |
-| Button | 21 | GP16 | INPUT_PULLUP → GND |
-| 3.3V OUT | 36 | — | Powers OLED, GPS, LoRa |
-| VSYS (5V in) | 39/40 | — | External 5V supply |
-| GND | 3/8/13/18/23/28/33/38 | — | Any GND pin |
+| Signal         | Pico W Pin            | GPIO | Notes                  |
+| -------------- | --------------------- | ---- | ---------------------- |
+| RYLR896 RXD    | 1                     | GP0  | UART0 TX               |
+| RYLR896 TXD    | 2                     | GP1  | UART0 RX               |
+| OLED SDA       | 6                     | GP4  | I2C0 SDA               |
+| OLED SCL       | 7                     | GP5  | I2C0 SCL               |
+| GPS RXD        | 11                    | GP8  | UART1 TX               |
+| GPS TXD        | 12                    | GP9  | UART1 RX               |
+| RYLR896 NRESET | 19                    | GP14 | Active LOW             |
+| GPS PPS        | 20                    | GP15 | 1 Hz rising edge       |
+| Button         | 21                    | GP16 | INPUT_PULLUP → GND     |
+| 3.3V OUT       | 36                    | —    | Powers OLED, GPS, LoRa |
+| VSYS (5V in)   | 39/40                 | —    | External 5V supply     |
+| GND            | 3/8/13/18/23/28/33/38 | —    | Any GND pin            |
 
 ## Software Requirements
 
@@ -171,11 +171,11 @@ Each device is **both beacon and relay simultaneously**:
 
 ### Two-Device Setup
 
-| | Unit 1 (Beacon) | Unit 2 (Relay) |
-|-|-----------------|----------------|
-| `DEVICE_ADDRESS` | 1 | 2 |
-| `TARGET_ADDRESS` | 2 | 1 |
-| Build flag | `-D DEVICE_ADDRESS=1 -D TARGET_ADDRESS=2` | `-D DEVICE_ADDRESS=2 -D TARGET_ADDRESS=1` |
+|                  | Unit 1 (Beacon)                           | Unit 2 (Relay)                            |
+| ---------------- | ----------------------------------------- | ----------------------------------------- |
+| `DEVICE_ADDRESS` | 1                                         | 2                                         |
+| `TARGET_ADDRESS` | 2                                         | 1                                         |
+| Build flag       | `-D DEVICE_ADDRESS=1 -D TARGET_ADDRESS=2` | `-D DEVICE_ADDRESS=2 -D TARGET_ADDRESS=1` |
 
 Edit `build_flags` in `platformio.ini` before uploading to each unit, or pass them on the CLI:
 
@@ -313,4 +313,3 @@ Renders GPS and radio information on the SSD1306 128×64 OLED over I2C0.
 - [ ] Add data logging to flash/SD
 - [ ] Cloud integration (MQTT over Wi-Fi using the Pico W's CYW43439)
 - [ ] Over-the-air firmware update via Wi-Fi
-

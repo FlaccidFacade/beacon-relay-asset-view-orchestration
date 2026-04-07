@@ -14,16 +14,16 @@ Each B.R.A.V.O. device:
 
 For **each** device you need:
 
-| Component | Notes |
-|-----------|-------|
-| Raspberry Pi Pico W | RP2040 + CYW43439 Wi-Fi |
-| REYAX RYLR896 | UART LoRa module, 915 MHz |
-| u-blox NEO-7m GPS | 9600 baud NMEA, 1 Hz PPS |
-| SSD1306 OLED 128×64 | I2C, address 0x3C |
-| Push-button | Momentary, normally open |
-| LoRa antenna | 915 MHz, SMA or U.FL |
-| 5V USB power supply | Powers VSYS, ≥500 mA |
-| Jumper wires |  |
+| Component           | Notes                     |
+| ------------------- | ------------------------- |
+| Raspberry Pi Pico W | RP2040 + CYW43439 Wi-Fi   |
+| REYAX RYLR896       | UART LoRa module, 915 MHz |
+| u-blox NEO-7m GPS   | 9600 baud NMEA, 1 Hz PPS  |
+| SSD1306 OLED 128×64 | I2C, address 0x3C         |
+| Push-button         | Momentary, normally open  |
+| LoRa antenna        | 915 MHz, SMA or U.FL      |
+| 5V USB power supply | Powers VSYS, ≥500 mA      |
+| Jumper wires        |                           |
 
 **Programmer**: Raspberry Pi 4B connected to Pico W via USB micro-B or USB-C.
 
@@ -32,26 +32,27 @@ For **each** device you need:
 All peripherals run at **3.3V from Pico W Pin 36**.  
 Power the Pico W itself via **VSYS (Pin 39/40) with 5V**.
 
-| Signal | Pico W GPIO | Physical Pin |
-|--------|-------------|-------------|
-| RYLR896 RXD ← | GP0 (TX) | 1 |
-| RYLR896 TXD → | GP1 (RX) | 2 |
-| OLED SDA | GP4 | 6 |
-| OLED SCL | GP5 | 7 |
-| GPS RXD ← | GP8 (TX) | 11 |
-| GPS TXD → | GP9 (RX) | 12 |
-| RYLR896 NRESET | GP14 | 19 |
-| GPS PPS | GP15 | 20 |
-| Button → GND | GP16 | 21 |
-| 3.3V supply | 3V3 OUT | 36 |
-| GND | GND | 38 |
-| 5V in | VSYS | 39 |
+| Signal         | Pico W GPIO | Physical Pin |
+| -------------- | ----------- | ------------ |
+| RYLR896 RXD ←  | GP0 (TX)    | 1            |
+| RYLR896 TXD →  | GP1 (RX)    | 2            |
+| OLED SDA       | GP4         | 6            |
+| OLED SCL       | GP5         | 7            |
+| GPS RXD ←      | GP8 (TX)    | 11           |
+| GPS TXD →      | GP9 (RX)    | 12           |
+| RYLR896 NRESET | GP14        | 19           |
+| GPS PPS        | GP15        | 20           |
+| Button → GND   | GP16        | 21           |
+| 3.3V supply    | 3V3 OUT     | 36           |
+| GND            | GND         | 38           |
+| 5V in          | VSYS        | 39           |
 
 ## Step 1: Configure Device Addresses
 
 The two units exchange GPS payloads using LoRa addresses. Edit `firmware/platformio.ini` **before uploading to each unit**:
 
 **Unit 1 (Beacon):**
+
 ```ini
 build_flags =
     -D DEVICE_ADDRESS=1
@@ -59,6 +60,7 @@ build_flags =
 ```
 
 **Unit 2 (Relay):**
+
 ```ini
 build_flags =
     -D DEVICE_ADDRESS=2
@@ -190,11 +192,11 @@ Msg: 2|40.71285
 
 ## Range Expectations
 
-| Environment | Typical Range |
-|-------------|--------------|
-| Line-of-sight (open field) | 500 m – 2 km |
-| Urban / suburban | 100 m – 500 m |
-| Indoor | 50 m – 200 m |
+| Environment                | Typical Range |
+| -------------------------- | ------------- |
+| Line-of-sight (open field) | 500 m – 2 km  |
+| Urban / suburban           | 100 m – 500 m |
+| Indoor                     | 50 m – 200 m  |
 
 Monitor RSSI on the Radio screen — values closer to 0 dBm indicate a stronger link.
 
@@ -204,4 +206,3 @@ Monitor RSSI on the Radio screen — values closer to 0 dBm indicate a stronger 
 - Adjust `HEARTBEAT_INTERVAL` in `src/main.cpp` for faster or slower GPS updates.
 - Enable the Pico W's Wi-Fi to relay GPS data to a cloud backend (MQTT / HTTP).
 - Add additional devices by assigning unique `DEVICE_ADDRESS` values (0–65535).
-
