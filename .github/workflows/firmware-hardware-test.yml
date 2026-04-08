@@ -13,6 +13,14 @@ on:
     paths:
       - "firmware/**"
   workflow_dispatch:
+    inputs:
+      test_suite:
+        description: >
+          Test suite to run (maps to firmware/pi-test/test_<name>.sh).
+          Examples: "comms" (LoRa bidirectional), "display" (OLED output).
+        required: false
+        default: "comms"
+        type: string
 
 jobs:
   hardware-test:
@@ -28,6 +36,8 @@ jobs:
         run: chmod +x firmware/pi-test/*.sh
 
       - name: Run hardware-in-the-loop tests
+        env:
+          TEST_SUITE: ${{ github.event.inputs.test_suite || 'comms' }}
         run: bash firmware/pi-test/run_all.sh
 
       - name: Upload test artifacts
