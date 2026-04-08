@@ -1,0 +1,8 @@
+# Build outputs from build.sh
+out/
+
+# Test artifacts (logs, recordings) — uploaded via CI, not committed
+artifacts/
+
+# Camera PID file
+.camera.pid

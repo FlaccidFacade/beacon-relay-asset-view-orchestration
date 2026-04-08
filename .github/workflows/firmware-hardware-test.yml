@@ -1,0 +1,49 @@
+name: Firmware Hardware Test
+
+permissions:
+  contents: read
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "firmware/**"
+  pull_request:
+    branches: [main]
+    paths:
+      - "firmware/**"
+  workflow_dispatch:
+    inputs:
+      test_suite:
+        description: >
+          Test suite to run (maps to firmware/pi-test/test_<name>.sh).
+          Examples: "comms" (LoRa bidirectional), "display" (OLED output).
+        required: false
+        default: "comms"
+        type: string
+
+jobs:
+  hardware-test:
+    name: Build, Flash & Test on RPi 4B
+    runs-on: [self-hosted, 4b-01-bravo]
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Make scripts executable
+        run: chmod +x firmware/pi-test/*.sh
+
+      - name: Run hardware-in-the-loop tests
+        env:
+          TEST_SUITE: ${{ github.event.inputs.test_suite || 'comms' }}
+        run: bash firmware/pi-test/run_all.sh
+
+      - name: Upload test artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: hardware-test-artifacts
+          path: firmware/pi-test/artifacts/
+          retention-days: 30
