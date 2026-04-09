@@ -32,8 +32,9 @@ jobs:
       - name: Custom Sparse Checkout
         run: |
           echo "Checking out only /firmware..."
+          REPO_URL="https://github.com/${GITHUB_REPOSITORY}.git"
           git init
-          git remote add origin https://github.com/${GITHUB_REPOSITORY}.git
+          git remote add origin "$REPO_URL" || git remote set-url origin "$REPO_URL"
           git config core.sparseCheckout true
           echo "firmware/*" > .git/info/sparse-checkout
           git fetch --depth=1 origin $GITHUB_SHA
