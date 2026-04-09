@@ -38,3 +38,19 @@ jobs:
           echo "firmware/*" > .git/info/sparse-checkout
           git fetch --depth=1 origin $GITHUB_SHA
           git checkout $GITHUB_SHA
+          
+      - name: Make scripts executable
+        run: chmod +x firmware/pi-test/*.sh
+
+      - name: Run hardware-in-the-loop tests
+        env:
+          TEST_SUITE: ${{ github.event.inputs.test_suite || 'comms' }}
+        run: bash firmware/pi-test/run_all.sh
+
+      - name: Upload test artifacts
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: hardware-test-artifacts
+          path: firmware/pi-test/artifacts/
+          retention-days: 30
