@@ -41,9 +41,11 @@ jobs:
           git checkout $GITHUB_SHA
           
       - name: Make scripts executable
+        working-directory: firmware
         run: chmod +x pi-test/*.sh
 
       - name: Run hardware-in-the-loop tests
+        working-directory: firmware
         env:
           TEST_SUITE: ${{ github.event.inputs.test_suite || 'comms' }}
         run: bash pi-test/run_all.sh
@@ -53,5 +55,5 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           name: hardware-test-artifacts
-          path: pi-test/artifacts/
+          path: firmware/pi-test/artifacts/
           retention-days: 30
