@@ -57,3 +57,8 @@ jobs:
           name: hardware-test-artifacts
           path: firmware/pi-test/artifacts/
           retention-days: 30
+
+      - name: Clean up artifacts
+        if: always()
+        working-directory: firmware
+        run: bash pi-test/cleanup.sh
