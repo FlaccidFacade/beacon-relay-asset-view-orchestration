@@ -47,7 +47,7 @@ jobs:
       - name: Run hardware-in-the-loop tests
         working-directory: firmware
         env:
-          TEST_SUITE: ${{ github.event.inputs.test_suite || 'comms' }}
+          TEST_SUITE: ${{ github.event.inputs.test_suite || 'all' }}
         run: bash pi-test/run_all.sh
 
       - name: Upload test artifacts
