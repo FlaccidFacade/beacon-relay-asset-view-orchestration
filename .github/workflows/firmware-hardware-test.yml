@@ -19,7 +19,7 @@ on:
           Test suite to run (maps to firmware/pi-test/test_<name>.sh).
           Examples: "comms" (LoRa bidirectional), "display" (OLED output).
         required: false
-        default: "comms"
+        default: "all"
         type: string
 
 jobs:
