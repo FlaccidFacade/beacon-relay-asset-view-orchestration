@@ -16,7 +16,7 @@ This repository contains all components of the B.R.A.V.O. system in a single mon
 
 | Directory       | Description                                                                  |
 | --------------- | ---------------------------------------------------------------------------- |
-| **firmware/**   | ESP32 collar & dongle firmware (LoRa, GPS, BLE, IMU, OTA updates)            |
+| **firmware/**   | beacon firmware (LoRa, GPS, BLE, IMU, OTA updates)            |
 | **mobile/**     | Galaxy Android app for LoRa gateway, telemetry, and map visualization        |
 | **web/**        | React/Next.js dashboard at domain tbd                                        |
 | **api/**        | AWS Lambda / API Gateway endpoints for telemetry, OTA, and device management |
