@@ -13,7 +13,7 @@
 # All logs and recordings are placed in firmware/pi-test/artifacts/.
 #
 # Environment variables:
-#   TEST_SUITE — name of the test to run (default: "comms")
+#   TEST_SUITE — name of the test to run (default: "all")
 #                Maps to firmware/pi-test/test_<name>.sh
 #                Examples: "comms", "display"
 
@@ -23,7 +23,7 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 ARTIFACTS_DIR="${SCRIPT_DIR}/artifacts"
 export ARTIFACTS_DIR
 
-TEST_SUITE="${TEST_SUITE:-comms}"
+TEST_SUITE="${TEST_SUITE:-all}"
 TEST_SCRIPT="${SCRIPT_DIR}/test_${TEST_SUITE}.sh"
 
 if [ ! -f "$TEST_SCRIPT" ]; then
