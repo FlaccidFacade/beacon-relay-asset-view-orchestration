@@ -7,6 +7,10 @@
 # The script detects Pico W boards in BOOTSEL mode, flashes the first image
 # to the first board and the second image to the second board.
 #
+# If boards are running firmware (not already in BOOTSEL mode), the script
+# automatically reboots them into BOOTSEL via `picotool reboot -f -u` so
+# that no physical button press is required (headless / CI friendly).
+#
 # If only one board is in BOOTSEL mode the script flashes that board, then
 # waits for the second board before continuing.
 #
@@ -41,6 +45,35 @@ detect_picos() {
         | grep -oP 'Device at \K[0-9]+:[0-9]+' || true
 }
 
+force_bootsel() {
+    # Force any running (non-BOOTSEL) Pico W boards into BOOTSEL mode.
+    # The arduino-pico core exposes a USB vendor reset interface that
+    # picotool can use to reboot the device without the physical BOOTSEL
+    # button:  picotool reboot -f -u
+    #   -f  target a device that is NOT in BOOTSEL mode
+    #   -u  reboot into USB/BOOTSEL mode (rather than application mode)
+    # We attempt up to 2 reboots (one per expected board).
+    echo "  Forcing running Pico W board(s) into BOOTSEL mode..."
+    local rebooted=0
+    for _ in 1 2; do
+        if picotool reboot -f -u 2>/dev/null; then
+            rebooted=$((rebooted + 1))
+            # Wait for the device to finish rebooting into BOOTSEL mode
+            sleep 2
+        else
+            break
+        fi
+    done
+
+    if [ "$rebooted" -gt 0 ]; then
+        echo "  Rebooted $rebooted device(s) into BOOTSEL mode."
+        # Extra settle time for USB re-enumeration after all reboots
+        sleep 3
+    else
+        echo "  No running boards found (may already be in BOOTSEL or disconnected)."
+    fi
+}
+
 flash_one() {
     local uf2="$1"
     local bus_addr="$2"
@@ -65,7 +98,8 @@ wait_for_pico() {
         fi
         if [ "$elapsed" -ge "$MAX_WAIT" ]; then
             echo "ERROR: Timed out waiting for $needed Pico W board(s) in BOOTSEL mode." >&2
-            echo "Hold BOOTSEL while plugging in the USB cable, then release." >&2
+            echo "Automatic reboot into BOOTSEL was attempted but failed." >&2
+            echo "Ensure Pico W boards are connected via USB and accessible by picotool." >&2
             exit 1
         fi
         sleep 2
@@ -73,6 +107,10 @@ wait_for_pico() {
         echo "  Waiting for Pico W in BOOTSEL mode... (${elapsed}s / ${MAX_WAIT}s)"
     done
 }
+
+# --- Force running boards into BOOTSEL mode (headless / CI) ---
+echo "=== Preparing devices ==="
+force_bootsel
 
 # --- Flash Device 1 ---
 echo "=== Flashing Device 1 ==="
@@ -86,7 +124,10 @@ sleep 3
 
 # --- Flash Device 2 ---
 echo "=== Flashing Device 2 ==="
-echo "Please put the second Pico W into BOOTSEL mode now."
+# If device 2 is no longer in BOOTSEL (e.g. it was reset), try forcing again.
+if [ "$(detect_picos | wc -l)" -lt 1 ]; then
+    force_bootsel
+fi
 wait_for_pico 1
 PICO_2="$(detect_picos | head -1)"
 flash_one "$UF2_2" "$PICO_2"
