@@ -58,6 +58,7 @@ force_bootsel() {
     for _ in 1 2; do
         if picotool reboot -f -u 2>/dev/null; then
             rebooted=$((rebooted + 1))
+            # Wait for the device to finish rebooting into BOOTSEL mode
             sleep 2
         else
             break
@@ -66,6 +67,7 @@ force_bootsel() {
 
     if [ "$rebooted" -gt 0 ]; then
         echo "  Rebooted $rebooted device(s) into BOOTSEL mode."
+        # Extra settle time for USB re-enumeration after all reboots
         sleep 3
     else
         echo "  No running boards found (may already be in BOOTSEL or disconnected)."
