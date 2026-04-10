@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# flash.sh — CI-safe dual Pico W UF2 flasher using BOOTSEL mounts
+# flash.sh — CI-safe dual Pico W UF2 flasher (robust BOOTSEL handling)
 
 set -euo pipefail
 
@@ -13,31 +13,10 @@ for f in "$UF2_1" "$UF2_2"; do
     [[ -f "$f" ]] || { echo "ERROR: Missing UF2: $f" >&2; exit 1; }
 done
 
-# --- detect BOOTSEL mounts (clean parsing) ---
+# --- detect BOOTSEL mounts ---
 detect_mounts() {
-    lsblk -rn -o MOUNTPOINT,LABEL | awk '$2=="RPI-RP2" {print $1}'
-}
-
-# --- force running boards into BOOTSEL (CI/headless safe) ---
-force_bootsel() {
-    echo "=== Forcing boards into BOOTSEL mode ==="
-    local rebooted=0
-
-    for _ in 1 2; do
-        if picotool reboot -f -u 2>/dev/null; then
-            rebooted=$((rebooted + 1))
-            sleep 2
-        else
-            break
-        fi
-    done
-
-    if [[ "$rebooted" -gt 0 ]]; then
-        echo "  Rebooted $rebooted device(s) into BOOTSEL"
-        sleep 3
-    else
-        echo "  No running devices found or already in BOOTSEL"
-    fi
+    lsblk -rn -o MOUNTPOINT,LABEL \
+        | awk '$2=="RPI-RP2" {print $1}'
 }
 
 wait_for_devices() {
@@ -62,19 +41,45 @@ wait_for_devices() {
     done
 }
 
+force_bootsel() {
+    echo "=== Forcing BOOTSEL mode ==="
+    local rebooted=0
+
+    for _ in 1 2; do
+        if picotool reboot -f -u 2>/dev/null; then
+            rebooted=$((rebooted + 1))
+            sleep 2
+        else
+            break
+        fi
+    done
+
+    echo "  Rebooted $rebooted device(s) (if any running)"
+    sleep 3
+}
+
+snapshot_mounts() {
+    detect_mounts | sort
+}
+
 flash_to_mount() {
     local uf2="$1"
     local mount="$2"
 
-    if [[ ! -w "$mount" ]]; then
+    [[ -n "$mount" ]] || {
+        echo "ERROR: Empty mount target" >&2
+        exit 1
+    }
+
+    [[ -w "$mount" ]] || {
         echo "ERROR: Mount not writable: $mount" >&2
         exit 1
-    fi
+    }
 
     echo "Flashing $uf2 -> $mount"
 
     if ! cp "$uf2" "$mount/"; then
-        echo "ERROR: Failed to copy $uf2 to $mount" >&2
+        echo "ERROR: Failed to copy $uf2 -> $mount" >&2
         exit 1
     fi
 
@@ -85,25 +90,43 @@ flash_to_mount() {
 echo "=== Preparing devices ==="
 force_bootsel
 
-# --- Device 1 ---
+# --- DEVICE 1 ---
 echo "=== Flashing Device 1 ==="
 wait_for_devices 1
-M1=$(detect_mounts | head -n 1)
+
+mapfile -t BEFORE < <(snapshot_mounts)
+M1="${BEFORE[0]:-}"
 
 flash_to_mount "$UF2_1" "$M1"
 echo "Device 1 flashed"
 
-sleep 2
+# allow full USB re-enumeration after reboot
+sleep 5
+sync
 
-# --- Device 2 ---
+# ensure OS settles USB state
+udevadm settle 2>/dev/null || true
+
+# --- DEVICE 2 ---
 echo "=== Flashing Device 2 ==="
+
 wait_for_devices 1
 
-# safer exclusion (exact match, not regex-based)
-M2=$(detect_mounts | grep -Fvx "$M1" | head -n 1)
+mapfile -t AFTER < <(snapshot_mounts)
+
+# pick first DIFFERENT mount from device 1
+M2=""
+for m in "${AFTER[@]}"; do
+    if [[ "$m" != "$M1" ]]; then
+        M2="$m"
+        break
+    fi
+done
 
 if [[ -z "$M2" ]]; then
-    echo "ERROR: No second Pico mount found (Device 1 may not have unmounted yet)" >&2
+    echo "ERROR: Could not isolate second Pico mount" >&2
+    echo "Detected mounts:" >&2
+    printf '%s\n' "${AFTER[@]}" >&2
     exit 1
 fi
 
