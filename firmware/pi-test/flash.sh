@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
-# flash.sh — Flash UF2 images to two Pico W devices via picotool
+# flash.sh — Flash UF2 images to two Pico W devices via USB mass-storage copy
 #
 # Usage:
 #   ./flash.sh [out/device1.uf2] [out/device2.uf2]
 #
-# The script detects Pico W boards in BOOTSEL mode, flashes the first image
-# to the first board and the second image to the second board.
+# The script detects Pico W boards in BOOTSEL mode by looking for RPI-RP2
+# USB mass-storage mount points, then copies the UF2 files to flash them.
 #
 # If boards are running firmware (not already in BOOTSEL mode), the script
 # automatically reboots them into BOOTSEL via `picotool reboot -f -u` so
@@ -14,7 +14,8 @@
 # If only one board is in BOOTSEL mode the script flashes that board, then
 # waits for the second board before continuing.
 #
-# Requires: picotool  (sudo apt-get install -y picotool)
+# Requires: lsblk (usually pre-installed)
+# Optional: picotool (for automatic BOOTSEL reboot of running boards)
 
 set -euo pipefail
 
@@ -32,17 +33,39 @@ for f in "$UF2_1" "$UF2_2"; do
     fi
 done
 
+# picotool is optional: used only to force-reboot running boards into BOOTSEL.
+# If not available, boards must already be in BOOTSEL mode.
 if ! command -v picotool &>/dev/null; then
-    echo "ERROR: picotool not found. Install with: sudo apt-get install -y picotool" >&2
-    exit 1
+    echo "WARNING: picotool not found. Automatic BOOTSEL reboot will be skipped." >&2
+    echo "  Boards must be in BOOTSEL mode (hold BOOTSEL while plugging USB)." >&2
+    echo "  Install with: sudo apt-get install -y picotool" >&2
 fi
 
 # --- Helpers ---
 detect_picos() {
-    # List bus addresses of Pico W boards in BOOTSEL mode.
-    # Returns one line per board: "bus:address"
-    picotool info -l 2>/dev/null \
-        | grep -oP 'Device at \K[0-9]+:[0-9]+' || true
+    # List mount points of Pico W boards in BOOTSEL mode.
+    # In BOOTSEL mode the Pico W exposes a USB mass-storage device labelled
+    # "RPI-RP2".  Returns one mount-point path per line.
+    #
+    # Primary method: lsblk (most reliable, works on all systemd-based distros)
+    # Fallback: scan common auto-mount directories
+    if command -v lsblk &>/dev/null; then
+        local found
+        found=$(lsblk -o LABEL,MOUNTPOINT -rn 2>/dev/null \
+            | awk '$1 == "RPI-RP2" && $2 != "" { print $2 }')
+        if [ -n "$found" ]; then
+            echo "$found"
+            return 0
+        fi
+    fi
+    # Fallback: scan common mount directories for RPI-RP2
+    for base in "/media/${USER:-}" "/media" "/run/media/${USER:-}" "/mnt"; do
+        [ -d "$base" ] || continue
+        for d in "$base"/RPI-RP2*; do
+            [ -d "$d" ] && echo "$d"
+        done
+    done
+    return 0
 }
 
 force_bootsel() {
@@ -53,6 +76,11 @@ force_bootsel() {
     #   -f  target a device that is NOT in BOOTSEL mode
     #   -u  reboot into USB/BOOTSEL mode (rather than application mode)
     # We attempt up to 2 reboots (one per expected board).
+    if ! command -v picotool &>/dev/null; then
+        echo "  picotool not found; skipping automatic BOOTSEL reboot."
+        echo "  Boards must already be in BOOTSEL mode (hold BOOTSEL while plugging USB)."
+        return 0
+    fi
     echo "  Forcing running Pico W board(s) into BOOTSEL mode..."
     local rebooted=0
     for _ in 1 2; do
@@ -67,8 +95,8 @@ force_bootsel() {
 
     if [ "$rebooted" -gt 0 ]; then
         echo "  Rebooted $rebooted device(s) into BOOTSEL mode."
-        # Extra settle time for USB re-enumeration after all reboots
-        sleep 3
+        # Extra settle time for USB re-enumeration and auto-mount
+        sleep 5
     else
         echo "  No running boards found (may already be in BOOTSEL or disconnected)."
     fi
@@ -76,15 +104,12 @@ force_bootsel() {
 
 flash_one() {
     local uf2="$1"
-    local bus_addr="$2"
-    local bus="${bus_addr%%:*}"
-    local addr="${bus_addr##*:}"
+    local mount_point="$2"
 
-    echo "  Flashing $uf2 -> bus $bus addr $addr"
-    picotool load "$uf2" --bus "$bus" --address "$addr" --force --verify
-    if ! picotool reboot --bus "$bus" --address "$addr" 2>&1; then
-        echo "  WARNING: picotool reboot failed for bus $bus addr $addr (device may need manual reset)"
-    fi
+    echo "  Flashing $(basename "$uf2") -> $mount_point"
+    cp "$uf2" "$mount_point/"
+    sync
+    echo "  UF2 copied; device will reboot automatically."
 }
 
 wait_for_pico() {
@@ -98,8 +123,8 @@ wait_for_pico() {
         fi
         if [ "$elapsed" -ge "$MAX_WAIT" ]; then
             echo "ERROR: Timed out waiting for $needed Pico W board(s) in BOOTSEL mode." >&2
-            echo "Automatic reboot into BOOTSEL was attempted but failed." >&2
-            echo "Ensure Pico W boards are connected via USB and accessible by picotool." >&2
+            echo "FATAL: Flash failed." >&2
+            echo "Hold BOOTSEL while plugging in the USB cable, then release." >&2
             exit 1
         fi
         sleep 2
@@ -119,8 +144,8 @@ PICO_1="$(detect_picos | head -1)"
 flash_one "$UF2_1" "$PICO_1"
 echo "  Device 1 flashed and rebooting."
 
-# Give Device 1 time to reboot out of BOOTSEL.
-sleep 3
+# Give Device 1 time to reboot out of BOOTSEL and unmount.
+sleep 5
 
 # --- Flash Device 2 ---
 echo "=== Flashing Device 2 ==="
