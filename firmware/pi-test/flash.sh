@@ -1,5 +1,13 @@
 #!/usr/bin/env bash
 # flash.sh — CI-safe dual Pico W UF2 flasher (robust BOOTSEL handling)
+#
+# Supports two modes:
+#   1. Direct USB BOOTSEL (default) — Pico W held in BOOTSEL at plug-in.
+#   2. Pico Probe SWD     — A Pico H running picoprobe forces BOOTSEL
+#      remotely via `picotool reboot -f -u`, eliminating the need to
+#      solder the BOOTSEL pad or physically press the button.
+#
+# The script auto-detects a connected picoprobe (USB VID:PID 2e8a:0004).
 
 set -euo pipefail
 
@@ -12,6 +20,26 @@ MAX_WAIT="${FLASH_WAIT_SECS:-60}"
 for f in "$UF2_1" "$UF2_2"; do
     [[ -f "$f" ]] || { echo "ERROR: Missing UF2: $f" >&2; exit 1; }
 done
+
+# --- picoprobe detection ---
+# Pico H running picoprobe exposes USB VID:PID 2e8a:0004.
+detect_picoprobe() {
+    if command -v lsusb &>/dev/null; then
+        lsusb -d 2e8a:0004 &>/dev/null
+    else
+        # Fall back to sysfs when lsusb is not available
+        grep -rqs "2e8a" /sys/bus/usb/devices/*/idVendor 2>/dev/null \
+            && grep -rqs "0004" /sys/bus/usb/devices/*/idProduct 2>/dev/null
+    fi
+}
+
+PICOPROBE_DETECTED=false
+if detect_picoprobe; then
+    PICOPROBE_DETECTED=true
+    echo "✓ Pico Probe (picoprobe) detected on USB"
+else
+    echo "  No Pico Probe detected — using direct USB BOOTSEL mode"
+fi
 
 # --- detect BOOTSEL mounts ---
 detect_mounts() {
@@ -44,6 +72,10 @@ wait_for_devices() {
 force_bootsel() {
     echo "=== Forcing BOOTSEL mode ==="
     local rebooted=0
+
+    if [[ "$PICOPROBE_DETECTED" == "true" ]]; then
+        echo "  Using Pico Probe (SWD) to force BOOTSEL — no physical button press needed"
+    fi
 
     for _ in 1 2; do
         if picotool reboot -f -u 2>/dev/null; then

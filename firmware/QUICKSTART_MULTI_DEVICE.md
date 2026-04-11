@@ -200,6 +200,82 @@ Msg: 2|40.71285
 
 Monitor RSSI on the Radio screen — values closer to 0 dBm indicate a stronger link.
 
+## Pico Probe Setup (Headless Flashing via SWD)
+
+If you want to flash Pico W devices **without holding the BOOTSEL button** (or
+soldering the BOOTSEL pad), you can use a spare **Pico H** as an SWD debugger.
+
+### Why Use a Pico Probe?
+
+| Benefit | Detail |
+| --- | --- |
+| No soldering | Avoids damaging Pico W boards by soldering the BOOTSEL test pad |
+| Headless flashing | `picotool reboot -f -u` forces BOOTSEL remotely — no physical button press |
+| Brick recovery | SWD can reprogram a device even when its firmware is completely broken |
+| CI/CD friendly | The HIL runner can flash both targets without human intervention |
+
+### Hardware Required
+
+| Item | Notes |
+| --- | --- |
+| Pico H (debugger) | Any RP2040 board **with headers** — flashed with [picoprobe](https://github.com/raspberrypi/picoprobe) firmware |
+| 3× female-to-female jumper wires | For the SWD connection |
+
+### Wiring: Debugger → Target
+
+Connect the **Pico H (picoprobe)** to each **Pico W target** using SWD:
+
+| Debugger Pico H Pin | Signal | Target Pico W Pin |
+| --- | --- | --- |
+| GP2 (Pin 4) | SWCLK | SWCLK (test pad or Pin 2) |
+| GP3 (Pin 5) | SWDIO | SWDIO (test pad or Pin 4) |
+| GND (Pin 3) | GND | GND (Pin 3) |
+
+> **Tip:** The Pico W SWD pads are labelled on the bottom of the board. If you
+> are using the three-pin debug header on the Pico H, connect **SWCLK**, **GND**,
+> and **SWDIO** in order (Pins 2, 3, 4 on the debugger).
+
+See `docs/bravo-hil-debug-setup.drawio` for a complete wiring diagram.
+
+### Flashing Workflow
+
+1. Connect the Pico H (picoprobe) to the Raspberry Pi 4B via USB.
+2. Connect the two Pico W targets to the Pico H via SWD as shown above.
+3. Build the firmware:
+
+   ```bash
+   cd firmware/pi-test
+   ./build.sh
+   ```
+
+4. Flash both devices — the script detects the picoprobe automatically:
+
+   ```bash
+   ./flash.sh
+   ```
+
+   Behind the scenes the script:
+   - Detects the picoprobe on USB (VID:PID `2e8a:0004`).
+   - Runs `picotool reboot -f -u` to force each target into BOOTSEL mode.
+   - Copies the `.uf2` files to the `RPI-RP2` mass-storage mount.
+
+5. After flashing, each Pico W reboots into the new firmware automatically.
+
+### Verifying picotool
+
+`picotool` must be installed on the host (Raspberry Pi 4B):
+
+```bash
+# Debian / Ubuntu / Raspberry Pi OS
+sudo apt-get update && sudo apt-get install -y picotool
+
+# Verify
+picotool version
+```
+
+If `picotool` is not packaged for your distro, build from source:
+<https://github.com/raspberrypi/picotool>
+
 ## Next Steps
 
 - Increase LoRa transmit power in `PinConfig.h` (`AT+CRFOP` parameter).

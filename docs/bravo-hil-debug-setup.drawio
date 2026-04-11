@@ -1,0 +1,76 @@
+<mxfile host="app.diagrams.net" modified="2026-04-11T00:00:00.000Z" agent="draw.io" version="24.0.0" type="device">
+  <diagram id="hil-debug-setup" name="HIL Debug Setup">
+    <mxGraphModel dx="1200" dy="800" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1100" pageHeight="850" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+
+        <!-- Title -->
+        <mxCell id="title" value="&lt;b&gt;B.R.A.V.O. HIL Debug Setup — Pico Probe&lt;/b&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=16;" vertex="1" parent="1">
+          <mxGeometry x="300" y="20" width="400" height="30" as="geometry"/>
+        </mxCell>
+
+        <!-- Host: Raspberry Pi 4B -->
+        <mxCell id="host" value="&lt;b&gt;Host&lt;/b&gt;&lt;br&gt;Raspberry Pi 4B&lt;br&gt;&lt;i&gt;Runs HIL scripts&lt;/i&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;arcSize=12;" vertex="1" parent="1">
+          <mxGeometry x="400" y="80" width="200" height="80" as="geometry"/>
+        </mxCell>
+
+        <!-- USB Cable: Host to Debugger -->
+        <mxCell id="usb-host-debug" value="USB" style="endArrow=block;html=1;strokeWidth=2;strokeColor=#333333;fontSize=11;endFill=1;" edge="1" parent="1" source="host" target="debugger">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <!-- Debugger: Pico H (picoprobe) -->
+        <mxCell id="debugger" value="&lt;b&gt;Debugger&lt;/b&gt;&lt;br&gt;Pico H #1&lt;br&gt;&lt;i&gt;picoprobe firmware&lt;/i&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=12;arcSize=12;" vertex="1" parent="1">
+          <mxGeometry x="400" y="230" width="200" height="80" as="geometry"/>
+        </mxCell>
+
+        <!-- SWD Bus label -->
+        <mxCell id="swd-label" value="&lt;b&gt;SWD Bus&lt;/b&gt;&lt;br&gt;SWCLK (Pin 2)&lt;br&gt;GND&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;(Pin 3)&lt;br&gt;SWDIO (Pin 4)" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="420" y="340" width="160" height="70" as="geometry"/>
+        </mxCell>
+
+        <!-- SWD line: Debugger to Target 1 -->
+        <mxCell id="swd-1" value="SWD" style="endArrow=block;html=1;strokeWidth=2;strokeColor=#b85450;fontSize=11;endFill=1;dashed=1;dashPattern=8 4;" edge="1" parent="1" source="debugger" target="target1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <!-- SWD line: Debugger to Target 2 -->
+        <mxCell id="swd-2" value="SWD" style="endArrow=block;html=1;strokeWidth=2;strokeColor=#b85450;fontSize=11;endFill=1;dashed=1;dashPattern=8 4;" edge="1" parent="1" source="debugger" target="target2">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <!-- Target 1: Pico W (Beacon) -->
+        <mxCell id="target1" value="&lt;b&gt;Target 1&lt;/b&gt;&lt;br&gt;Pico W&lt;br&gt;&lt;i&gt;Beacon (DEVICE_ADDRESS=1)&lt;/i&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=12;arcSize=12;" vertex="1" parent="1">
+          <mxGeometry x="200" y="440" width="220" height="80" as="geometry"/>
+        </mxCell>
+
+        <!-- Target 2: Pico W (Relay) -->
+        <mxCell id="target2" value="&lt;b&gt;Target 2&lt;/b&gt;&lt;br&gt;Pico W&lt;br&gt;&lt;i&gt;Relay (DEVICE_ADDRESS=2)&lt;/i&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=12;arcSize=12;" vertex="1" parent="1">
+          <mxGeometry x="580" y="440" width="220" height="80" as="geometry"/>
+        </mxCell>
+
+        <!-- USB power: Host to Target 1 -->
+        <mxCell id="usb-t1" value="USB (power/serial)" style="endArrow=block;html=1;strokeWidth=1;strokeColor=#999999;fontSize=10;endFill=1;dashed=1;dashPattern=4 4;" edge="1" parent="1" source="host" target="target1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <!-- USB power: Host to Target 2 -->
+        <mxCell id="usb-t2" value="USB (power/serial)" style="endArrow=block;html=1;strokeWidth=1;strokeColor=#999999;fontSize=10;endFill=1;dashed=1;dashPattern=4 4;" edge="1" parent="1" source="host" target="target2">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <!-- Workflow note -->
+        <mxCell id="note" value="&lt;b&gt;Flashing workflow:&lt;/b&gt;&lt;br&gt;1. Host runs &lt;code&gt;picotool reboot -f -u&lt;/code&gt; via picoprobe&lt;br&gt;2. Target enters BOOTSEL mode (no physical button press)&lt;br&gt;3. Host copies .uf2 to RPI-RP2 mass-storage mount&lt;br&gt;4. Target reboots into new firmware" style="shape=note;whiteSpace=wrap;html=1;size=14;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;align=left;spacingLeft=8;spacingRight=8;" vertex="1" parent="1">
+          <mxGeometry x="100" y="580" width="380" height="100" as="geometry"/>
+        </mxCell>
+
+        <!-- Benefit note -->
+        <mxCell id="benefit" value="&lt;b&gt;Benefits:&lt;/b&gt;&lt;br&gt;• No BOOTSEL soldering needed on Pico W&lt;br&gt;• Robust recovery of bricked devices via SWD&lt;br&gt;• Fully headless CI/CD-compatible flashing" style="shape=note;whiteSpace=wrap;html=1;size=14;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;align=left;spacingLeft=8;spacingRight=8;" vertex="1" parent="1">
+          <mxGeometry x="520" y="580" width="340" height="90" as="geometry"/>
+        </mxCell>
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
