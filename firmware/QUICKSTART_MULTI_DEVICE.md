@@ -223,17 +223,19 @@ soldering the BOOTSEL pad), you can use a spare **Pico H** as an SWD debugger.
 
 ### Wiring: Debugger → Target
 
-Connect the **Pico H (picoprobe)** to each **Pico W target** using SWD:
+Connect the **Pico H (picoprobe)** to each **Pico W target** using SWD.
+Pin numbers below are **physical pin** positions on the board header:
 
-| Debugger Pico H Pin | Signal | Target Pico W Pin |
+| Debugger Pico H | Signal | Target Pico W |
 | --- | --- | --- |
-| GP2 (Pin 4) | SWCLK | SWCLK (test pad or Pin 2) |
-| GP3 (Pin 5) | SWDIO | SWDIO (test pad or Pin 4) |
-| GND (Pin 3) | GND | GND (Pin 3) |
+| GP2 — physical pin 4 | SWCLK | SWCLK — debug pad (active-low clock) |
+| GP3 — physical pin 5 | SWDIO | SWDIO — debug pad (data I/O) |
+| GND — physical pin 3 | GND | Any GND pin (e.g. physical pin 3) |
 
-> **Tip:** The Pico W SWD pads are labelled on the bottom of the board. If you
-> are using the three-pin debug header on the Pico H, connect **SWCLK**, **GND**,
-> and **SWDIO** in order (Pins 2, 3, 4 on the debugger).
+> **Tip:** The Pico W SWD pads are labelled on the bottom of the board next to
+> the USB connector. On the Pico H debugger, the three-pin debug header exposes
+> **SWCLK** (physical pin 4), **GND** (physical pin 3), and **SWDIO** (physical
+> pin 5) — connect these to the matching pads on the target.
 
 See `docs/bravo-hil-debug-setup.drawio` for a complete wiring diagram.
 
