@@ -13,6 +13,7 @@
     
     <!-- Connection Status -->
     <string name="status_disconnected">Disconnected</string>
+    <string name="status_scanning">Scanning for devices…</string>
     <string name="status_connecting">Connecting…</string>
     <string name="status_connected">Connected</string>
     <string name="status_receiving">Receiving Data…</string>

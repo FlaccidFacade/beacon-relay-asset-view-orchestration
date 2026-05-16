@@ -138,10 +138,7 @@ public class MainActivity extends AppCompatActivity {
         startService(intent);
         bindService(intent, bleConnection, Context.BIND_AUTO_CREATE);
         
-        textConnectionStatus.setText(R.string.status_connecting);
-        
-        // TODO: Show device selection dialog
-        Toast.makeText(this, "BLE connection initiated", Toast.LENGTH_SHORT).show();
+        textConnectionStatus.setText(R.string.status_scanning);
     }
 
     /**
@@ -211,9 +208,32 @@ public class MainActivity extends AppCompatActivity {
                 public void onTelemetryReceived(TelemetryData data) {
                     updateTelemetryDisplay(data);
                 }
+
+                @Override
+                public void onScanStarted() {
+                    runOnUiThread(() ->
+                        textConnectionStatus.setText(R.string.status_scanning));
+                }
+
+                @Override
+                public void onScanFailed(int errorCode) {
+                    runOnUiThread(() -> {
+                        int messageRes;
+                        if (errorCode == BLEConnectionService.ERROR_NO_DEVICE_FOUND) {
+                            messageRes = R.string.error_no_device_found;
+                        } else if (errorCode == BLEConnectionService.ERROR_PERMISSION_DENIED) {
+                            messageRes = R.string.error_permission_denied;
+                        } else {
+                            messageRes = R.string.error_connection_failed;
+                        }
+                        Toast.makeText(MainActivity.this, messageRes, Toast.LENGTH_SHORT).show();
+                        textConnectionStatus.setText(R.string.status_disconnected);
+                    });
+                }
             });
             
-            // TODO: Connect to specific device
+            // Auto-scan for Raspberry Pi Pico WH / Pico 2WH devices and connect without prompting
+            bleService.scanForPicoDevices();
         }
         
         @Override
