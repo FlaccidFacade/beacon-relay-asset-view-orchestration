@@ -10,10 +10,22 @@ import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCallback;
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothProfile;
+import android.bluetooth.le.BluetoothLeScanner;
+import android.bluetooth.le.ScanCallback;
+import android.bluetooth.le.ScanResult;
+import android.bluetooth.le.ScanSettings;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.os.Binder;
 import android.os.Build;
+import android.os.Handler;
 import android.os.IBinder;
+import android.os.Looper;
+
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import androidx.core.app.NotificationCompat;
 
@@ -33,12 +45,30 @@ public class BLEConnectionService extends Service {
     // ESP32 Service and Characteristic UUIDs (placeholder - replace with actual UUIDs)
     private static final String SERVICE_UUID = "4fafc201-1fb5-459e-8fcc-c5c9c331914b";
     private static final String CHARACTERISTIC_UUID = "beb5483e-36e1-4688-b7f5-ea07361b26a8";
-    
+
+    // Known Raspberry Pi Pico W device name prefixes (covers Pico WH and Pico 2WH)
+    private static final Set<String> PICO_DEVICE_NAMES = new HashSet<>(Arrays.asList(
+        "pico wh", "pico 2wh", "pico w"
+    ));
+
+    /** Scan timeout in milliseconds (30 seconds). */
+    private static final long SCAN_TIMEOUT_MS = 30_000;
+
+    /** Custom error code reported when Bluetooth is unavailable. */
+    public static final int ERROR_BLUETOOTH_UNAVAILABLE = -1;
+    /** Custom error code reported when no device was found within the scan timeout. */
+    public static final int ERROR_NO_DEVICE_FOUND = -2;
+    /** Custom error code reported when required Bluetooth permissions are not granted. */
+    public static final int ERROR_PERMISSION_DENIED = -3;
+
     public static final String ACTION_DATA_RECEIVED = "com.bravo.mobile.ACTION_DATA_RECEIVED";
     public static final String EXTRA_TELEMETRY = "telemetry_data";
     
     private BluetoothAdapter bluetoothAdapter;
+    private BluetoothLeScanner bluetoothLeScanner;
     private BluetoothGatt bluetoothGatt;
+    private final AtomicBoolean isScanning = new AtomicBoolean(false);
+    private final Handler scanTimeoutHandler = new Handler(Looper.getMainLooper());
     private LoRaReceiver loRaReceiver;
     private final IBinder binder = new LocalBinder();
     private ConnectionStateListener connectionStateListener;
@@ -46,6 +76,8 @@ public class BLEConnectionService extends Service {
     public interface ConnectionStateListener {
         void onConnectionStateChanged(boolean connected);
         void onTelemetryReceived(TelemetryData data);
+        default void onScanStarted() {}
+        default void onScanFailed(int errorCode) {}
     }
 
     public class LocalBinder extends Binder {
@@ -58,6 +90,9 @@ public class BLEConnectionService extends Service {
     public void onCreate() {
         super.onCreate();
         bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+        if (bluetoothAdapter != null) {
+            bluetoothLeScanner = bluetoothAdapter.getBluetoothLeScanner();
+        }
         loRaReceiver = new LoRaReceiver();
         createNotificationChannel();
     }
@@ -73,6 +108,89 @@ public class BLEConnectionService extends Service {
     public IBinder onBind(Intent intent) {
         return binder;
     }
+
+    /**
+     * Scan for known Raspberry Pi Pico WH / Pico 2WH devices and auto-connect to the first one found.
+     * No device selection prompt is shown — connection is automatic.
+     * The scan stops automatically after {@value #SCAN_TIMEOUT_MS} ms if no device is found.
+     */
+    public void scanForPicoDevices() {
+        if (bluetoothAdapter == null || bluetoothLeScanner == null) {
+            if (connectionStateListener != null) {
+                connectionStateListener.onScanFailed(ERROR_BLUETOOTH_UNAVAILABLE);
+            }
+            return;
+        }
+
+        if (isScanning.get()) {
+            return;
+        }
+
+        // On Android 12+ BLUETOOTH_SCAN is a runtime permission
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S &&
+                checkSelfPermission(android.Manifest.permission.BLUETOOTH_SCAN)
+                        != PackageManager.PERMISSION_GRANTED) {
+            if (connectionStateListener != null) {
+                connectionStateListener.onScanFailed(ERROR_PERMISSION_DENIED);
+            }
+            return;
+        }
+
+        ScanSettings settings = new ScanSettings.Builder()
+                .setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY)
+                .build();
+
+        // No device-name filters — case-insensitive matching is done in the scan callback.
+        isScanning.set(true);
+        bluetoothLeScanner.startScan(null, settings, leScanCallback);
+
+        if (connectionStateListener != null) {
+            connectionStateListener.onScanStarted();
+        }
+
+        // Stop scanning automatically after the timeout
+        scanTimeoutHandler.postDelayed(() -> {
+            if (isScanning.get()) {
+                stopScan();
+                if (connectionStateListener != null) {
+                    connectionStateListener.onScanFailed(ERROR_NO_DEVICE_FOUND);
+                }
+            }
+        }, SCAN_TIMEOUT_MS);
+    }
+
+    /**
+     * Stop an ongoing BLE scan and cancel any pending scan timeout.
+     */
+    public void stopScan() {
+        scanTimeoutHandler.removeCallbacksAndMessages(null);
+        if (bluetoothLeScanner != null && isScanning.compareAndSet(true, false)) {
+            bluetoothLeScanner.stopScan(leScanCallback);
+        }
+    }
+
+    /**
+     * Scan callback — auto-connects to the first matching Pico device found.
+     */
+    private final ScanCallback leScanCallback = new ScanCallback() {
+        @Override
+        public void onScanResult(int callbackType, ScanResult result) {
+            BluetoothDevice device = result.getDevice();
+            String name = device.getName();
+            if (name != null && PICO_DEVICE_NAMES.contains(name.trim().toLowerCase())) {
+                stopScan();
+                connectToDevice(device.getAddress());
+            }
+        }
+
+        @Override
+        public void onScanFailed(int errorCode) {
+            isScanning.set(false);
+            if (connectionStateListener != null) {
+                connectionStateListener.onScanFailed(errorCode);
+            }
+        }
+    };
 
     /**
      * Connect to a BLE device by address
@@ -217,6 +335,7 @@ public class BLEConnectionService extends Service {
     @Override
     public void onDestroy() {
         super.onDestroy();
+        stopScan();
         disconnect();
     }
 }
