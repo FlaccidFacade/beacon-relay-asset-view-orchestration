@@ -1,168 +1,86 @@
 #!/usr/bin/env bash
-# flash.sh — CI-safe dual Pico W UF2 flasher (robust BOOTSEL handling)
+# flash.sh — Flash two Pico W boards via Pico Debugger (SWD / OpenOCD)
 #
-# Supports two modes:
-#   1. Direct USB BOOTSEL (default) — Pico W held in BOOTSEL at plug-in.
-#   2. Pico Probe SWD     — A Pico H running picoprobe forces BOOTSEL
-#      remotely via `picotool reboot -f -u`, eliminating the need to
-#      solder the BOOTSEL pad or physically press the button.
+# Each Pico W has a dedicated Pico Debugger connected via SWD.  OpenOCD
+# programs the ELF directly — no BOOTSEL button press or UF2 copy required.
 #
-# The script auto-detects a connected picoprobe (USB VID:PID 2e8a:0004).
+# Required environment variables:
+#   PROBE1_SERIAL  — USB serial number of the Pico Debugger for device 1
+#   PROBE2_SERIAL  — USB serial number of the Pico Debugger for device 2
+#
+# To find probe serial numbers:
+#   lsusb -v -d 2e8a:000c 2>/dev/null | grep iSerial
+#
+# Optional positional arguments (default to out/device{1,2}.elf):
+#   $1  — path to ELF for device 1
+#   $2  — path to ELF for device 2
 
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-UF2_1="${1:-$SCRIPT_DIR/out/device1.uf2}"
-UF2_2="${2:-$SCRIPT_DIR/out/device2.uf2}"
-MAX_WAIT="${FLASH_WAIT_SECS:-60}"
+ELF_1="${1:-$SCRIPT_DIR/out/device1.elf}"
+ELF_2="${2:-$SCRIPT_DIR/out/device2.elf}"
 
-# --- checks ---
-for f in "$UF2_1" "$UF2_2"; do
-    [[ -f "$f" ]] || { echo "ERROR: Missing UF2: $f" >&2; exit 1; }
-done
-
-# --- picoprobe detection ---
-# Pico H running picoprobe exposes USB VID:PID 2e8a:0004.
-detect_picoprobe() {
-    if command -v lsusb &>/dev/null; then
-        lsusb -d 2e8a:0004 &>/dev/null
-    else
-        # Fall back to sysfs when lsusb is not available
-        grep -rqs "2e8a" /sys/bus/usb/devices/*/idVendor 2>/dev/null \
-            && grep -rqs "0004" /sys/bus/usb/devices/*/idProduct 2>/dev/null
-    fi
-}
-
-PICOPROBE_DETECTED=false
-if detect_picoprobe; then
-    PICOPROBE_DETECTED=true
-    echo "✓ Pico Probe (picoprobe) detected on USB"
-else
-    echo "  No Pico Probe detected — using direct USB BOOTSEL mode"
-fi
-
-# --- detect BOOTSEL mounts ---
-detect_mounts() {
-    lsblk -rn -o MOUNTPOINT,LABEL \
-        | awk '$2=="RPI-RP2" {print $1}'
-}
-
-wait_for_devices() {
-    local needed=$1
-    local elapsed=0
-
-    while true; do
-        count=$(detect_mounts | wc -l | tr -d ' ')
-
-        if [[ "$count" -ge "$needed" ]]; then
-            return 0
-        fi
-
-        if [[ "$elapsed" -ge "$MAX_WAIT" ]]; then
-            echo "ERROR: Timeout waiting for $needed Pico(s) in BOOTSEL mode" >&2
-            exit 1
-        fi
-
-        echo "Waiting for Pico(s) in BOOTSEL mode... (${elapsed}s / ${MAX_WAIT}s)"
-        sleep 2
-        elapsed=$((elapsed + 2))
-    done
-}
-
-force_bootsel() {
-    echo "=== Forcing BOOTSEL mode ==="
-    local rebooted=0
-
-    if [[ "$PICOPROBE_DETECTED" == "true" ]]; then
-        echo "  Using Pico Probe (SWD) to force BOOTSEL — no physical button press needed"
-    fi
-
-    for _ in 1 2; do
-        if picotool reboot -f -u 2>/dev/null; then
-            rebooted=$((rebooted + 1))
-            sleep 2
-        else
-            break
-        fi
-    done
-
-    echo "  Rebooted $rebooted device(s) (if any running)"
-    sleep 3
-}
-
-snapshot_mounts() {
-    detect_mounts | sort
-}
-
-flash_to_mount() {
-    local uf2="$1"
-    local mount="$2"
-
-    [[ -n "$mount" ]] || {
-        echo "ERROR: Empty mount target" >&2
-        exit 1
-    }
-
-    [[ -w "$mount" ]] || {
-        echo "ERROR: Mount not writable: $mount" >&2
-        exit 1
-    }
-
-    echo "Flashing $uf2 -> $mount"
-
-    if ! cp "$uf2" "$mount/"; then
-        echo "ERROR: Failed to copy $uf2 -> $mount" >&2
-        exit 1
-    fi
-
-    sync
-}
-
-# --- MAIN ---
-echo "=== Preparing devices ==="
-force_bootsel
-
-# --- DEVICE 1 ---
-echo "=== Flashing Device 1 ==="
-wait_for_devices 1
-
-mapfile -t BEFORE < <(snapshot_mounts)
-M1="${BEFORE[0]:-}"
-
-flash_to_mount "$UF2_1" "$M1"
-echo "Device 1 flashed"
-
-# allow full USB re-enumeration after reboot
-sleep 5
-sync
-
-# ensure OS settles USB state
-udevadm settle 2>/dev/null || true
-
-# --- DEVICE 2 ---
-echo "=== Flashing Device 2 ==="
-
-wait_for_devices 1
-
-mapfile -t AFTER < <(snapshot_mounts)
-
-# pick first DIFFERENT mount from device 1
-M2=""
-for m in "${AFTER[@]}"; do
-    if [[ "$m" != "$M1" ]]; then
-        M2="$m"
-        break
-    fi
-done
-
-if [[ -z "$M2" ]]; then
-    echo "ERROR: Could not isolate second Pico mount" >&2
-    echo "Detected mounts:" >&2
-    printf '%s\n' "${AFTER[@]}" >&2
+# --- preflight: probe serial numbers ---
+if [[ -z "${PROBE1_SERIAL:-}" || -z "${PROBE2_SERIAL:-}" ]]; then
+    echo "ERROR: PROBE1_SERIAL and PROBE2_SERIAL must both be set." >&2
+    echo "  Example:" >&2
+    echo "    PROBE1_SERIAL=E6614103E7924134 PROBE2_SERIAL=E6614103E7924135 bash flash.sh" >&2
+    echo "  To list connected probe serials:" >&2
+    echo "    lsusb -v -d 2e8a:000c 2>/dev/null | grep iSerial" >&2
     exit 1
 fi
 
-flash_to_mount "$UF2_2" "$M2"
-echo "Device 2 flashed"
+# --- preflight: ELF files ---
+for f in "$ELF_1" "$ELF_2"; do
+    [[ -f "$f" ]] || { echo "ERROR: Missing ELF: $f" >&2; exit 1; }
+done
+
+# --- preflight: openocd available ---
+if ! command -v openocd &>/dev/null; then
+    echo "ERROR: openocd not found on PATH." >&2
+    echo "  Install: sudo apt-get install openocd" >&2
+    exit 1
+fi
+
+# --- preflight: at least one Pico Debugger on USB ---
+# Pico Debugger (picoprobe v2) USB VID:PID 2e8a:000c
+detect_probe() {
+    if command -v lsusb &>/dev/null; then
+        lsusb -d 2e8a:000c &>/dev/null
+    else
+        grep -rqs "2e8a" /sys/bus/usb/devices/*/idVendor 2>/dev/null \
+            && grep -rqs "000c" /sys/bus/usb/devices/*/idProduct 2>/dev/null
+    fi
+}
+
+if ! detect_probe; then
+    echo "ERROR: No Pico Debugger detected on USB (VID:PID 2e8a:000c)." >&2
+    echo "  Ensure both debuggers are connected and powered." >&2
+    exit 1
+fi
+
+# --- flash via SWD ---
+flash_via_swd() {
+    local elf="$1"
+    local probe_serial="$2"
+    local label="$3"
+
+    echo "=== Flashing $label ==="
+    echo "  ELF:   $elf"
+    echo "  Probe: $probe_serial"
+
+    openocd \
+        -f interface/cmsis-dap.cfg \
+        -f target/rp2040.cfg \
+        -c "adapter serial $probe_serial" \
+        -c "program $elf verify reset exit"
+
+    echo "$label flashed OK"
+    echo ""
+}
+
+flash_via_swd "$ELF_1" "$PROBE1_SERIAL" "Device 1"
+flash_via_swd "$ELF_2" "$PROBE2_SERIAL" "Device 2"
 
 echo "=== Flash complete ==="

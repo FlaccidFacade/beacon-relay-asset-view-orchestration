@@ -13,14 +13,14 @@ Display::Display()
       initialized(false), lastUpdate(0) {}
 
 bool Display::begin() {
-    Serial.println("[Display] Initializing SSD1306...");
+    Serial1.println("[Display] Initializing SSD1306...");
 
     Wire.setSDA(PIN_OLED_SDA);
     Wire.setSCL(PIN_OLED_SCL);
     Wire.begin();
 
     if (!display.begin(SSD1306_SWITCHCAPVCC, OLED_I2C_ADDR)) {
-        Serial.println("[Display] FAIL — check I2C wiring (GP4/GP5) and address 0x3C");
+        Serial1.println("[Display] FAIL — check I2C wiring (GP4/GP5) and address 0x3C");
         return false;
     }
 
@@ -32,7 +32,7 @@ bool Display::begin() {
     display.println("B.R.A.V.O.");
     display.println("Starting...");
     display.display();
-    Serial.println("[Display] SSD1306 OK");
+    Serial1.println("[Display] SSD1306 OK");
     return true;
 }
 

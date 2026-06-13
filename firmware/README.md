@@ -27,7 +27,7 @@ This firmware powers both the beacon devices and the relay devices in the B.R.A.
 **Official Documentation & Pinout:**
 
 - [Pico W Datasheet](https://datasheets.raspberrypi.com/picow/pico-w-datasheet.pdf)
-- [Pico W Pinout](https://datasheets.raspberrypi.com/picow/PicoW-A4-Pinout.pdf)
+- [Pico W Pinout](https://datasheets.raspberrypi.com/picow/PicoW-A4-Pinout.pdf) or see https://picow.pinout.xyz/
 - [Getting Started with Pico](https://datasheets.raspberrypi.com/pico/getting-started-with-pico.pdf)
 
 ### Peripherals

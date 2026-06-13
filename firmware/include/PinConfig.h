@@ -10,18 +10,25 @@
  *   - Options: USB 5V adapter, 4x AA batteries (6V), or LiPo + regulator
  *
  * PERIPHERAL CONNECTIONS (all use 3.3V from pin 36 and GND):
- *   UART0 (GP0 TX, GP1 RX)  -> RYLR896 RXD/TXD     (115200 baud AT commands)
- *   I2C0  (GP4 SDA, GP5 SCL) -> SSD1306 OLED        (128x64, I2C addr 0x3C)
- *   UART1 (GP8 TX, GP9 RX)  -> GPS NEO-7m          (9600 baud NMEA)
- *   GP14                     -> RYLR896 NRESET      (active LOW reset)
- *   GP15                     -> GPS PPS              (1 Hz rising edge)
+ *   UART0 (GP0 TX, GP1 RX)   -> Debug serial monitor  (115200 baud, Serial1)
+ *   I2C0  (GP4 SDA, GP5 SCL) -> SSD1306 OLED          (128x64, I2C addr 0x3C)
+ *   UART1 (GP8 TX, GP9 RX)   -> GPS NEO-7m            (9600 baud NMEA)
+ *   SerialPIO (GP16 TX, GP17 RX) -> RYLR896 RXD/TXD   (115200 baud AT commands)
+ *   GP14                      -> RYLR896 NRESET        (active LOW reset)
+ *   GP15                      -> GPS PPS               (1 Hz rising edge)
+ *   GP22                      -> Push-button           (active LOW, INPUT_PULLUP)
  */
 
 #pragma once
 
-// ── LoRa RYLR896 (UART0) ───────────────────────────────────────────────────
-#define PIN_LORA_TX     0    // GP0  → RYLR896 RXD   (UART0 TX)
-#define PIN_LORA_RX     1    // GP1  ← RYLR896 TXD   (UART0 RX)
+// ── Debug UART (UART0 / Serial1) ──────────────────────────────────────────
+#define PIN_DEBUG_TX    0    // GP0  → debug monitor TXD  (UART0 TX)
+#define PIN_DEBUG_RX    1    // GP1  ← debug monitor RXD  (UART0 RX)
+
+// ── LoRa RYLR896 (SerialPIO — GP16/GP17 are UART0 alternate pins; ─────────
+//    SerialPIO is used so UART0 remains free for debug on GP0/GP1)  ─────────
+#define PIN_LORA_TX     16   // GP16 → RYLR896 RXD   (SerialPIO TX)
+#define PIN_LORA_RX     17   // GP17 ← RYLR896 TXD   (SerialPIO RX)
 #define PIN_LORA_RESET  14   // GP14 → RYLR896 NRESET (active LOW pulse)
 
 // ── OLED SSD1306 128×64 (I2C0) ────────────────────────────────────────────
@@ -39,8 +46,8 @@
 #define GPS_BAUD        9600
 
 // ── User Input ────────────────────────────────────────────────────────────
-#define PIN_BUTTON      16   // GP16 — momentary push-button, active LOW
-                             // Wire: GP16 → button → GND  (INPUT_PULLUP)
+#define PIN_BUTTON      22   // GP22 — momentary push-button, active LOW
+                             // Wire: GP22 → button → GND  (INPUT_PULLUP)
 
 // ── LoRa RF settings ──────────────────────────────────────────────────────
 #define LORA_BAUD       115200
