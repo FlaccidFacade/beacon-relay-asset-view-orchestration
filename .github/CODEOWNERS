@@ -1,0 +1,22 @@
+# CODEOWNERS file for beacon-relay-asset-view-orchestration (B.R.A.V.O.)
+#
+# This file defines code ownership for automatic review requests on pull requests.
+# When a PR is created that modifies files in a specific directory, the listed
+# owners will automatically be requested as reviewers.
+#
+# Syntax: <pattern> <owner1> [<owner2>...]
+# Patterns are matched using gitignore-style wildcards.
+# Later matches take precedence over earlier ones.
+#
+# For more info: https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+
+# Default owner for everything in the repo
+*       @FlaccidFacade
+
+# Specific folder ownership
+# Uncomment and modify the examples below to add other reviewers to specific areas
+# Multiple owners can be added space-separated, and all will be requested for review
+
+# Mobile ownership
+/mobile/        @FlaccidFacade @plumpkin1997
+
