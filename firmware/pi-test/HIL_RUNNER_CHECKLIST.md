@@ -13,9 +13,9 @@ Use this checklist on the `self-hosted, 4b-01-bravo` runner before dispatching `
 - [ ] `git --version`
 - [ ] `python3 --version`
 - [ ] `pio --version`
-- [ ] `picotool version`
+- [ ] `openocd --version`
+- [ ] `lsusb --version` (from `usbutils`, used to identify probe serial numbers)
 - [ ] `rpicam-vid --version` (camera recording used by `pi-test/record.sh`)
-- [ ] `lsblk --version`
 - [ ] `udevadm --version`
 
 ## 3) USB / device visibility
