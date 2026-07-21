@@ -64,8 +64,12 @@ detect_probe() {
     if command -v lsusb &>/dev/null; then
         lsusb -d 2e8a:000c &>/dev/null
     else
-        grep -rqs "2e8a" /sys/bus/usb/devices/*/idVendor 2>/dev/null \
-            && grep -rqs "000c" /sys/bus/usb/devices/*/idProduct 2>/dev/null
+        local d
+        for d in /sys/bus/usb/devices/*; do
+            [[ -r "$d/idVendor" && -r "$d/idProduct" ]] || continue
+            [[ "$(cat "$d/idVendor")" == "2e8a" && "$(cat "$d/idProduct")" == "000c" ]] && return 0
+        done
+        return 1
     fi
 }
 
