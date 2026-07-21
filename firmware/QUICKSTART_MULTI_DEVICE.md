@@ -250,10 +250,10 @@ See `docs/bravo-hil-debug-setup.drawio` for a complete wiring diagram.
    ./build.sh
    ```
 
-4. Flash both devices — the script detects the picoprobe automatically:
+4. Flash both devices (set `PROBE1_SERIAL` / `PROBE2_SERIAL` to pin probes to devices):
 
    ```bash
-   ./flash.sh
+   PROBE1_SERIAL=<serial1> PROBE2_SERIAL=<serial2> ./flash.sh
    ```
 
    Behind the scenes the script:
