@@ -5,7 +5,7 @@ Use this checklist on the `self-hosted, 4b-01-bravo` runner before dispatching `
 ## 1) Runner state
 
 - [ ] Runner is online in GitHub and has labels: `self-hosted`, `4b-01-bravo`
-- [ ] Repository path exists and is writable by runner user: `~/_work/beacon-relay-asset-view-orchestration/beacon-relay-asset-view-orchestration`
+- [ ] Repository workspace exists and is writable by runner user: `echo "$GITHUB_WORKSPACE" && [ -w "$GITHUB_WORKSPACE" ]`
 
 ## 2) Required tools
 
