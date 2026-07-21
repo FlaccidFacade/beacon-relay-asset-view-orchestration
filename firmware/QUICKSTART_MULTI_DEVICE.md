@@ -257,9 +257,8 @@ See `docs/bravo-hil-debug-setup.drawio` for a complete wiring diagram.
    ```
 
    Behind the scenes the script:
-   - Detects the picoprobe on USB (VID:PID `2e8a:0004`).
-   - Runs `picotool reboot -f -u` to force each target into BOOTSEL mode.
-   - Copies the `.uf2` files to the `RPI-RP2` mass-storage mount.
+   - Detects Pico Debugger(s) on USB (VID:PID `2e8a:000c`).
+   - Uses `openocd` to program the `.elf` and reset the target via SWD (no BOOTSEL / UF2 copy).
 
 5. After flashing, each Pico W reboots into the new firmware automatically.
 
