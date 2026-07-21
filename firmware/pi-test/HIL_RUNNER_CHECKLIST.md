@@ -37,10 +37,12 @@ TEST_SUITE=all bash pi-test/run_all.sh
 
 Expected failure mode to resolve first (seen in current CI logs):
 
-```text
-ERROR: Timeout waiting for 1 Pico(s) in BOOTSEL mode
+ERROR: openocd not found on PATH.
+# or
+ERROR: No Pico Debugger detected on USB (VID:PID 2e8a:000c).
+# or
+ERROR: PROBE1_SERIAL and PROBE2_SERIAL must both be set.
 FATAL: Flash failed.
-```
 
 ## 5) If BOOTSEL timeout still occurs
 
