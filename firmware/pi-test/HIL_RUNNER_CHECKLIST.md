@@ -38,9 +38,13 @@ TEST_SUITE=all bash pi-test/run_all.sh
 Expected failure mode to resolve first (seen in current CI logs):
 
 ERROR: openocd not found on PATH.
+
 # or
+
 ERROR: No Pico Debugger detected on USB (VID:PID 2e8a:000c).
+
 # or
+
 ERROR: PROBE1_SERIAL and PROBE2_SERIAL must both be set.
 FATAL: Flash failed.
 
