@@ -207,30 +207,30 @@ soldering the BOOTSEL pad), you can use a spare **Pico H** as an SWD debugger.
 
 ### Why Use a Pico Probe?
 
-| Benefit | Detail |
-| --- | --- |
-| No soldering | Avoids damaging Pico W boards by soldering the BOOTSEL test pad |
+| Benefit           | Detail                                                                     |
+| ----------------- | -------------------------------------------------------------------------- |
+| No soldering      | Avoids damaging Pico W boards by soldering the BOOTSEL test pad            |
 | Headless flashing | `picotool reboot -f -u` forces BOOTSEL remotely — no physical button press |
-| Brick recovery | SWD can reprogram a device even when its firmware is completely broken |
-| CI/CD friendly | The HIL runner can flash both targets without human intervention |
+| Brick recovery    | SWD can reprogram a device even when its firmware is completely broken     |
+| CI/CD friendly    | The HIL runner can flash both targets without human intervention           |
 
 ### Hardware Required
 
-| Item | Notes |
-| --- | --- |
-| Pico H (debugger) | Any RP2040 board **with headers** — flashed with [picoprobe](https://github.com/raspberrypi/picoprobe) firmware |
-| 3× female-to-female jumper wires | For the SWD connection |
+| Item                             | Notes                                                                                                           |
+| -------------------------------- | --------------------------------------------------------------------------------------------------------------- |
+| Pico H (debugger)                | Any RP2040 board **with headers** — flashed with [picoprobe](https://github.com/raspberrypi/picoprobe) firmware |
+| 3× female-to-female jumper wires | For the SWD connection                                                                                          |
 
 ### Wiring: Debugger → Target
 
 Connect the **Pico H (picoprobe)** to each **Pico W target** using SWD.
 Pin numbers below are **physical pin** positions on the board header:
 
-| Debugger Pico H | Signal | Target Pico W |
-| --- | --- | --- |
-| GP2 — physical pin 4 | SWCLK | SWCLK — debug pad (active-low clock) |
-| GP3 — physical pin 5 | SWDIO | SWDIO — debug pad (data I/O) |
-| GND — physical pin 3 | GND | Any GND pin (e.g. physical pin 3) |
+| Debugger Pico H      | Signal | Target Pico W                        |
+| -------------------- | ------ | ------------------------------------ |
+| GP2 — physical pin 4 | SWCLK  | SWCLK — debug pad (active-low clock) |
+| GP3 — physical pin 5 | SWDIO  | SWDIO — debug pad (data I/O)         |
+| GND — physical pin 3 | GND    | Any GND pin (e.g. physical pin 3)    |
 
 > **Tip:** The Pico W SWD pads are labelled on the bottom of the board next to
 > the USB connector. On the Pico H debugger, the three-pin debug header exposes
