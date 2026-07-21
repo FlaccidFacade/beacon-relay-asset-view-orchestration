@@ -1,11 +1,11 @@
 # Raspberry Pi Runner HIL Checklist
 
-Use this checklist on the `self-hosted, 4b-01-bravo` runner before dispatching `Firmware Hardware Test`.
+Use this checklist on the `self-hosted, 4b-01-bravo` runner before dispatching `Firmware Hardware Test` and while triaging failures in workflow logs.
 
 ## 1) Runner state
 
 - [ ] Runner is online in GitHub and has labels: `self-hosted`, `4b-01-bravo`
-- [ ] Repository workspace exists and is writable by runner user: `echo "$GITHUB_WORKSPACE" && [ -w "$GITHUB_WORKSPACE" ]`
+- [ ] Repository workspace exists and is writable by runner user: `[ -n "$GITHUB_WORKSPACE" ] && [ -w "$GITHUB_WORKSPACE" ] && echo "$GITHUB_WORKSPACE"`
 
 ## 2) Required tools
 
@@ -21,7 +21,7 @@ Use this checklist on the `self-hosted, 4b-01-bravo` runner before dispatching `
 ## 3) USB / device visibility
 
 - [ ] Two Pico W devices are connected over data-capable USB cables
-- [ ] `lsusb | grep 2e8a:` shows RP2/RP2040 devices
+- [ ] `lsusb | grep 2e8a: || echo "No RP2/RP2040 USB devices found"` (should show at least two devices)
 - [ ] If flashing times out, put at least one Pico in BOOTSEL mode and verify: `lsblk -rn -o MOUNTPOINT,LABEL | awk '$2=="RPI-RP2" {print $1}'`
 - [ ] Confirm the runner user can write to mounted `RPI-RP2` volume(s)
 
