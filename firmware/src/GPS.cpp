@@ -22,7 +22,7 @@ bool GPS::begin() {
     pinMode(PIN_GPS_PPS, INPUT);
 
     initialized = true;
-    Serial.println("[GPS] NEO-7m on UART1 ready");
+    Serial1.println("[GPS] NEO-7m on UART1 ready");
     return true;
 }
 

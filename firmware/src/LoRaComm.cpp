@@ -1,19 +1,24 @@
 /**
  * @file LoRaComm.cpp
- * @brief REYAX RYLR896 LoRa driver — AT command interface over UART0 (Pico W)
+ * @brief REYAX RYLR896 LoRa driver — AT command interface via SerialPIO (Pico W)
  *
  * Hardware connections (Pico W):
- *   GP0 (UART0 TX) → RYLR896 RXD
- *   GP1 (UART0 RX) ← RYLR896 TXD
- *   GP14           → RYLR896 NRESET  (active LOW)
- *   Pin 36 (3V3)   → RYLR896 VCC
- *   Any GND pin    → RYLR896 GND
+ *   GP16 (SerialPIO TX) → RYLR896 RXD
+ *   GP17 (SerialPIO RX) ← RYLR896 TXD
+ *   GP14                → RYLR896 NRESET  (active LOW)
+ *   Pin 36 (3V3)        → RYLR896 VCC
+ *   Any GND pin         → RYLR896 GND
+ *
+ * SerialPIO is used because GP16/GP17 are UART0 alternate pins on RP2040;
+ * hardware UART0 (Serial1) is reserved for debug output on GP0/GP1.
  */
 
 #include "LoRaComm.h"
+#include <SerialPIO.h>
 
-// UART0 is Serial1 in arduino-pico
-#define LORA_SERIAL Serial1
+// PIO-based software UART — pins and 256-byte RX FIFO bound at construction
+static SerialPIO loraSerial(PIN_LORA_TX, PIN_LORA_RX, 256);
+#define LORA_SERIAL loraSerial
 
 LoRaComm::LoRaComm()
     : initialized(false), lastRSSI(0), lastSNR(0.0f), rxBuffer("") {}
@@ -63,12 +68,10 @@ String LoRaComm::sendAT(const String& cmd,
 // ── Public API ────────────────────────────────────────────────────────────────
 
 bool LoRaComm::begin(uint16_t deviceAddress) {
-    // Configure UART0 pins before Serial1.begin()
-    LORA_SERIAL.setTX(PIN_LORA_TX);
-    LORA_SERIAL.setRX(PIN_LORA_RX);
+    // SerialPIO pins are bound in the constructor; only baud rate is set here
     LORA_SERIAL.begin(LORA_BAUD);
 
-    Serial.println("[LoRa] Resetting RYLR896...");
+    Serial1.println("[LoRa] Resetting RYLR896...");
     hardwareReset();
 
     // Verify module is alive
@@ -77,22 +80,22 @@ bool LoRaComm::begin(uint16_t deviceAddress) {
         // Try once more — some modules produce "Ready" rather than "+OK"
         resp = sendAT("AT", "Ready", 1500);
         if (resp == "") {
-            Serial.println("[LoRa] No response from RYLR896");
+            Serial1.println("[LoRa] No response from RYLR896");
             return false;
         }
     }
 
     // Set device address
     resp = sendAT("AT+ADDRESS=" + String(deviceAddress), "+ADDRESS=", 2000);
-    Serial.println("[LoRa] ADDRESS → " + resp);
+    Serial1.println("[LoRa] ADDRESS → " + resp);
 
     // Set network ID
     resp = sendAT("AT+NETWORKID=" + String(LORA_NETWORK_ID), "+NETWORKID=", 2000);
-    Serial.println("[LoRa] NETWORKID → " + resp);
+    Serial1.println("[LoRa] NETWORKID → " + resp);
 
     // Set carrier frequency (Hz)
     resp = sendAT("AT+BAND=" + String(LORA_FREQ_HZ), "+BAND=", 2000);
-    Serial.println("[LoRa] BAND → " + resp);
+    Serial1.println("[LoRa] BAND → " + resp);
 
     // Set RF parameters: SF, BW, CR, Preamble
     String paramCmd = "AT+PARAMETER=" +
@@ -101,10 +104,10 @@ bool LoRaComm::begin(uint16_t deviceAddress) {
                       String(LORA_PARAM_CR) + "," +
                       String(LORA_PARAM_PP);
     resp = sendAT(paramCmd, "+PARAMETER=", 2000);
-    Serial.println("[LoRa] PARAMETER → " + resp);
+    Serial1.println("[LoRa] PARAMETER → " + resp);
 
     initialized = true;
-    Serial.println("[LoRa] RYLR896 ready");
+    Serial1.println("[LoRa] RYLR896 ready");
     return true;
 }
 
@@ -112,7 +115,7 @@ bool LoRaComm::sendMessage(uint16_t targetAddress, const String& message) {
     if (!initialized) return false;
 
     if (message.length() > RYLR_MAX_PAYLOAD) {
-        Serial.println("[LoRa] Payload too large");
+        Serial1.println("[LoRa] Payload too large");
         return false;
     }
 
@@ -122,7 +125,7 @@ bool LoRaComm::sendMessage(uint16_t targetAddress, const String& message) {
 
     String resp = sendAT(cmd, "+SEND=", 3000);
     if (resp == "") {
-        Serial.println("[LoRa] sendMessage: no ACK");
+        Serial1.println("[LoRa] sendMessage: no ACK");
         return false;
     }
     return true;

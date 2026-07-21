@@ -84,11 +84,13 @@ void gpsPPS() {
 
 // ── Setup ─────────────────────────────────────────────────────────────────────
 void setup() {
-    Serial.begin(115200);
+    Serial1.setTX(PIN_DEBUG_TX);
+    Serial1.setRX(PIN_DEBUG_RX);
+    Serial1.begin(115200);
     delay(1000);
-    Serial.println("[BRAVO] Pico W starting...");
+    Serial1.println("[BRAVO] Pico W starting...");
 
-    // Button — GP16 INPUT_PULLUP, trigger on falling edge (press)
+    // Button — GP22 INPUT_PULLUP, trigger on falling edge (press)
     pinMode(PIN_BUTTON, INPUT_PULLUP);
     attachInterrupt(digitalPinToInterrupt(PIN_BUTTON), buttonISR, FALLING);
 
@@ -98,22 +100,22 @@ void setup() {
 
     // Display first so we can show init status
     if (!disp.begin()) {
-        Serial.println("[BRAVO] Display failed — continuing headless");
+        Serial1.println("[BRAVO] Display failed — continuing headless");
     }
 
     // GPS
     bool gpsOk = gpsModule.begin();
     disp.showInitStatus("GPS", gpsOk);
-    Serial.println(gpsOk ? "[BRAVO] GPS OK" : "[BRAVO] GPS FAIL");
+    Serial1.println(gpsOk ? "[BRAVO] GPS OK" : "[BRAVO] GPS FAIL");
 
     // LoRa
     bool loraOk = lora.begin(DEVICE_ADDRESS);
     disp.showInitStatus("LoRa", loraOk);
-    Serial.println(loraOk ? "[BRAVO] LoRa OK" : "[BRAVO] LoRa FAIL");
+    Serial1.println(loraOk ? "[BRAVO] LoRa OK" : "[BRAVO] LoRa FAIL");
 
     disp.showMessage("Ready!");
     delay(500);
-    Serial.println("[BRAVO] Setup complete");
+    Serial1.println("[BRAVO] Setup complete");
 }
 
 // ── Loop ──────────────────────────────────────────────────────────────────────
@@ -139,9 +141,9 @@ void loop() {
 
         if (lora.sendMessage(TARGET_ADDRESS, payload)) {
             txCount++;
-            Serial.println("[LoRa] TX → " + payload);
+            Serial1.println("[LoRa] TX → " + payload);
         } else {
-            Serial.println("[LoRa] TX failed");
+            Serial1.println("[LoRa] TX failed");
         }
     }
 
@@ -153,7 +155,7 @@ void loop() {
             lastRSSI    = pkt.rssi;
             lastSNR     = pkt.snr;
             lastLoRaMsg = pkt.payload;
-            Serial.println("[LoRa] RX from " + String(pkt.srcAddress) +
+            Serial1.println("[LoRa] RX from " + String(pkt.srcAddress) +
                            ": " + pkt.payload +
                            " RSSI=" + String(pkt.rssi) +
                            " SNR="  + String(pkt.snr, 1));
