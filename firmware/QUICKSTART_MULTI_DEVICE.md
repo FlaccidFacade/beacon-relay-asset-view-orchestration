@@ -210,7 +210,7 @@ soldering the BOOTSEL pad), you can use a spare **Pico H** as an SWD debugger.
 | Benefit           | Detail                                                                     |
 | ----------------- | -------------------------------------------------------------------------- |
 | No soldering      | Avoids damaging Pico W boards by soldering the BOOTSEL test pad            |
-| Headless flashing | `picotool reboot -f -u` forces BOOTSEL remotely — no physical button press |
+| Headless flashing | `openocd` programs firmware over SWD — no physical BOOTSEL button press     |
 | Brick recovery    | SWD can reprogram a device even when its firmware is completely broken     |
 | CI/CD friendly    | The HIL runner can flash both targets without human intervention           |
 
@@ -262,20 +262,24 @@ See `docs/bravo-hil-debug-setup.drawio` for a complete wiring diagram.
 
 5. After flashing, each Pico W reboots into the new firmware automatically.
 
-### Verifying picotool
+### Verifying OpenOCD
 
-`picotool` must be installed on the host (Raspberry Pi 4B):
+`openocd` must be installed on the host (Raspberry Pi 4B):
 
 ```bash
 # Debian / Ubuntu / Raspberry Pi OS
-sudo apt-get update && sudo apt-get install -y picotool
+sudo apt-get update && sudo apt-get install -y openocd
 
 # Verify
-picotool version
+openocd --version
 ```
 
-If `picotool` is not packaged for your distro, build from source:
-<https://github.com/raspberrypi/picotool>
+If you also use manual BOOTSEL workflows, `picotool` is optional:
+
+```bash
+sudo apt-get install -y picotool
+picotool version
+```
 
 ## Next Steps
 

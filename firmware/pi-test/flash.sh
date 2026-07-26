@@ -112,6 +112,7 @@ flash_via_bootsel() {
         return 1
     }
 
+    # Collect unique mounted BOOTSEL volumes (label RPI-RP2).
     mapfile -t _MOUNTS < <(lsblk -rn -o MOUNTPOINT,LABEL | awk '$2=="RPI-RP2" && $1!="" {print $1}' | sort -u)
     if [[ ${#_MOUNTS[@]} -lt 2 ]]; then
         echo "ERROR: Need two mounted RPI-RP2 volumes for BOOTSEL fallback flashing." >&2
