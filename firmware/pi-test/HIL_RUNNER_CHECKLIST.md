@@ -2,6 +2,18 @@
 
 Use this checklist on the `self-hosted, 4b-01-bravo` runner before dispatching `Firmware Hardware Test` and while triaging failures in workflow logs.
 
+## 0) First-time probe provisioning
+
+Skip this section if both probe Picos are already flashed with debugprobe and show as `2e8a:000c` in `lsusb`.
+
+- [ ] Two plain Pico (or Pico W) boards are available to use as debuggers
+- [ ] Run the automated setup script (downloads debugprobe firmware and flashes both):
+  ```bash
+  bash firmware/pi-test/setup_probes.sh
+  ```
+- [ ] After the script completes, verify: `lsusb | grep 2e8a:000c` shows two entries
+- [ ] Wire each probe to its target Pico W via SWD — see `firmware/pi-test/PROBE_SETUP.md` for the pin mapping
+
 ## 1) Runner state
 
 - [ ] Runner is online in GitHub and has labels: `self-hosted`, `4b-01-bravo`
