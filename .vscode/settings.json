@@ -1,5 +1,6 @@
 {
   "editor.formatOnSave": true,
+  "editor.wordWrap": "on",
   "editor.defaultFormatter": "esbenp.prettier-vscode",
   "editor.codeActionsOnSave": {
     "source.fixAll.eslint": "explicit"
@@ -50,5 +51,9 @@
     "**/.gradle/**": true,
     "**/.platformio/**": true,
     "**/cdk.out/**": true
+  },
+  "sonarlint.connectedMode.project": {
+    "connectionId": "flaccidfacade",
+    "projectKey": "FlaccidFacade_beacon-relay-asset-view-orchestration"
   }
 }

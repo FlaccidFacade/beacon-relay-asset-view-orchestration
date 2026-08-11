@@ -27,26 +27,6 @@ For **each** device you need:
 
 **Programmer**: Raspberry Pi 4B connected to Pico W via USB micro-B or USB-C.
 
-## Wiring (per device)
-
-All peripherals run at **3.3V from Pico W Pin 36**.  
-Power the Pico W itself via **VSYS (Pin 39/40) with 5V**.
-
-| Signal         | Pico W GPIO | Physical Pin |
-| -------------- | ----------- | ------------ |
-| RYLR896 RXD ←  | GP0 (TX)    | 1            |
-| RYLR896 TXD →  | GP1 (RX)    | 2            |
-| OLED SDA       | GP4         | 6            |
-| OLED SCL       | GP5         | 7            |
-| GPS RXD ←      | GP8 (TX)    | 11           |
-| GPS TXD →      | GP9 (RX)    | 12           |
-| RYLR896 NRESET | GP14        | 19           |
-| GPS PPS        | GP15        | 20           |
-| Button → GND   | GP16        | 21           |
-| 3.3V supply    | 3V3 OUT     | 36           |
-| GND            | GND         | 38           |
-| 5V in          | VSYS        | 39           |
-
 ## Step 1: Configure Device Addresses
 
 The two units exchange GPS payloads using LoRa addresses. Edit `firmware/platformio.ini` **before uploading to each unit**:
@@ -199,6 +179,92 @@ Msg: 2|40.71285
 | Indoor                     | 50 m – 200 m  |
 
 Monitor RSSI on the Radio screen — values closer to 0 dBm indicate a stronger link.
+
+## Pico Probe Setup (Headless Flashing via SWD)
+
+If you want to flash Pico W devices **without holding the BOOTSEL button** (or
+soldering the BOOTSEL pad), you can use a spare **Pico H** as an SWD debugger.
+
+### Why Use a Pico Probe?
+
+| Benefit           | Detail                                                                  |
+| ----------------- | ----------------------------------------------------------------------- |
+| No soldering      | Avoids damaging Pico W boards by soldering the BOOTSEL test pad         |
+| Headless flashing | `openocd` programs firmware over SWD — no physical BOOTSEL button press |
+| Brick recovery    | SWD can reprogram a device even when its firmware is completely broken  |
+| CI/CD friendly    | The HIL runner can flash both targets without human intervention        |
+
+### Hardware Required
+
+| Item                             | Notes                                                                                                           |
+| -------------------------------- | --------------------------------------------------------------------------------------------------------------- |
+| Pico H (debugger)                | Any RP2040 board **with headers** — flashed with [picoprobe](https://github.com/raspberrypi/picoprobe) firmware |
+| 3× female-to-female jumper wires | For the SWD connection                                                                                          |
+
+### Wiring: Debugger → Target
+
+Connect the **Pico H (picoprobe)** to each **Pico W target** using SWD.
+Pin numbers below are **physical pin** positions on the board header:
+
+| Debugger Pico H      | Signal | Target Pico W                        |
+| -------------------- | ------ | ------------------------------------ |
+| GP2 — physical pin 4 | SWCLK  | SWCLK — debug pad (active-low clock) |
+| GP3 — physical pin 5 | SWDIO  | SWDIO — debug pad (data I/O)         |
+| GND — physical pin 3 | GND    | Any GND pin (e.g. physical pin 3)    |
+
+> **Tip:** The Pico W SWD pads are labelled on the bottom of the board next to
+> the USB connector. On the Pico H debugger, the three-pin debug header exposes
+> **SWCLK** (physical pin 4), **GND** (physical pin 3), and **SWDIO** (physical
+> pin 5) — connect these to the matching pads on the target.
+
+See `docs/bravo-hil-debug-setup.drawio` for a complete wiring diagram.
+
+> **Running this from Windows 10 + WSL instead of a Raspberry Pi?** See
+> [`pi-test/WSL_SETUP.md`](pi-test/WSL_SETUP.md) for the USB passthrough
+> steps (`usbipd-win`) needed before the commands below will see your
+> devices.
+
+### Flashing Workflow
+
+1. Connect the Pico H (picoprobe) to the Raspberry Pi 4B via USB.
+2. Connect the two Pico W targets to the Pico H via SWD as shown above.
+3. Build the firmware:
+
+   ```bash
+   cd firmware/pi-test
+   ./build.sh
+   ```
+
+4. Flash both devices (set `PROBE1_SERIAL` / `PROBE2_SERIAL` to pin probes to devices):
+
+   ```bash
+   PROBE1_SERIAL=<serial1> PROBE2_SERIAL=<serial2> ./flash.sh
+   ```
+
+   Behind the scenes the script:
+   - Detects Pico Debugger(s) on USB (VID:PID `2e8a:000c`).
+   - Uses `openocd` to program the `.elf` and reset the target via SWD (no BOOTSEL / UF2 copy).
+
+5. After flashing, each Pico W reboots into the new firmware automatically.
+
+### Verifying OpenOCD
+
+`openocd` must be installed on the host (Raspberry Pi 4B):
+
+```bash
+# Debian / Ubuntu / Raspberry Pi OS
+sudo apt-get update && sudo apt-get install -y openocd
+
+# Verify
+openocd --version
+```
+
+If you also use manual BOOTSEL workflows, `picotool` is optional:
+
+```bash
+sudo apt-get install -y picotool
+picotool version
+```
 
 ## Next Steps
 

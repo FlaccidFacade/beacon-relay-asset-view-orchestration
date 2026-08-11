@@ -3,12 +3,13 @@
  * @brief B.R.A.V.O. firmware — Raspberry Pi Pico W
  *
  * Hardware:
- *   UART0 (GP0/GP1)   — RYLR896 LoRa (AT commands, 115200 baud)
+ *   UART0 (GP0/GP1)   — Debug serial monitor (115200 baud, Serial1)
  *   I2C0  (GP4/GP5)   — SSD1306 OLED 128x64
- *   UART1 (GP8/GP9)   — GPS NEO-7m (NMEA, 9600 baud)
+ *   SerialPIO (GP8/GP9)   — RYLR896 LoRa (AT commands, 115200 baud)
+ *   SerialPIO (GP12/GP13) — GPS NEO-7m (NMEA, 9600 baud)
  *   GP14              — RYLR896 NRESET
  *   GP15              — GPS PPS (1 Hz rising edge)
- *   GP16              — Push-button (INPUT_PULLUP, active LOW)
+ *   GP22              — Push-button (INPUT_PULLUP, active LOW)
  *   VSYS (pin 39/40)  — 5V input power
  *   Pin 36 (3V3 OUT)  — 3.3V rail for all peripherals
  *
@@ -27,6 +28,7 @@
 #include "GPS.h"
 #include "LoRaComm.h"
 #include "Display.h"
+#include "DebugLog.h"
 
 // ── Device identity (set via build flags) ────────────────────────────────────
 #ifndef DEVICE_ADDRESS
@@ -34,6 +36,18 @@
 #endif
 #ifndef TARGET_ADDRESS
 #define TARGET_ADDRESS 2
+#endif
+
+// ── LoRa link direction (set via build flags) ────────────────────────────────
+// Only one direction is required: the beacon transmits, the relay receives.
+// Both default to enabled so a single unit can still loop back for bench
+// testing; set LORA_TX_ENABLED=0 on the relay and LORA_RX_ENABLED=0 on the
+// beacon to run a strict one-way link.
+#ifndef LORA_TX_ENABLED
+#define LORA_TX_ENABLED 1
+#endif
+#ifndef LORA_RX_ENABLED
+#define LORA_RX_ENABLED 1
 #endif
 
 // ── Timing ────────────────────────────────────────────────────────────────────
@@ -84,11 +98,14 @@ void gpsPPS() {
 
 // ── Setup ─────────────────────────────────────────────────────────────────────
 void setup() {
+    Serial1.setTX(PIN_DEBUG_TX);
+    Serial1.setRX(PIN_DEBUG_RX);
+    Serial1.begin(115200);
     Serial.begin(115200);
     delay(1000);
-    Serial.println("[BRAVO] Pico W starting...");
+    bravoLog("[BRAVO] Pico W starting...");
 
-    // Button — GP16 INPUT_PULLUP, trigger on falling edge (press)
+    // Button — GP22 INPUT_PULLUP, trigger on falling edge (press)
     pinMode(PIN_BUTTON, INPUT_PULLUP);
     attachInterrupt(digitalPinToInterrupt(PIN_BUTTON), buttonISR, FALLING);
 
@@ -98,26 +115,43 @@ void setup() {
 
     // Display first so we can show init status
     if (!disp.begin()) {
-        Serial.println("[BRAVO] Display failed — continuing headless");
+        bravoLog("[BRAVO] Display failed — continuing headless");
     }
 
     // GPS
     bool gpsOk = gpsModule.begin();
     disp.showInitStatus("GPS", gpsOk);
-    Serial.println(gpsOk ? "[BRAVO] GPS OK" : "[BRAVO] GPS FAIL");
+    bravoLog(gpsOk ? "[BRAVO] GPS OK" : "[BRAVO] GPS FAIL");
 
     // LoRa
     bool loraOk = lora.begin(DEVICE_ADDRESS);
     disp.showInitStatus("LoRa", loraOk);
-    Serial.println(loraOk ? "[BRAVO] LoRa OK" : "[BRAVO] LoRa FAIL");
+    bravoLog(loraOk ? "[BRAVO] LoRa OK" : "[BRAVO] LoRa FAIL");
 
     disp.showMessage("Ready!");
     delay(500);
-    Serial.println("[BRAVO] Setup complete");
+    bravoLog("[BRAVO] Setup complete");
 }
 
 // ── Loop ──────────────────────────────────────────────────────────────────────
 void loop() {
+    // 0) Unconditional heartbeat — proves the loop is alive even if LoRa
+    //    never becomes ready (TX/RX logging below is gated on isReady()).
+    static uint32_t lastAlive = 0;
+    if (millis() - lastAlive >= 3000) {
+        lastAlive = millis();
+        bravoLog("[BRAVO] alive, LoRa ready=" + String(lora.isReady() ? "yes" : "no"));
+    }
+
+    // 0b) Periodic LoRa config read-back — confirms both units actually
+    //     converged on matching ADDRESS/NETWORKID/BAND, since set commands
+    //     only ack "+OK" and never echo the value that was actually applied.
+    static uint32_t lastConfigLog = 0;
+    if (lora.isReady() && (millis() - lastConfigLog >= 15000)) {
+        lastConfigLog = millis();
+        lora.logConfig();
+    }
+
     // 1) Feed GPS parser
     gpsModule.update();
 
@@ -128,6 +162,7 @@ void loop() {
     }
 
     // 3) LoRa TX heartbeat — send GPS payload to the other unit
+#if LORA_TX_ENABLED
     if (lora.isReady() && (millis() - lastHeartbeat >= HEARTBEAT_INTERVAL)) {
         lastHeartbeat = millis();
 
@@ -139,13 +174,15 @@ void loop() {
 
         if (lora.sendMessage(TARGET_ADDRESS, payload)) {
             txCount++;
-            Serial.println("[LoRa] TX → " + payload);
+            bravoLog("[LoRa] TX → " + payload);
         } else {
-            Serial.println("[LoRa] TX failed");
+            bravoLog("[LoRa] TX failed");
         }
     }
+#endif
 
     // 4) LoRa RX — non-blocking poll
+#if LORA_RX_ENABLED
     if (lora.isReady()) {
         LoRaPacket pkt;
         if (lora.receive(pkt)) {
@@ -153,12 +190,13 @@ void loop() {
             lastRSSI    = pkt.rssi;
             lastSNR     = pkt.snr;
             lastLoRaMsg = pkt.payload;
-            Serial.println("[LoRa] RX from " + String(pkt.srcAddress) +
+            bravoLog("[LoRa] RX from " + String(pkt.srcAddress) +
                            ": " + pkt.payload +
                            " RSSI=" + String(pkt.rssi) +
                            " SNR="  + String(pkt.snr, 1));
         }
     }
+#endif
 
     // 5) Button — cycle screen
     if (buttonPressed) {

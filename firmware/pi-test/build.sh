@@ -32,22 +32,24 @@ echo ""
 
 mkdir -p "$OUT_DIR"
 
-# --- Build device 1 (beacon) ---
-echo "--- Building Device 1 (DEVICE_ADDRESS=1, TARGET_ADDRESS=2) ---"
-PLATFORMIO_BUILD_FLAGS="-D DEVICE_ADDRESS=1 -D TARGET_ADDRESS=2" \
+# --- Build device 1 (beacon: TX-only) ---
+echo "--- Building Device 1 (DEVICE_ADDRESS=1, TARGET_ADDRESS=2, TX-only beacon) ---"
+PLATFORMIO_BUILD_FLAGS="-D DEVICE_ADDRESS=1 -D TARGET_ADDRESS=2 -D LORA_TX_ENABLED=1 -D LORA_RX_ENABLED=0" \
     $PIO run -d "$FIRMWARE_DIR" -e rpicow
 
 cp "$FIRMWARE_DIR/.pio/build/rpicow/firmware.uf2" "$OUT_DIR/device1.uf2"
-echo "  -> out/device1.uf2"
+cp "$FIRMWARE_DIR/.pio/build/rpicow/firmware.elf" "$OUT_DIR/device1.elf"
+echo "  -> out/device1.uf2  out/device1.elf"
 
-# --- Build device 2 (relay) ---
-echo "--- Building Device 2 (DEVICE_ADDRESS=2, TARGET_ADDRESS=1) ---"
-PLATFORMIO_BUILD_FLAGS="-D DEVICE_ADDRESS=2 -D TARGET_ADDRESS=1" \
+# --- Build device 2 (relay: RX-only) ---
+echo "--- Building Device 2 (DEVICE_ADDRESS=2, TARGET_ADDRESS=1, RX-only relay) ---"
+PLATFORMIO_BUILD_FLAGS="-D DEVICE_ADDRESS=2 -D TARGET_ADDRESS=1 -D LORA_TX_ENABLED=0 -D LORA_RX_ENABLED=1" \
     $PIO run -d "$FIRMWARE_DIR" -e rpicow
 
 cp "$FIRMWARE_DIR/.pio/build/rpicow/firmware.uf2" "$OUT_DIR/device2.uf2"
-echo "  -> out/device2.uf2"
+cp "$FIRMWARE_DIR/.pio/build/rpicow/firmware.elf" "$OUT_DIR/device2.elf"
+echo "  -> out/device2.uf2  out/device2.elf"
 
 echo ""
 echo "=== Build complete ==="
-ls -lh "$OUT_DIR"/*.uf2
+ls -lh "$OUT_DIR"/*.uf2 "$OUT_DIR"/*.elf
