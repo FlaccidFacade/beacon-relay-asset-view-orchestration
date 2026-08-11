@@ -87,19 +87,27 @@ flash_via_swd() {
     local elf="$1"
     local probe_serial="$2"
     local label="$3"
+    local gdb_port="$4"
+    local tcl_port="$5"
+    local telnet_port="$6"
+    local log_file="$7"
 
-    echo "=== Flashing $label ==="
-    echo "  ELF:   $elf"
-    echo "  Probe: $probe_serial"
+    {
+        echo "=== Flashing $label ==="
+        echo "  ELF:   $elf"
+        echo "  Probe: $probe_serial"
 
-    openocd \
-        -f interface/cmsis-dap.cfg \
-        -f target/rp2040.cfg \
-        -c "adapter serial $probe_serial" \
-        -c "program $elf verify reset exit"
+        openocd \
+            -f interface/cmsis-dap.cfg \
+            -f target/rp2040.cfg \
+            -c "adapter serial $probe_serial" \
+            -c "gdb_port $gdb_port" \
+            -c "tcl_port $tcl_port" \
+            -c "telnet_port $telnet_port" \
+            -c "program $elf verify reset exit"
 
-    echo "$label flashed OK"
-    echo ""
+        echo "$label flashed OK"
+    } >"$log_file" 2>&1
 }
 
 flash_via_bootsel() {
@@ -122,21 +130,54 @@ flash_via_bootsel() {
 
     echo "INFO: Falling back to BOOTSEL flashing via mounted RPI-RP2 volumes."
     echo "=== Flashing Device 1 (BOOTSEL) ==="
-    cp "$UF2_1" "${_MOUNTS[0]}/"
-    sync
-    echo "Device 1 flashed OK"
-    echo ""
+    cp "$UF2_1" "${_MOUNTS[0]}/" &
+    local cp_pid1=$!
 
     echo "=== Flashing Device 2 (BOOTSEL) ==="
-    cp "$UF2_2" "${_MOUNTS[1]}/"
+    cp "$UF2_2" "${_MOUNTS[1]}/" &
+    local cp_pid2=$!
+
+    local cp_fail=0
+    wait "$cp_pid1" || cp_fail=1
+    wait "$cp_pid2" || cp_fail=1
     sync
+
+    if [[ "$cp_fail" -ne 0 ]]; then
+        echo "ERROR: One or more BOOTSEL copies failed." >&2
+        return 1
+    fi
+
+    echo "Device 1 flashed OK"
     echo "Device 2 flashed OK"
     echo ""
 }
 
 if [[ "$FLASH_MODE" == "swd" ]]; then
-    flash_via_swd "$ELF_1" "$PROBE1_SERIAL" "Device 1"
-    flash_via_swd "$ELF_2" "$PROBE2_SERIAL" "Device 2"
+    LOG_1="$(mktemp)"
+    LOG_2="$(mktemp)"
+
+    echo "Flashing both devices in parallel via SWD ..."
+    # rp2040.cfg exposes one gdb server per core (2 cores), so each instance
+    # needs its base gdb_port spaced by at least 2 to avoid colliding with
+    # the other instance's second core.
+    flash_via_swd "$ELF_1" "$PROBE1_SERIAL" "Device 1" 3333 6666 4444 "$LOG_1" &
+    FLASH_PID1=$!
+
+    flash_via_swd "$ELF_2" "$PROBE2_SERIAL" "Device 2" 3343 6676 4454 "$LOG_2" &
+    FLASH_PID2=$!
+
+    FLASH_FAIL=0
+    wait "$FLASH_PID1" || FLASH_FAIL=1
+    wait "$FLASH_PID2" || FLASH_FAIL=1
+
+    cat "$LOG_1"
+    cat "$LOG_2"
+    rm -f "$LOG_1" "$LOG_2"
+
+    if [[ "$FLASH_FAIL" -ne 0 ]]; then
+        echo "ERROR: One or more devices failed to flash." >&2
+        exit 1
+    fi
 else
     flash_via_bootsel
 fi

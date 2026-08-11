@@ -2,6 +2,10 @@
 
 This guide covers turning two standard Pico (or Pico W) boards into Pico Debuggers using the [debugprobe](https://github.com/raspberrypi/picoprobe) firmware, and wiring them to the two target Pico W boards for HIL testing.
 
+> **On Windows 10 + WSL?** See [`WSL_SETUP.md`](./WSL_SETUP.md) first — you need to
+> attach both target Pico W boards and both debug probes to WSL via `usbipd-win`
+> before `flash.sh` / `run_all.sh` can see them.
+
 ## Automated setup
 
 Run this once on the HIL PC from the repo root:

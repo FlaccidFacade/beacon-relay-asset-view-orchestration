@@ -59,6 +59,13 @@ public:
      */
     bool receive(LoRaPacket& out);
 
+    /**
+     * Query the module's currently active ADDRESS/NETWORKID/BAND and log
+     * them via bravoLog — used to verify both units actually converged on
+     * matching settings, since set commands only ack "+OK" (not the value).
+     */
+    void logConfig();
+
     /** Last packet RSSI (dBm) */
     int  getLastRSSI() const { return lastRSSI; }
     /** Last packet SNR  (dB)  */

@@ -26,27 +26,6 @@ For **each** device you need:
 | Jumper wires        |                           |
 
 **Programmer**: Raspberry Pi 4B connected to Pico W via USB micro-B or USB-C.
-
-## Wiring (per device)
-
-All peripherals run at **3.3V from Pico W Pin 36**.  
-Power the Pico W itself via **VSYS (Pin 39/40) with 5V**.
-
-| Signal         | Pico W GPIO | Physical Pin |
-| -------------- | ----------- | ------------ |
-| RYLR896 RXD ←  | GP0 (TX)    | 1            |
-| RYLR896 TXD →  | GP1 (RX)    | 2            |
-| OLED SDA       | GP4         | 6            |
-| OLED SCL       | GP5         | 7            |
-| GPS RXD ←      | GP8 (TX)    | 11           |
-| GPS TXD →      | GP9 (RX)    | 12           |
-| RYLR896 NRESET | GP14        | 19           |
-| GPS PPS        | GP15        | 20           |
-| Button → GND   | GP16        | 21           |
-| 3.3V supply    | 3V3 OUT     | 36           |
-| GND            | GND         | 38           |
-| 5V in          | VSYS        | 39           |
-
 ## Step 1: Configure Device Addresses
 
 The two units exchange GPS payloads using LoRa addresses. Edit `firmware/platformio.ini` **before uploading to each unit**:
@@ -238,6 +217,11 @@ Pin numbers below are **physical pin** positions on the board header:
 > pin 5) — connect these to the matching pads on the target.
 
 See `docs/bravo-hil-debug-setup.drawio` for a complete wiring diagram.
+
+> **Running this from Windows 10 + WSL instead of a Raspberry Pi?** See
+> [`pi-test/WSL_SETUP.md`](pi-test/WSL_SETUP.md) for the USB passthrough
+> steps (`usbipd-win`) needed before the commands below will see your
+> devices.
 
 ### Flashing Workflow
 

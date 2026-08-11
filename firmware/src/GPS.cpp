@@ -1,28 +1,30 @@
 /**
  * @file GPS.cpp
- * @brief GPS module implementation for Pico W — NEO-7m on UART1 (Serial2)
+ * @brief GPS module implementation for Pico W — NEO-7m via SerialPIO
  *
- * Serial2.setTX/setRX must be called before Serial2.begin() in arduino-pico.
+ * GP12/GP13 don't support hardware UART1, so GPS uses a software UART
+ * (SerialPIO) instead, same approach as LoRaComm on GP8/GP9.
  * The PPS interrupt free-function lives in main.cpp and calls GPS::onPPS().
  */
 
 #include "GPS.h"
+#include <SerialPIO.h>
+#include "DebugLog.h"
 
-// arduino-pico maps Serial2 to UART1
-#define GPS_SERIAL Serial2
+// PIO-based software UART — pins bound at construction
+static SerialPIO gpsSerial(PIN_GPS_TX, PIN_GPS_RX, 256);
+#define GPS_SERIAL gpsSerial
 
 GPS::GPS() : initialized(false), ppsFlag(false) {}
 
 bool GPS::begin() {
-    GPS_SERIAL.setTX(PIN_GPS_TX);
-    GPS_SERIAL.setRX(PIN_GPS_RX);
     GPS_SERIAL.begin(GPS_BAUD);
 
     // Configure PPS pin as input (interrupt attached in main.cpp)
     pinMode(PIN_GPS_PPS, INPUT);
 
     initialized = true;
-    Serial1.println("[GPS] NEO-7m on UART1 ready");
+    bravoLog("[GPS] NEO-7m ready");
     return true;
 }
 

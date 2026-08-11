@@ -7,20 +7,21 @@
  */
 
 #include "Display.h"
+#include "DebugLog.h"
 
 Display::Display()
     : display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, -1),
       initialized(false), lastUpdate(0) {}
 
 bool Display::begin() {
-    Serial1.println("[Display] Initializing SSD1306...");
+    bravoLog("[Display] Initializing SSD1306...");
 
     Wire.setSDA(PIN_OLED_SDA);
     Wire.setSCL(PIN_OLED_SCL);
     Wire.begin();
 
     if (!display.begin(SSD1306_SWITCHCAPVCC, OLED_I2C_ADDR)) {
-        Serial1.println("[Display] FAIL — check I2C wiring (GP4/GP5) and address 0x3C");
+        bravoLog("[Display] FAIL — check I2C wiring (GP4/GP5) and address 0x3C");
         return false;
     }
 
@@ -32,7 +33,7 @@ bool Display::begin() {
     display.println("B.R.A.V.O.");
     display.println("Starting...");
     display.display();
-    Serial1.println("[Display] SSD1306 OK");
+    bravoLog("[Display] SSD1306 OK");
     return true;
 }
 

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# test_comms.sh — Verify two B.R.A.V.O. devices are communicating over LoRa
+# test_lora.sh — Verify two B.R.A.V.O. devices are communicating over LoRa
 #
 # Monitors serial output from both Pico W devices and checks for:
 #   1. Both devices complete initialisation ("[BRAVO] Setup complete")
@@ -11,16 +11,52 @@
 #   1 — one or more tests failed
 #
 # Environment variables:
-#   SERIAL_DEV1  — serial device for unit 1 (default /dev/ttyACM0)
-#   SERIAL_DEV2  — serial device for unit 2 (default /dev/ttyACM1)
+#   SERIAL_DEV1  — serial device for unit 1 (default: auto-detected)
+#   SERIAL_DEV2  — serial device for unit 2 (default: auto-detected)
 #   TEST_TIMEOUT — seconds to wait for comms (default 90)
 #   BAUD         — serial baud rate (default 115200)
+#
+# Auto-detection notes:
+#   Each Pico W target enumerates as USB VID:PID 2e8a:f00a. Debug probes
+#   (2e8a:000c) also expose their own /dev/ttyACM* node (their UART bridge),
+#   so ttyACM numbering is NOT reliable — e.g. under WSL/usbipd the probes
+#   can land on /dev/ttyACM0/1 and both targets on /dev/ttyACM2/3 depending
+#   on attach order. This script matches on USB VID:PID instead of assuming
+#   fixed device numbers.
 
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 ARTIFACTS_DIR="${SCRIPT_DIR}/artifacts"
 mkdir -p "$ARTIFACTS_DIR"
+
+# --- auto-detect target Pico W ttyACM ports (VID:PID 2e8a:f00a) ---
+detect_target_ttys() {
+    local tty devpath d vid pid
+    for tty in /sys/class/tty/ttyACM*; do
+        [[ -e "$tty/device" ]] || continue
+        devpath="$(readlink -f "$tty/device")"
+        d="$devpath"
+        while [[ "$d" != "/" && "$d" != "/sys" ]]; do
+            if [[ -r "$d/idVendor" && -r "$d/idProduct" ]]; then
+                vid="$(cat "$d/idVendor")"
+                pid="$(cat "$d/idProduct")"
+                [[ "$vid:$pid" == "2e8a:f00a" ]] && echo "/dev/$(basename "$tty")"
+                break
+            fi
+            d="$(dirname "$d")"
+        done
+    done | sort -u
+}
+
+if [[ -z "${SERIAL_DEV1:-}" || -z "${SERIAL_DEV2:-}" ]]; then
+    mapfile -t _TARGET_TTYS < <(detect_target_ttys)
+    if [[ ${#_TARGET_TTYS[@]} -ge 2 ]]; then
+        : "${SERIAL_DEV1:=${_TARGET_TTYS[0]}}"
+        : "${SERIAL_DEV2:=${_TARGET_TTYS[1]}}"
+        echo "INFO: Auto-detected SERIAL_DEV1=$SERIAL_DEV1 SERIAL_DEV2=$SERIAL_DEV2"
+    fi
+fi
 
 SERIAL_DEV1="${SERIAL_DEV1:-/dev/ttyACM0}"
 SERIAL_DEV2="${SERIAL_DEV2:-/dev/ttyACM1}"
@@ -89,21 +125,37 @@ check() {
     if grep -q "$pattern" "$file" 2>/dev/null; then
         echo "  PASS: $description"
         pass=$((pass + 1))
+        return 0
+    else
+        echo "  FAIL: $description"
+        fail=$((fail + 1))
+        return 1
+    fi
+}
+
+# Check that `pattern` appears in at least one of the two logs, without
+# double-counting a separate pass/fail per file.
+check_either() {
+    local description="$1"
+    local pattern="$2"
+
+    if grep -q "$pattern" "$LOG1" 2>/dev/null || grep -q "$pattern" "$LOG2" 2>/dev/null; then
+        echo "  PASS: $description"
+        pass=$((pass + 1))
     else
         echo "  FAIL: $description"
         fail=$((fail + 1))
     fi
 }
 
-# Device 1 checks
-check "Device 1 booted"       "$LOG1" '\[BRAVO\] Setup complete'
-check "Device 1 LoRa TX"      "$LOG1" '\[LoRa\] TX'
-check "Device 1 LoRa RX"      "$LOG1" '\[LoRa\] RX'
-
-# Device 2 checks
-check "Device 2 booted"       "$LOG2" '\[BRAVO\] Setup complete'
-check "Device 2 LoRa TX"      "$LOG2" '\[LoRa\] TX'
-check "Device 2 LoRa RX"      "$LOG2" '\[LoRa\] RX'
+# Only one direction of LoRa traffic is required (beacon TX-only, relay
+# RX-only), and WSL/usbipd attach order doesn't guarantee which serial port
+# ends up as SERIAL_DEV1 vs SERIAL_DEV2, so check by content, not by which
+# device is "1" or "2".
+check "Device 1 booted"       "$LOG1" '\[BRAVO\] Setup complete' || true
+check "Device 2 booted"       "$LOG2" '\[BRAVO\] Setup complete' || true
+check_either "One unit transmitted (LoRa TX)" '\[LoRa\] TX →'
+check_either "One unit received (LoRa RX)"    '\[LoRa\] RX'
 
 echo ""
 echo "Passed: $pass / $((pass + fail))"
