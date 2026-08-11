@@ -15,6 +15,7 @@ bash firmware/pi-test/setup_probes.sh
 ```
 
 The script will:
+
 1. Download the latest `debugprobe.uf2` from the official release
 2. Walk you through putting each probe Pico into BOOTSEL mode and copying the firmware
 3. Confirm both boards enumerate as `2e8a:000c` (Pico Debugger)
@@ -26,18 +27,18 @@ After the script completes, `flash.sh` will auto-detect the probes and no enviro
 
 Wire each probe Pico to its target Pico W using three jumper wires:
 
-| Probe Pico pin | Target Pico W pin | Signal |
-|---|---|---|
-| GP2 | SWDIO | SWD data |
-| GP3 | SWCLK | SWD clock |
-| GND | GND | Ground |
+| Probe Pico pin | Target Pico W pin | Signal    |
+| -------------- | ----------------- | --------- |
+| GP2            | SWDIO             | SWD data  |
+| GP3            | SWCLK             | SWD clock |
+| GND            | GND               | Ground    |
 
 Optionally connect the UART for serial capture during tests:
 
-| Probe Pico pin | Target Pico W pin | Signal |
-|---|---|---|
-| GP0 (TX) | GP1 (RX) | UART from target |
-| GP1 (RX) | GP0 (TX) | UART to target |
+| Probe Pico pin | Target Pico W pin | Signal           |
+| -------------- | ----------------- | ---------------- |
+| GP0 (TX)       | GP1 (RX)          | UART from target |
+| GP1 (RX)       | GP0 (TX)          | UART to target   |
 
 > **Note:** Keep the probe Pico powered via its own USB connection to the Pi. Do not power the target Pico W from the probe — connect the target's USB separately (or power it from the probe's VSYS pin if your cable setup allows, but a separate USB connection is simpler and more reliable).
 

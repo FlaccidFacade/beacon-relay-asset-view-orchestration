@@ -7,12 +7,12 @@ USB passthrough.
 
 You have **4 USB connections** to manage (2 per Pico W):
 
-| Connection                          | Shows up as                          | Used by            |
-| ------------------------------------ | ------------------------------------- | ------------------- |
-| Pico W #1 — direct USB (CDC serial)  | `/dev/ttyACM0` (or similar)           | `test_lora.sh`      |
-| Pico W #2 — direct USB (CDC serial)  | `/dev/ttyACM1` (or similar)           | `test_lora.sh`      |
-| Debug probe #1 — USB (SWD to Pico W #1) | `2e8a:000c` "Pico Debug Probe"      | `flash.sh` (openocd) |
-| Debug probe #2 — USB (SWD to Pico W #2) | `2e8a:000c` "Pico Debug Probe"      | `flash.sh` (openocd) |
+| Connection                              | Shows up as                    | Used by              |
+| --------------------------------------- | ------------------------------ | -------------------- |
+| Pico W #1 — direct USB (CDC serial)     | `/dev/ttyACM0` (or similar)    | `test_lora.sh`       |
+| Pico W #2 — direct USB (CDC serial)     | `/dev/ttyACM1` (or similar)    | `test_lora.sh`       |
+| Debug probe #1 — USB (SWD to Pico W #1) | `2e8a:000c` "Pico Debug Probe" | `flash.sh` (openocd) |
+| Debug probe #2 — USB (SWD to Pico W #2) | `2e8a:000c` "Pico Debug Probe" | `flash.sh` (openocd) |
 
 ## 1. One-time Windows host setup
 

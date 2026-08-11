@@ -26,6 +26,7 @@ For **each** device you need:
 | Jumper wires        |                           |
 
 **Programmer**: Raspberry Pi 4B connected to Pico W via USB micro-B or USB-C.
+
 ## Step 1: Configure Device Addresses
 
 The two units exchange GPS payloads using LoRa addresses. Edit `firmware/platformio.ini` **before uploading to each unit**:
@@ -186,12 +187,12 @@ soldering the BOOTSEL pad), you can use a spare **Pico H** as an SWD debugger.
 
 ### Why Use a Pico Probe?
 
-| Benefit           | Detail                                                                     |
-| ----------------- | -------------------------------------------------------------------------- |
-| No soldering      | Avoids damaging Pico W boards by soldering the BOOTSEL test pad            |
-| Headless flashing | `openocd` programs firmware over SWD — no physical BOOTSEL button press     |
-| Brick recovery    | SWD can reprogram a device even when its firmware is completely broken     |
-| CI/CD friendly    | The HIL runner can flash both targets without human intervention           |
+| Benefit           | Detail                                                                  |
+| ----------------- | ----------------------------------------------------------------------- |
+| No soldering      | Avoids damaging Pico W boards by soldering the BOOTSEL test pad         |
+| Headless flashing | `openocd` programs firmware over SWD — no physical BOOTSEL button press |
+| Brick recovery    | SWD can reprogram a device even when its firmware is completely broken  |
+| CI/CD friendly    | The HIL runner can flash both targets without human intervention        |
 
 ### Hardware Required
 
