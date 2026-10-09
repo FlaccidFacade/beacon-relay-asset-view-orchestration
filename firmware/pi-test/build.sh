@@ -25,9 +25,15 @@ else
     exit 1
 fi
 
+PIO_ENV="${PIO_ENV:-rpicow}"
+if [[ "${TEST_SUITE:-}" == "random_lora" ]]; then
+    PIO_ENV="rpicow_random_lora_test"
+fi
+
 echo "=== B.R.A.V.O. firmware build ==="
 echo "PlatformIO: $PIO"
 echo "Firmware:   $FIRMWARE_DIR"
+echo "Env:        $PIO_ENV"
 echo ""
 
 mkdir -p "$OUT_DIR"
@@ -35,19 +41,19 @@ mkdir -p "$OUT_DIR"
 # --- Build device 1 (beacon: TX-only) ---
 echo "--- Building Device 1 (DEVICE_ADDRESS=1, TARGET_ADDRESS=2, TX-only beacon) ---"
 PLATFORMIO_BUILD_FLAGS="-D DEVICE_ADDRESS=1 -D TARGET_ADDRESS=2 -D LORA_TX_ENABLED=1 -D LORA_RX_ENABLED=0" \
-    $PIO run -d "$FIRMWARE_DIR" -e rpicow
+    $PIO run -d "$FIRMWARE_DIR" -e "$PIO_ENV"
 
-cp "$FIRMWARE_DIR/.pio/build/rpicow/firmware.uf2" "$OUT_DIR/device1.uf2"
-cp "$FIRMWARE_DIR/.pio/build/rpicow/firmware.elf" "$OUT_DIR/device1.elf"
+cp "$FIRMWARE_DIR/.pio/build/$PIO_ENV/firmware.uf2" "$OUT_DIR/device1.uf2"
+cp "$FIRMWARE_DIR/.pio/build/$PIO_ENV/firmware.elf" "$OUT_DIR/device1.elf"
 echo "  -> out/device1.uf2  out/device1.elf"
 
 # --- Build device 2 (relay: RX-only) ---
 echo "--- Building Device 2 (DEVICE_ADDRESS=2, TARGET_ADDRESS=1, RX-only relay) ---"
 PLATFORMIO_BUILD_FLAGS="-D DEVICE_ADDRESS=2 -D TARGET_ADDRESS=1 -D LORA_TX_ENABLED=0 -D LORA_RX_ENABLED=1" \
-    $PIO run -d "$FIRMWARE_DIR" -e rpicow
+    $PIO run -d "$FIRMWARE_DIR" -e "$PIO_ENV"
 
-cp "$FIRMWARE_DIR/.pio/build/rpicow/firmware.uf2" "$OUT_DIR/device2.uf2"
-cp "$FIRMWARE_DIR/.pio/build/rpicow/firmware.elf" "$OUT_DIR/device2.elf"
+cp "$FIRMWARE_DIR/.pio/build/$PIO_ENV/firmware.uf2" "$OUT_DIR/device2.uf2"
+cp "$FIRMWARE_DIR/.pio/build/$PIO_ENV/firmware.elf" "$OUT_DIR/device2.elf"
 echo "  -> out/device2.uf2  out/device2.elf"
 
 echo ""
