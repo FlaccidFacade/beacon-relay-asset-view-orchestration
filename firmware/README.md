@@ -27,7 +27,7 @@ This firmware powers both the beacon devices and the relay devices in the B.R.A.
 **Official Documentation & Pinout:**
 
 - [Pico W Datasheet](https://datasheets.raspberrypi.com/picow/pico-w-datasheet.pdf)
-- [Pico W Pinout](https://datasheets.raspberrypi.com/picow/PicoW-A4-Pinout.pdf)
+- [Pico W Pinout](https://datasheets.raspberrypi.com/picow/PicoW-A4-Pinout.pdf) or see https://picow.pinout.xyz/
 - [Getting Started with Pico](https://datasheets.raspberrypi.com/pico/getting-started-with-pico.pdf)
 
 ### Peripherals
@@ -41,27 +41,7 @@ This firmware powers both the beacon devices and the relay devices in the B.R.A.
   - Position accuracy: 2.5 m (CEP)
   - Cold start: ~27 s, Hot start: ~1 s
 - **OLED Display**: SSD1306 128×64 (I2C, addr 0x3C)
-- **Push-button**: Momentary switch on GP16 (cycles display screens)
-
-### Pin Connections (Pico W)
-
-All peripherals run at **3.3V** from Pin 36 (3V3 OUT).
-Power the Pico W with 5V on **VSYS** (Pin 39 or 40).
-
-| Signal         | Pico W Pin            | GPIO | Notes                  |
-| -------------- | --------------------- | ---- | ---------------------- |
-| RYLR896 RXD    | 1                     | GP0  | UART0 TX               |
-| RYLR896 TXD    | 2                     | GP1  | UART0 RX               |
-| OLED SDA       | 6                     | GP4  | I2C0 SDA               |
-| OLED SCL       | 7                     | GP5  | I2C0 SCL               |
-| GPS RXD        | 11                    | GP8  | UART1 TX               |
-| GPS TXD        | 12                    | GP9  | UART1 RX               |
-| RYLR896 NRESET | 19                    | GP14 | Active LOW             |
-| GPS PPS        | 20                    | GP15 | 1 Hz rising edge       |
-| Button         | 21                    | GP16 | INPUT_PULLUP → GND     |
-| 3.3V OUT       | 36                    | —    | Powers OLED, GPS, LoRa |
-| VSYS (5V in)   | 39/40                 | —    | External 5V supply     |
-| GND            | 3/8/13/18/23/28/33/38 | —    | Any GND pin            |
+- **Push-button**: Momentary switch on GP22 (cycles display screens)
 
 ## Software Requirements
 
@@ -243,11 +223,11 @@ Drives the REYAX RYLR896 via UART0 AT commands.
 
 ### GPS Module
 
-Parses NMEA sentences from the NEO-7m on UART1 via TinyGPS++.
+Parses NMEA sentences from the NEO-7m via TinyGPS++ over a software UART (SerialPIO).
 
 **Key Functions:**
 
-- `bool begin()` — Configure Serial2 (UART1) and PPS pin
+- `bool begin()` — Configure SerialPIO and PPS pin
 - `void update()` — Feed characters from Serial2 into TinyGPS++
 - `GPSData getData()` — Snapshot of current fix: lat, lon, alt, speed, satellites
 - `bool hasFix()` — True if location data is valid
@@ -276,8 +256,9 @@ Renders GPS and radio information on the SSD1306 128×64 OLED over I2C0.
 
 ### LoRa Module Not Responding
 
-- Check wiring: GP0→RYLR896 RXD, GP1←RYLR896 TXD, GP14→NRESET.
+- Check wiring: GP8→RYLR896 RXD, GP9←RYLR896 TXD, GP14→NRESET.
 - Power the RYLR896 from Pin 36 (3.3V) — **not 5V**.
+- GP0/GP1 are reserved for the debug UART (`Serial1`) — do NOT wire the RYLR896 there.
 - Confirm both devices use the same `LORA_FREQ_HZ` and `LORA_NETWORK_ID`.
 - Open serial monitor and look for `[LoRa] No response from RYLR896`.
 
@@ -285,9 +266,9 @@ Renders GPS and radio information on the SSD1306 128×64 OLED over I2C0.
 
 - Use **outdoors** with clear sky view.
 - Allow 27+ seconds for cold start.
-- Check wiring: GP8→NEO-7m RXD, GP9←NEO-7m TXD.
+- Check wiring: GP12→NEO-7m RXD, GP13←NEO-7m TXD.
 - Confirm 9600 baud (`GPS_BAUD` in `PinConfig.h`).
-- Serial monitor will print `[GPS] NEO-7m on UART1 ready` on success.
+- Serial monitor will print `[GPS] NEO-7m ready` on success.
 
 ### Display Not Initialising
 

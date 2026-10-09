@@ -39,10 +39,14 @@ jobs:
           echo "firmware/*" > .git/info/sparse-checkout
           git fetch --depth=1 origin $GITHUB_SHA
           git checkout $GITHUB_SHA
-          
+
       - name: Make scripts executable
         working-directory: firmware
         run: chmod +x pi-test/*.sh
+
+      - name: Print Pi runner HIL checklist
+        working-directory: firmware
+        run: cat pi-test/HIL_RUNNER_CHECKLIST.md
 
       - name: Run hardware-in-the-loop tests
         working-directory: firmware

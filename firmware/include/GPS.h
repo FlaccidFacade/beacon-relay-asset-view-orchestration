@@ -2,7 +2,8 @@
  * @file GPS.h
  * @brief GPS module for B.R.A.V.O. — NEO-7m on Raspberry Pi Pico W
  *
- * UART1 (Serial2):  GP8 TX (Pico→GPS RXD),  GP9 RX (GPS TXD→Pico)
+ * SerialPIO (software UART): GP12 TX (Pico→GPS RXD, physical pin 16),
+ *                            GP13 RX (GPS TXD→Pico, physical pin 17)
  * PPS interrupt:    GP15 rising edge = 1 Hz timing pulse
  * Power:            Pin 36 (3V3 OUT), any GND pin
  * Baud rate:        9600 (NEO-7m default NMEA output)
